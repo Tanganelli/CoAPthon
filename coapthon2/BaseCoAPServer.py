@@ -39,7 +39,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
     def handle(self):
         try:
             buff = self.rfile.getvalue()
-            self._reader = BitStream()
+            self._reader = BitStream(bytes=buff)
         except socket.timeout, e:
             #a read or a write timed out.  Discard this connection
             self.log_error("Request timed out: %r", e)
