@@ -38,7 +38,7 @@ class Message(object):
         return self._options
 
     def add_option(self, option):
-        assert (type(option) is Option)
+        assert isinstance(option, Option)
         name, type_value, repeatable = defines.options[option.number]
         if not repeatable:
             try:
@@ -50,7 +50,7 @@ class Message(object):
             self._options.append(option)
 
     def del_option(self, option):
-        assert (type(option) is Option)
+        assert isinstance(option, Option)
         try:
             while True:
                 self._options.remove(option)

@@ -1,5 +1,7 @@
 __author__ = 'giacomo'
 
+################### Message Format ###################
+
 ## number of bits used for the encoding of the CoAP version field.
 VERSION_BITS = 2
 
@@ -42,7 +44,8 @@ RESPONSE_CODE_LOWER_BOUND = 64
 ## The highest value of a response code.
 RESPONSE_CODE_UPPER_BOUND = 191
 
-###################Option Type############
+################### Option ###################
+
 ## The integer.
 INTEGER = 0
 ## The string.
@@ -54,23 +57,31 @@ UNKNOWN = 3
 
 #(NAME, VALUE_TYPE, REPEATABLE)
 options = {
-        0: ('Reserved', UNKNOWN, True),
-        1: ('If-Match', OPAQUE, True),
-        3: ('Uri-Host', STRING, False),
-        4: ('ETag', OPAQUE, True),
-        5: ('If-None-Match', INTEGER, False),
-        6: ('Observe', INTEGER, False),
-        7: ('Uri-Port', INTEGER, False),
-        8: ('Location-Path', STRING, True),
-        11: ('Uri-Path', STRING, True),
-        12: ('Content-Type', INTEGER, False),
-        14: ('Max-Age', INTEGER, False),
-        15: ('Uri-Query', STRING, True),
-        17: ('Accept', INTEGER, False),
-        20: ('Location-Query', STRING, True),
-        23: ('Block2', INTEGER, False),
-        27: ('Block1', INTEGER, False),
-        35: ('Proxy-Uri', STRING, False),
-        39: ('Proxy-Scheme', STRING, False),
-        60: ('Size1', INTEGER, False)
-    }
+    0: ('Reserved', UNKNOWN, True),
+    1: ('If-Match', OPAQUE, True),
+    3: ('Uri-Host', STRING, False),
+    4: ('ETag', OPAQUE, True),
+    5: ('If-None-Match', INTEGER, False),
+    6: ('Observe', INTEGER, False),
+    7: ('Uri-Port', INTEGER, False),
+    8: ('Location-Path', STRING, True),
+    11: ('Uri-Path', STRING, True),
+    12: ('Content-Type', INTEGER, False),
+    14: ('Max-Age', INTEGER, False),
+    15: ('Uri-Query', STRING, True),
+    17: ('Accept', INTEGER, False),
+    20: ('Location-Query', STRING, True),
+    23: ('Block2', INTEGER, False),
+    27: ('Block1', INTEGER, False),
+    35: ('Proxy-Uri', STRING, False),
+    39: ('Proxy-Scheme', STRING, False),
+    60: ('Size1', INTEGER, False)
+}
+
+################### CoAP Code ###################
+codes = {
+    1: 'GET',
+    2: 'POST',
+    3: 'PUT',
+    4: 'DELETE',
+}
