@@ -1,3 +1,6 @@
+from coapthon2 import defines
+from coapthon2.messages.option import Option
+
 __author__ = 'giacomo'
 
 
@@ -10,7 +13,7 @@ class Message(object):
         ## The token, a 0-8 byte array.
         self.token = None
         ## The set of options of this message.
-        self.options = None
+        self._options = []
         ## The payload of this message.
         self.payload = None
         ## The destination address of this message.
@@ -29,3 +32,27 @@ class Message(object):
         self._duplicate = False
         ## The timestamp
         self._timestamp = None
+
+    @property
+    def options(self):
+        return self._options
+
+    def add_option(self, option):
+        assert (type(option) is Option)
+        name, type_value, repeatable = defines.options[option.number]
+        if not repeatable:
+            try:
+                self._options.index(option)
+                raise TypeError("Option : %s is not repeatable", name)
+            except ValueError:
+                self._options.append(option)
+        else:
+            self._options.append(option)
+
+    def del_option(self, option):
+        assert (type(option) is Option)
+        try:
+            while True:
+                self._options.remove(option)
+        except ValueError:
+            pass

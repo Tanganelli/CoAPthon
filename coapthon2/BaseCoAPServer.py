@@ -1,11 +1,10 @@
 import socket
 import SocketServer
 import sys
-from bitstring import BitStream, ReadError
+from bitstring import BitStream, ReadError, BitArray
 from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
-from coapthon2.messages.optionregistry import OptionRegistry
 from coapthon2.messages.request import Request
 
 __author__ = 'Giacomo Tanganelli'
@@ -14,7 +13,6 @@ __all__ = ["CoAPServer", "BaseCoAPRequestHandler"]
 
 
 class CoAPServer(SocketServer.UDPServer):
-
     def __init__(self, server_address, request_handler_class):
         SocketServer.UDPServer.__init__(self, server_address, request_handler_class)
         self._server_name = None
@@ -47,7 +45,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
             buff = self.rfile.getvalue()
             self._reader = BitStream(bytes=buff, length=self.rfile.len)
             version = self._reader.read(defines.VERSION_BITS).uint
-            mtype = self._reader.read(defines.TYPE_BITS).uint
+            message_type = self._reader.read(defines.TYPE_BITS).uint
             token_length = self._reader.read(defines.TOKEN_LENGTH_BITS).uint
             code = self._reader.read(defines.CODE_BITS).uint
             mid = self._reader.read(defines.MESSAGE_ID_BITS).uint
@@ -60,7 +58,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
             else:
                 message = Message()
             message.version = version
-            message.type = mtype
+            message.type = message_type
             message.mid = mid
 
             if token_length > 0:
@@ -70,7 +68,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
 
             current_option = 0
             try:
-                while True:
+                while self._reader.pos <= self._reader.len:
                     next_byte = self._reader.peek(8).uint
                     if next_byte != int(defines.PAYLOAD_MARKER):
                         # the first 4 bits of the byte represent the option delta
@@ -81,16 +79,30 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
                         option_length = self.read_option_value_from_nibble(length)
 
                         # read option
-                        option_name, option_type = OptionRegistry.dict[current_option]
+                        option_name, option_type = defines.options[current_option]
                         if option_length == 0:
                             value = None
                         elif option_type == defines.INTEGER:
                             value = self._reader.read(option_length * 8).uint
                         else:
                             value = self._reader.read(option_length * 8).bytes
-            except ReadError:
-                pass
 
+                        option = Option()
+                        option.number = current_option
+                        option.value = value
+
+                        message.add_option(option)
+                    else:
+                        self._reader.pos += 8  # skip payload marker
+                        if self._reader.len <= self._reader.pos:
+                            self.send_error(0)
+                            raise ValueError("Payload Marker with no payload")
+                        to_end = self._reader.len - self._reader.pos
+                        message.payload = self._reader.read(to_end).bytes
+
+            except ReadError, e:
+                self.send_error(0)
+                self.log_error("Error parsing message: %r", e)
 
         except socket.timeout, e:
             #a read or a write timed out.  Discard this connection
@@ -107,7 +119,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
         return defines.REQUEST_CODE_LOWER_BOUND <= code <= defines.REQUEST_CODE_UPPER_BOUNT
 
     @staticmethod
-    def is_response(self, code):
+    def is_response(code):
         """
         Checks if is response.
 
@@ -116,7 +128,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
         return defines.RESPONSE_CODE_LOWER_BOUND <= code <= defines.RESPONSE_CODE_UPPER_BOUND
 
     @staticmethod
-    def is_empty(self, code):
+    def is_empty(code):
         """
         Checks if is empty.
 
@@ -148,4 +160,4 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
         elif nibble == 14:
             return self._reader.read(16).uint + 269
         else:
-            raise ValueError("Unsupported option delta " + nibble)
+            raise ValueError("Unsupported option nibble " + nibble)
