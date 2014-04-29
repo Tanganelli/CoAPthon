@@ -43,13 +43,13 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
     def handle(self):
         try:
             buff = self.rfile.getvalue()
-            self._reader = BitStream(bytes=buff, length=self.rfile.len)
+            self._reader = BitStream(bytes=buff, length=(len(buff) * 8))
             version = self._reader.read(defines.VERSION_BITS).uint
             message_type = self._reader.read(defines.TYPE_BITS).uint
             token_length = self._reader.read(defines.TOKEN_LENGTH_BITS).uint
             code = self._reader.read(defines.CODE_BITS).uint
             mid = self._reader.read(defines.MESSAGE_ID_BITS).uint
-            if not self.is_response(code):
+            if self.is_response(code):
                 self.send_error(406)
                 return
             elif self.is_request(code):
@@ -57,6 +57,8 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
                 message.code = code
             else:
                 message = Message()
+            message.source = self.client_address
+            message.destination = self.server.server_address
             message.version = version
             message.type = message_type
             message.mid = mid
@@ -68,7 +70,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
 
             current_option = 0
             try:
-                while self._reader.pos <= self._reader.len:
+                while self._reader.pos < self._reader.len:
                     next_byte = self._reader.peek(8).uint
                     if next_byte != int(defines.PAYLOAD_MARKER):
                         # the first 4 bits of the byte represent the option delta
@@ -79,7 +81,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
                         option_length = self.read_option_value_from_nibble(length)
 
                         # read option
-                        option_name, option_type = defines.options[current_option]
+                        option_name, option_type, option_repeatable = defines.options[current_option]
                         if option_length == 0:
                             value = None
                         elif option_type == defines.INTEGER:
@@ -161,3 +163,29 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
             return self._reader.read(16).uint + 269
         else:
             raise ValueError("Unsupported option nibble " + nibble)
+
+
+def test(HandlerClass = BaseCoAPRequestHandler,
+         ServerClass = CoAPServer):
+    """Test the HTTP request handler class.
+
+    This runs an HTTP server on port 8000 (or the first command line
+    argument).
+
+    """
+
+    if sys.argv[1:]:
+        port = int(sys.argv[1])
+    else:
+        port = 5683
+    server_address = ('', port)
+
+    httpd = ServerClass(server_address, HandlerClass)
+
+    sa = httpd.socket.getsockname()
+    print "Serving HTTP on", sa[0], "port", sa[1], "..."
+    httpd.serve_forever()
+
+
+if __name__ == '__main__':
+    test()
