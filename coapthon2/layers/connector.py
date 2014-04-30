@@ -28,13 +28,22 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
         self.command = None
         self.path = None
 
+    def send(self, message):
+        self.serialize(message)
+        self.wfile.flush()  # actually send the response 
+        pass
+
     def handle(self):
         try:
             message = self.parse_message()
             if message is None:
                 self.log_error("Message is not correct")
             elif isinstance(message, Request):
-                self.server.layer_stack[-1].handle_request(message)
+
+                for layer in self.server.layer_stack.reverse():
+                    if not layer.handle_request(message):
+                        break
+
                 self.wfile.flush()  # actually send the response if not already done.
             else:  # empty message
                 pass
@@ -174,4 +183,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
 
     def do_GET(self):
         print("Handle GET")
+
+    def serialize(self, message):
+        pass
 

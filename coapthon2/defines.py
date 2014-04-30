@@ -1,4 +1,4 @@
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 ################### Message Format ###################
 

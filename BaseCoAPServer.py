@@ -2,12 +2,11 @@ import SocketServer
 import socket
 import sys
 from coapthon2.layers.connector import BaseCoAPRequestHandler
-from coapthon2.layers.matcher import Matcher
-from coapthon2.layers.reliability import Reliability
+from coapthon2.layers.layer import Layer
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
-__all__ = ["CoAPServer", "BaseCoAPRequestHandler"]
+__all__ = ["CoAPServer"]
 
 
 class CoAPServer(SocketServer.UDPServer):
@@ -15,9 +14,7 @@ class CoAPServer(SocketServer.UDPServer):
         SocketServer.UDPServer.__init__(self, server_address, request_handler_class)
         self._server_name = None
         self._server_port = None
-        self.layer_stack = []
-        self.layer_stack.append(Reliability())
-        self.layer_stack.append(Matcher())
+        self.layer_stack = Layer()
 
     def server_bind(self):
         """Override server_bind to store the server name."""

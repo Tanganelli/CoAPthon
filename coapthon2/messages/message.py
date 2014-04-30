@@ -1,7 +1,7 @@
 from coapthon2 import defines
 from coapthon2.messages.option import Option
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class Message(object):
@@ -56,3 +56,100 @@ class Message(object):
                 self._options.remove(option)
         except ValueError:
             pass
+
+    @property
+    def duplicated(self):
+        """
+        Checks if this message is a duplicate.
+
+        @return: True, if is a duplicate
+        """
+        return self._duplicate
+
+    @duplicated.setter
+    def duplicated(self, d):
+        """
+        Marks this message as a duplicate.
+
+        @param d: if a duplicate
+        """
+        assert isinstance(d, bool)
+        self._duplicate = d
+
+    @property
+    def acknowledged(self):
+        """
+        Checks if is this message has been acknowledged.
+
+        @return: True, if is acknowledged
+        """
+        return self._acknowledged
+
+    @acknowledged.setter
+    def acknowledged(self, a):
+        """
+        Marks this message as acknowledged.
+
+        @param a: if acknowledged
+        """
+        assert isinstance(a, bool)
+        self._acknowledged = a
+
+    @property
+    def rejected(self):
+        """
+        Checks if this message has been rejected.
+
+        @return: True, if is rejected
+        """
+        return self._rejected
+
+    @rejected.setter
+    def rejected(self, r):
+        """
+        Marks this message as rejected.
+
+        @param r: if rejected
+        """
+        assert isinstance(r, bool)
+        self._rejected = r
+
+    @property
+    def timeouted(self):
+        """
+        Checks if this message has timeouted. Confirmable messages in particular
+        might timeout.
+
+        @return: True, if has timeouted
+        """
+        return self._timeouted
+
+    @timeouted.setter
+    def timeouted(self, t):
+        """
+        Marks this message as timeouted. Confirmable messages in particular might
+        timeout.
+
+        @param t: if timeouted
+        """
+        assert isinstance(t, bool)
+        self._timeouted = t
+
+    @property
+    def cancelled(self):
+        """
+        Checks if this message has been canceled.
+
+        @return: True, if is canceled
+        """
+        return self._canceled
+
+    @cancelled.setter
+    def cancelled(self, c):
+        """
+        Marks this message as canceled.
+
+        @param c: if canceled
+        """
+        assert isinstance(c, bool)
+        self._canceled = c

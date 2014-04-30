@@ -1,6 +1,6 @@
 from coapthon2.messages.message import Message
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class Request(Message):
