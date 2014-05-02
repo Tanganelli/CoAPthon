@@ -1,15 +1,15 @@
-from coapthon2.layers.layer import Layer
 from coapthon2.messages.request import Request
 
 __author__ = 'Giacomo Tanganelli'
 
 
-class Matcher(Layer):
-    def __init__(self):
+class Matcher(object):
+    def __init__(self, server):
         self._mid_received = {}
         self._token_received = {}
         self._mid_sent = {}
         self._token_sent = {}
+        self._server = server
 
     def handle_request(self, message):
         assert isinstance(message, Request)
@@ -25,7 +25,6 @@ class Matcher(Layer):
 
     def send_previous_response(self, mid):
         response = self._mid_sent[mid]
-
 
     def send_ack(self, mid):
         pass

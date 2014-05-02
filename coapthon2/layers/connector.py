@@ -1,3 +1,4 @@
+from Queue import Queue
 import socket
 import SocketServer
 import sys
@@ -27,6 +28,7 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
         self._reader = None
         self.command = None
         self.path = None
+        self.queue = Queue()
 
     def send(self, message):
         self.serialize(message)
@@ -39,11 +41,10 @@ class BaseCoAPRequestHandler(SocketServer.DatagramRequestHandler):
             if message is None:
                 self.log_error("Message is not correct")
             elif isinstance(message, Request):
-
-                for layer in self.server.layer_stack.reverse():
-                    if not layer.handle_request(message):
-                        break
-
+                self.server.layer_stack.append(self)
+                self.server.queue.put(message)
+                self.server.process()
+                response = self.queue.get()
                 self.wfile.flush()  # actually send the response if not already done.
             else:  # empty message
                 pass
