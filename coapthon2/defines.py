@@ -1,4 +1,5 @@
 __author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 ################### Message Format ###################
 
@@ -78,6 +79,8 @@ options = {
     60: ('Size1', INTEGER, False)
 }
 
+inv_options = {v[0]: k for k, v in options.iteritems()}
+
 ################### CoAP Code ###################
 codes = {
     1: 'GET',
@@ -85,3 +88,40 @@ codes = {
     3: 'PUT',
     4: 'DELETE',
 }
+
+################### CoAP Type ###################
+types = {
+    0: 'CON',
+    1: 'NON',
+    2: 'ACK',
+    3: 'RST'
+}
+
+inv_types = {v: k for k, v in types.iteritems()}
+################### CoAP Response ###################
+responses = {
+    "CREATED": 65,
+    "DELETED": 66,
+    "VALID": 67,
+    "CHANGED": 68,
+    "CONTENT": 69,
+    "CONTINUE": 95,
+    "BAD_REQUEST": 128,
+    "UNAUTHORIZED": 129,
+    "BAD_OPTION": 130,
+    "FORBIDDEN": 131,
+    "NOT_FOUND": 132,
+    "METHOD_NOT_ALLOWED": 133,
+    "NOT_ACCEPTABLE": 134,
+    "REQUEST_ENTITY_INCOMPLETE": 136,
+    "PRECONDITION_FAILED": 140,
+    "REQUEST_ENTITY_TOO_LARGE": 141,
+    "UNSUPPORTED_CONTENT_FORMAT": 143,
+    "INTERNAL_SERVER_ERROR": 160,
+    "NOT_IMPLEMENTED": 161,
+    "BAD_GATEWAY": 162,
+    "SERVICE_UNAVAILABLE": 163,
+    "GATEWAY_TIMEOUT": 164,
+    "PROXY_NOT_SUPPORTED": 165
+}
+

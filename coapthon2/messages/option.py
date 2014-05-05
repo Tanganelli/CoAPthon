@@ -1,4 +1,8 @@
-__author__ = 'giacomo'
+from bitstring import BitArray
+from coapthon2.utils import bit_len
+
+__author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 
 class Option(object):
@@ -16,8 +20,33 @@ class Option(object):
 
     @property
     def value(self):
-        return self._value
+        if type(self._value) is None:
+            self._value = BitArray()
+        return self._value.tobytes()
 
     @value.setter
-    def value(self, value):
-        self._value = value
+    def value(self, val):
+        if type(val) is str:
+            val = BitArray(bytes=val, length=len(val) * 8)
+        if type(val) is int and bit_len(val) != 0:
+            val = BitArray(uint=val, length=bit_len(val) * 8)
+        if type(val) is int and bit_len(val) == 0:
+            val = BitArray()
+        assert(type(val) is BitArray)
+        self._value = val
+
+    @property
+    def raw_value(self):
+        """
+        Gets the option value.
+
+        @return: the option value
+        """
+        if type(self._value) is None:
+            self._value = BitArray()
+        return self._value
+
+    @property
+    def length(self):
+        assert(type(self._value) is BitArray)
+        return len(self._value.tobytes())

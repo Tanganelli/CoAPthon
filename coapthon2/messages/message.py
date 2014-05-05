@@ -2,6 +2,7 @@ from coapthon2 import defines
 from coapthon2.messages.option import Option
 
 __author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 
 class Message(object):
@@ -153,3 +154,35 @@ class Message(object):
         """
         assert isinstance(c, bool)
         self._canceled = c
+
+    @staticmethod
+    def new_ack(message):
+        """
+        Create a new acknowledgment for the specified message.
+
+        @param message: the message to acknowledge
+        @return: the acknowledgment
+        """
+        ack = Message()
+        types = {v: k for k, v in defines.types.iteritems()}
+        ack.type = types['ACK']
+        ack.mid = message.mid
+        ack.token = None
+        ack.destination = message.source
+        return ack
+
+    @staticmethod
+    def new_rst(message):
+        """
+        Create a new reset message for the specified message.
+
+        @param message: the message to reject
+        @return: the rst message
+        """
+        rst = Message()
+        types = {v: k for k, v in defines.types.iteritems()}
+        rst.type = types['RST']
+        rst.mid = message.mid
+        rst.token = None
+        rst.destination = message.source
+        return rst
