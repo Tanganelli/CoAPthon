@@ -97,7 +97,6 @@ class CoAP(DatagramProtocol):
             response = self.create_resource(path, resource, request, response)
             return response
 
-
     def handle_get(self, request):
         path = request.uri_path
         path = path.strip("/")
