@@ -249,6 +249,9 @@ class CoAP(DatagramProtocol):
             else:
                 old = res
 
+    def notify(self, node):
+        pass
+
 
 class CoAPServer(CoAP):
     def __init__(self):
