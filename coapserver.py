@@ -207,7 +207,8 @@ class CoAP(DatagramProtocol):
         self._mid_sent[response.mid] = self._token_sent[response.token] = response
         return response
 
-    def send_error(self, request, response, error):
+    @staticmethod
+    def send_error(request, response, error):
         response.type = defines.inv_types['NON']
         response.code = defines.responses[error]
         response.token = request.token
@@ -256,7 +257,6 @@ class CoAPServer(CoAP):
             log.msg(self.root.dump())
         if self.add_resource('hello/hello2', Hello('hello')):
             log.msg(self.root.dump())
-
 
 
 reactor.listenUDP(5683, CoAPServer())
