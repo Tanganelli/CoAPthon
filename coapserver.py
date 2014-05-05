@@ -95,7 +95,12 @@ class CoAP(DatagramProtocol):
         if resource is None:
             # Create request
             response = self.create_resource(path, resource, request, response)
+            log.msg(self.root.dump())
             return response
+        else:
+            # Update request
+            # TODO
+            pass
 
     def handle_get(self, request):
         path = request.uri_path
@@ -222,7 +227,7 @@ class CoAP(DatagramProtocol):
             res = old.find(p)
             if res is None:
                 if old.value.allow_children:
-                    method = getattr(resource, 'render_PUT', None)
+                    method = getattr(old.value, 'render_PUT', None)
                     if hasattr(method, '__call__'):
                         resource = method()
                         if resource is not None:

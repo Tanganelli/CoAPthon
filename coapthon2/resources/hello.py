@@ -12,4 +12,7 @@ class Hello(Resource):
     def render_GET(self):
         return "Hello, world!"
 
+    def render_PUT(self):
+        return Hello("hello")
+
 
