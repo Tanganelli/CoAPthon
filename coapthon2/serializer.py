@@ -5,6 +5,7 @@ from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
+from coapthon2.messages.response import Response
 from coapthon2.utils import bit_len
 
 __author__ = 'Giacomo Tanganelli'
@@ -26,8 +27,7 @@ class Serializer(object):
         code = self._reader.read(defines.CODE_BITS).uint
         mid = self._reader.read(defines.MESSAGE_ID_BITS).uint
         if self.is_response(code):
-            #message = Response()
-            message = Message()
+            message = Response()
             pass
         elif self.is_request(code):
             message = Request()

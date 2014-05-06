@@ -12,6 +12,7 @@ class Resource(object):
             self.observable = name.observable
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
+            self.payload = name.payload
         else:
             ## The attributes of this resource.
             self._attributes = None
@@ -31,6 +32,8 @@ class Resource(object):
             self._allow_children = allow_children
 
             self._observe_count = 1
+
+            self.payload = None
 
     @property
     def attributes(self):

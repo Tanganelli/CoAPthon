@@ -44,6 +44,40 @@ class CoAP(DatagramProtocol):
                 response = ret
             response = serializer.serialize_response(response)
             self.transport.write(response, (host, port))
+        elif isinstance(message, Response):
+            log.err("Received response")
+            rst = Message.new_rst(message)
+            response = serializer.serialize_response(rst)
+            self.transport.write(response, (host, port))
+        else:
+            # ACK or RST
+            self.handle_message(message)
+
+    def handle_message(self, message):
+        # Matcher
+        if message.mid not in self._mid_sent:
+            log.err(defines.types[message.type] + " received without the corresponding message")
+            return
+        # Reliability
+        response = self._mid_sent[message.mid]
+        if message.type == defines.inv_types['ACK']:
+            response.acknowledged = True
+        elif message.type == defines.inv_types['RST']:
+            response.rejected = True
+        # TODO Blockwise
+        # Observing
+        if message.type == defines.inv_types['RST']:
+            for resource in self._relation.keys():
+                host, port = message.source
+                key = hash(str(host) + str(port) + str(response.token))
+                observers = self._relation[resource]
+                del observers[key]
+                log.msg("Cancel observing relation")
+                if len(observers) == 0:
+                    del self._relation[resource]
+                # TODO cancel retransmission
+
+        return
 
     def handle_request(self, request):
         if request.mid not in self._mid_received:
@@ -94,13 +128,15 @@ class CoAP(DatagramProtocol):
         response.destination = request.source
         if resource is None:
             # Create request
-            response = self.create_resource(path, resource, request, response)
+            response = self.create_resource(path, request, response)
+            log.msg("Resource created")
             log.msg(self.root.dump())
             return response
         else:
             # Update request
-            # TODO
-            pass
+            response = self.update_resource(path, request, response, resource)
+            log.msg("Resource updated")
+            return response
 
     def handle_get(self, request):
         path = request.uri_path
@@ -113,6 +149,7 @@ class CoAP(DatagramProtocol):
         response = Response()
         response.destination = request.source
         if resource is None:
+            # Not Found
             response = self.send_error(request, response, 'NOT_FOUND')
         else:
             method = getattr(resource, 'render_GET', None)
@@ -147,32 +184,26 @@ class CoAP(DatagramProtocol):
             if res is None:
                 if len(paths) != i:
                     return False
-                if old.value.allow_children:
-                    resource.path = p
-                    old = old.add_child(resource)
-                else:
-                    return False
+                resource.path = p
+                old = old.add_child(resource)
             else:
                 old = res
         return True
 
     def add_observing(self, resource, response):
-        host, port = response.source
-        log.msg("Initiate an observe relation between " + str(host) + ":" +
-                str(port) + " and resource " + str(resource.path))
-        key = hash(str(host) + str(port) + str(resource.path))
+        host, port = response.destination
+        key = hash(str(host) + str(port) + str(response.token))
         observers = self._relation.get(resource)
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
         if observers is None:
+            log.msg("Initiate an observe relation between " + str(host) + ":" +
+                    str(port) + " and resource " + str(resource.path))
             observers = {key: now}
         else:
-            subscriber = observers.get(key)
-            if subscriber is None:
-                observers[key] = now
-            else:
-                observe_count, last = observers[key]
-                observers[key] = now
+            log.msg("Update observe relation between " + str(host) + ":" +
+                    str(port) + " and resource " + str(resource.path))
+            observers[key] = now
         self._relation[resource] = observers
         option = Option()
         option.number = defines.inv_options['Observe']
@@ -220,7 +251,7 @@ class CoAP(DatagramProtocol):
         response.mid = request.mid
         return response
 
-    def create_resource(self, path, resource, request, response):
+    def create_resource(self, path, request, response):
         paths = path.split("/")
         old = self.root
         for p in paths:
@@ -253,6 +284,31 @@ class CoAP(DatagramProtocol):
                     return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
             else:
                 old = res
+
+    def update_resource(self, path, request, response, resource):
+        path = path.strip("/")
+        node = self.root.find_complete(path)
+        method = getattr(resource, 'render_PUT', None)
+        if hasattr(method, '__call__'):
+            new_resource = method(False, request.payload)
+            if new_resource is not None:
+                node.value = new_resource
+                response.code = defines.responses['CHANGED']
+                response.payload = None
+                # Token
+                response.token = request.token
+                # Observe
+                self.notify(node)
+                #TODO Blockwise
+                #Reliability
+                response = self.reliability_response(request, response)
+                #Matcher
+                response = self.matcher_response(response)
+                return response
+            else:
+                return self.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+        else:
+            return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def notify(self, node):
         pass

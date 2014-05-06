@@ -8,11 +8,17 @@ class Hello(Resource):
 
     def __init__(self, name):
         super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
+        self.payload = "Hello, world!"
 
     def render_GET(self):
-        return "Hello, world!"
+        return self.payload
 
-    def render_PUT(self):
-        return Hello("hello")
-
+    def render_PUT(self, create=True, payload=None):
+        if not create:
+            self.payload = payload
+            return self
+        else:
+            new = Hello("hello")
+            new.payload = payload
+            return new
 
