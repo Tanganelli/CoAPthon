@@ -2,7 +2,7 @@ import sys
 import time
 from twisted.python import log
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor
+from twisted.internet import reactor, threads
 from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
@@ -199,11 +199,12 @@ class CoAP(DatagramProtocol):
         if observers is None:
             log.msg("Initiate an observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
-            observers = {key: now}
+            observers = {key: (now, host, port, response.token)}
         else:
             log.msg("Update observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
-            observers[key] = now
+            old, host, port, token = observers[key]
+            observers[key] = (now, host, port, token)
         self._relation[resource] = observers
         option = Option()
         option.number = defines.inv_options['Observe']
@@ -311,7 +312,46 @@ class CoAP(DatagramProtocol):
             return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def notify(self, node):
-        pass
+        assert isinstance(node, Tree)
+        resource = node.value
+        observers = self._relation.get(resource)
+        if observers is None:
+            return
+        now = int(round(time.time() * 1000))
+        commands = []
+        for item in observers.keys():
+            old, host, port, token = observers[item]
+            #send notification
+            commands.append((self.prepare_notification, [(resource, host, port, token)], {}))
+            observers[item] = (now, host, port, token)
+        resource.observe_count += 1
+        self._relation[resource] = observers
+        threads.callMultipleInThread(commands)
+
+    def prepare_notification(self, t):
+        resource, host, port, token = t
+        response = Response()
+        response.destination = (host, port)
+        response.token = token
+        method = getattr(resource, 'render_GET', None)
+        if hasattr(method, '__call__'):
+            # Render_GET
+            response.code = defines.responses['CONTENT']
+            response.payload = method()
+            #TODO Blockwise
+            #Reliability
+            request = Request()
+            request.type = defines.inv_types['NON']
+            response = self.reliability_response(request, response)
+            #Matcher
+            response = self.matcher_response(response)
+            reactor.callFromThread(self.send_notification, (response, host, port))
+
+    def send_notification(self, t):
+        response, host, port = t
+        serializer = Serializer()
+        response = serializer.serialize_response(response)
+        self.transport.write(response, (host, port))
 
 
 class CoAPServer(CoAP):
