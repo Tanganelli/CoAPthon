@@ -138,6 +138,49 @@ class CoAP(DatagramProtocol):
             log.msg("Resource updated")
             return response
 
+    def handle_post(self, request):
+        path = request.uri_path
+        path = path.strip("/")
+        node = self.root.find_complete(path)
+        if node is not None:
+            resource = node.value
+        else:
+            resource = None
+        response = Response()
+        response.destination = request.source
+        if resource is None:
+            # Create request
+            response = self.create_resource(path, request, response)
+            log.msg("Resource created")
+            log.msg(self.root.dump())
+            return response
+        else:
+            # Update request
+            response = self.update_resource(path, request, response, resource)
+            log.msg("Resource updated")
+            return response
+
+    def handle_delete(self, request):
+        path = request.uri_path
+        path = path.strip("/")
+        node = self.root.find_complete(path)
+        if node is not None:
+            resource = node.value
+        else:
+            resource = None
+        response = Response()
+        response.destination = request.source
+        if resource is None:
+            # Create request
+            response = self.send_error(request, response, 'NOT_FOUND')
+            log.msg("Resource Not Found")
+            return response
+        else:
+            # Delete
+            response = self.delete_resource(request, response, node)
+            log.msg("Resource deleted")
+            return response
+
     def handle_get(self, request):
         path = request.uri_path
         path = path.strip("/")
@@ -311,6 +354,33 @@ class CoAP(DatagramProtocol):
         else:
             return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
+    def delete_resource(self, request, response, node):
+        assert isinstance(node, Tree)
+        method = getattr(node.value, 'render_DELETE', None)
+        if hasattr(method, '__call__'):
+            ret = method()
+            if ret:
+                parent = node.parent
+                assert isinstance(parent, Tree)
+                parent.del_child(node)
+                response.code = defines.responses['DELETED']
+                response.payload = None
+                # Token
+                response.token = request.token
+                # Observe
+                self.notify(parent)
+                self.remove_observes(node)
+                 #TODO Blockwise
+                #Reliability
+                response = self.reliability_response(request, response)
+                #Matcher
+                response = self.matcher_response(response)
+                return response
+            else:
+                return self.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+        else:
+            return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
+
     def notify(self, node):
         assert isinstance(node, Tree)
         resource = node.value
@@ -352,6 +422,9 @@ class CoAP(DatagramProtocol):
         serializer = Serializer()
         response = serializer.serialize_response(response)
         self.transport.write(response, (host, port))
+
+    def remove_observers(self, node):
+        pass
 
 
 class CoAPServer(CoAP):

@@ -57,3 +57,11 @@ class Tree(object):
                 tab += "\t"
                 return v.dump(msg, tab)
         return msg
+
+    def del_child(self, node):
+        assert isinstance(node, Tree)
+        for k in node.children:
+            v = node.children.get(k, None)
+            if v is not None:
+                return self.del_child(v)
+        del self.children[node.value.path]
