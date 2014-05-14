@@ -20,12 +20,12 @@ log.startLogging(sys.stdout)
 
 
 class CoAP(DatagramProtocol):
-
     def __init__(self):
         self._mid_received = {}
         self._token_received = {}
         self._mid_sent = {}
         self._token_sent = {}
+        self._callID = {}
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
@@ -44,6 +44,12 @@ class CoAP(DatagramProtocol):
             else:
                 response = ret
             response = serializer.serialize_response(response)
+            if response.type == defines.inv_types['CON']:
+                future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+                key = hash(str(host) + str(port) + str(response.mid))
+                self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit, (response, host, port,
+                                                                                               future_time)), 0)
+
             self.transport.write(response, (host, port))
         elif isinstance(message, Response):
             log.err("Received response")
@@ -54,18 +60,33 @@ class CoAP(DatagramProtocol):
             # ACK or RST
             self.handle_message(message)
 
+    def retransmit(self, t):
+        response, host, port, future_time = t
+        key = hash(str(host) + str(port) + str(response.mid))
+        call_id, retransmit_count = self._callID[key]
+        if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
+            retransmit_count += 1
+            self.transport.write(response, (host, port))
+            future_time *= 2
+            self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit, (response, host, port,
+                                                                                           future_time)),
+                                 retransmit_count)
+        else:
+            response.timeouted = True
+            del self._callID[key]
+
     def handle_message(self, message):
         # Matcher
         if message.mid not in self._mid_sent:
             log.err(defines.types[message.type] + " received without the corresponding message")
             return
-        # Reliability
+            # Reliability
         response = self._mid_sent[message.mid]
         if message.type == defines.inv_types['ACK']:
             response.acknowledged = True
         elif message.type == defines.inv_types['RST']:
             response.rejected = True
-        # TODO Blockwise
+            # TODO Blockwise
         # Observing
         if message.type == defines.inv_types['RST']:
             for resource in self._relation.keys():
@@ -76,8 +97,13 @@ class CoAP(DatagramProtocol):
                 log.msg("Cancel observing relation")
                 if len(observers) == 0:
                     del self._relation[resource]
-                # TODO cancel retransmission
 
+        # cancel retransmission
+        host, port = message.source
+        key = hash(str(host) + str(port) + str(message.mid))
+        call_id, retrasmission_count = self._callID.get(key, None)
+        if call_id is not None:
+            call_id.cancel()
         return
 
     def handle_request(self, request):
@@ -207,7 +233,7 @@ class CoAP(DatagramProtocol):
                 # Observe
                 if request.observe and resource.observable:
                     response, resource = self.add_observing(resource, response)
-                #TODO Blockwise
+                    #TODO Blockwise
                 #Reliability
                 response = self.reliability_response(request, response)
                 #Matcher
@@ -244,7 +270,7 @@ class CoAP(DatagramProtocol):
             log.msg("Initiate an observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
             observers = {key: (now, host, port, response.token)}
-        elif not observers.has_key(key):
+        elif key not in observers:
             log.msg("Initiate an observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
             observers[key] = (now, host, port, response.token)
@@ -275,11 +301,6 @@ class CoAP(DatagramProtocol):
         else:
             response.mid = request.mid
 
-        if response.type == defines.inv_types['CON']:
-            future_time = random.uniform(defines.ACK_TIMEOUT,  (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
-
-            #TODO set retransmission handler
-            pass
         return response
 
     def matcher_response(self, response):
@@ -377,7 +398,7 @@ class CoAP(DatagramProtocol):
                 # Observe
                 self.notify(parent)
                 self.remove_observes(node)
-                 #TODO Blockwise
+                #TODO Blockwise
                 #Reliability
                 response = self.reliability_response(request, response)
                 #Matcher
