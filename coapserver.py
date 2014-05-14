@@ -1,3 +1,4 @@
+import random
 import sys
 import time
 from twisted.python import log
@@ -243,6 +244,10 @@ class CoAP(DatagramProtocol):
             log.msg("Initiate an observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
             observers = {key: (now, host, port, response.token)}
+        elif not observers.has_key(key):
+            log.msg("Initiate an observe relation between " + str(host) + ":" +
+                    str(port) + " and resource " + str(resource.path))
+            observers[key] = (now, host, port, response.token)
         else:
             log.msg("Update observe relation between " + str(host) + ":" +
                     str(port) + " and resource " + str(resource.path))
@@ -271,6 +276,8 @@ class CoAP(DatagramProtocol):
             response.mid = request.mid
 
         if response.type == defines.inv_types['CON']:
+            future_time = random.uniform(defines.ACK_TIMEOUT,  (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+
             #TODO set retransmission handler
             pass
         return response
@@ -403,6 +410,10 @@ class CoAP(DatagramProtocol):
         response = Response()
         response.destination = (host, port)
         response.token = token
+        option = Option()
+        option.number = defines.inv_options['Observe']
+        option.value = resource.observe_count
+        response.add_option(option)
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             # Render_GET

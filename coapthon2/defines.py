@@ -1,6 +1,32 @@
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
+################### CoAP Parameters ###################
+
+ACK_TIMEOUT = 2
+
+ACK_RANDOM_FACTOR = 1.5
+
+MAX_RETRANSMIT = 4
+
+NSTART = 1
+
+DEFAULT_LEISURE = 5
+
+PROBING_RATE = 1
+
+MAX_TRANSMIT_SPAN = ACK_TIMEOUT * (pow(2, (MAX_RETRANSMIT + 1)) - 1) * ACK_RANDOM_FACTOR
+
+MAX_LATENCY = 120  # 2 minutes
+
+PROCESSING_DELAY = ACK_TIMEOUT
+
+MAX_RTT = (2 * MAX_LATENCY) + PROCESSING_DELAY
+
+EXCHANGE_LIFETIME = MAX_TRANSMIT_SPAN + (2 * MAX_LATENCY) + PROCESSING_DELAY
+
+NON_LIFETIME = MAX_TRANSMIT_SPAN + MAX_LATENCY
+
 ################### Message Format ###################
 
 ## number of bits used for the encoding of the CoAP version field.
