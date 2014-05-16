@@ -21,17 +21,15 @@ log.startLogging(sys.stdout)
 
 class CoAP(DatagramProtocol):
     def __init__(self):
-        self._mid_received = {}
-        self._token_received = {}
-        self._mid_sent = {}
-        self._token_sent = {}
+        self._received = {}
+        self._sent = {}
         self._callID = {}
+        self._relation = {}
+        self._currentMID = 1
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
-        self._relation = {}
-        self._currentMID = 1
 
     def datagramReceived(self, data, (host, port)):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
@@ -43,17 +41,13 @@ class CoAP(DatagramProtocol):
                 response = self.process(ret)
             else:
                 response = ret
+            self.schedule_retrasmission((response, host, port))
             response = serializer.serialize_response(response)
-            if response.type == defines.inv_types['CON']:
-                future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
-                key = hash(str(host) + str(port) + str(response.mid))
-                self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit, (response, host, port,
-                                                                                               future_time)), 0)
-
             self.transport.write(response, (host, port))
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
+            rst = self.matcher_response(rst)
             response = serializer.serialize_response(rst)
             self.transport.write(response, (host, port))
         else:
@@ -77,11 +71,13 @@ class CoAP(DatagramProtocol):
 
     def handle_message(self, message):
         # Matcher
-        if message.mid not in self._mid_sent:
+        host, port = message.source
+        key = hash(str(host) + str(port) + str(message.mid))
+        response = self._sent.get(key, None)
+        if response is None:
             log.err(defines.types[message.type] + " received without the corresponding message")
             return
             # Reliability
-        response = self._mid_sent[message.mid]
         if message.type == defines.inv_types['ACK']:
             response.acknowledged = True
         elif message.type == defines.inv_types['RST']:
@@ -99,23 +95,28 @@ class CoAP(DatagramProtocol):
                     del self._relation[resource]
 
         # cancel retransmission
-        host, port = message.source
-        key = hash(str(host) + str(port) + str(message.mid))
+        log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         call_id, retrasmission_count = self._callID.get(key, None)
         if call_id is not None:
             call_id.cancel()
+        self._sent[key] = response
+        #TODO
+        # delete acknowledged or rejected exchange
         return
 
     def handle_request(self, request):
-        if request.mid not in self._mid_received:
-            self._token_received[request.token] = self._mid_received[request.mid] = request
-            self._token_sent[request.token] = self._mid_sent[request.mid] = None
+        host, port = request.source
+        key = hash(str(host) + str(port) + str(request.mid))
+        if key not in self._received:
+            self._received[key] = request
             # TODO Blockwise
             return request
         else:
+            request = self._received[key]
             request.duplicated = True
-            response = self._mid_sent[request.mid]
-            if isinstance(response, response):
+            self._received[key] = request
+            response = self._sent.get(key)
+            if isinstance(response, Response):
                 return response
             elif request.acknowledged:
                 ack = Message.new_ack(request)
@@ -177,13 +178,13 @@ class CoAP(DatagramProtocol):
         response.destination = request.source
         if resource is None:
             # Create request
-            response = self.create_resource(path, request, response)
+            response = self.create_resource(path, request, response, "render_POST")
             log.msg("Resource created")
             log.msg(self.root.dump())
             return response
         else:
             # Update request
-            response = self.update_resource(path, request, response, resource)
+            response = self.update_resource(path, request, response, resource, "render_POST")
             log.msg("Resource updated")
             return response
 
@@ -228,15 +229,12 @@ class CoAP(DatagramProtocol):
                 # Render_GET
                 response.code = defines.responses['CONTENT']
                 response.payload = method()
-                # Token
                 response.token = request.token
                 # Observe
                 if request.observe and resource.observable:
                     response, resource = self.add_observing(resource, response)
-                    #TODO Blockwise
-                #Reliability
+                #TODO Blockwise
                 response = self.reliability_response(request, response)
-                #Matcher
                 response = self.matcher_response(response)
             else:
                 response = self.send_error(request, response, 'METHOD_NOT_ALLOWED')
@@ -287,7 +285,8 @@ class CoAP(DatagramProtocol):
         resource.observe_count += 1
         return response, resource
 
-    def reliability_response(self, request, response):
+    @staticmethod
+    def reliability_response(request, response):
         if not (response.type == defines.inv_types['ACK'] or response.type == defines.inv_types['RST']):
             if request.type == defines.inv_types['CON']:
                 if request.acknowledged:
@@ -312,7 +311,8 @@ class CoAP(DatagramProtocol):
             raise AttributeError("Response has no destination address set")
         if port is None or port == 0:
             raise AttributeError("Response hsa no destination port set")
-        self._mid_sent[response.mid] = self._token_sent[response.token] = response
+        key = hash(str(host) + str(port) + str(response.mid))
+        self._sent[key] = response
         return response
 
     @staticmethod
@@ -323,14 +323,14 @@ class CoAP(DatagramProtocol):
         response.mid = request.mid
         return response
 
-    def create_resource(self, path, request, response):
+    def create_resource(self, path, request, response, render_method="render_PUT"):
         paths = path.split("/")
         old = self.root
         for p in paths:
             res = old.find(p)
             if res is None:
                 if old.value.allow_children:
-                    method = getattr(old.value, 'render_PUT', None)
+                    method = getattr(old.value, render_method, None)
                     if hasattr(method, '__call__'):
                         resource = method()
                         if resource is not None:
@@ -357,10 +357,10 @@ class CoAP(DatagramProtocol):
             else:
                 old = res
 
-    def update_resource(self, path, request, response, resource):
+    def update_resource(self, path, request, response, resource, render_method="render_PUT"):
         path = path.strip("/")
         node = self.root.find_complete(path)
-        method = getattr(resource, 'render_PUT', None)
+        method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
             new_resource = method(False, request.payload)
             if new_resource is not None:
@@ -443,7 +443,8 @@ class CoAP(DatagramProtocol):
             #TODO Blockwise
             #Reliability
             request = Request()
-            request.type = defines.inv_types['NON']
+            request.type = defines.inv_types['CON']
+            request.acknowledged = True
             response = self.reliability_response(request, response)
             #Matcher
             response = self.matcher_response(response)
@@ -452,8 +453,17 @@ class CoAP(DatagramProtocol):
     def send_notification(self, t):
         response, host, port = t
         serializer = Serializer()
+        self.schedule_retrasmission(t)
         response = serializer.serialize_response(response)
         self.transport.write(response, (host, port))
+
+    def schedule_retrasmission(self, t):
+        response, host, port = t
+        if response.type == defines.inv_types['CON']:
+            future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+            key = hash(str(host) + str(port) + str(response.mid))
+            self._callID[key] = (reactor.callLater(future_time, self.retransmit, (response, host, port,
+                                                                                  future_time)), 0)
 
     def remove_observers(self, node):
         pass
