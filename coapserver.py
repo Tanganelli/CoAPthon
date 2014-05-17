@@ -3,8 +3,12 @@ import sys
 import time
 from twisted.python import log
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor, threads
+from twisted.internet import reactor, threads, task
 from coapthon2 import defines
+from coapthon2.layer.message import MessageLayer
+from coapthon2.layer.observe import ObserveLayer
+from coapthon2.layer.request import RequestLayer
+from coapthon2.layer.resource import ResourceLayer
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
@@ -31,14 +35,22 @@ class CoAP(DatagramProtocol):
         root.path = '/'
         self.root = Tree(root)
 
+        l = task.LoopingCall(self.purge_mids)
+        l.start(defines.EXCHANGE_LIFETIME)
+
+        self._request_layer = RequestLayer(self)
+        self._resource_layer = ResourceLayer(self)
+        self._message_layer = MessageLayer(self)
+        self._observe_layer = ObserveLayer(self)
+
     def datagramReceived(self, data, (host, port)):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.serialize_request(data, host, port)
         if isinstance(message, Request):
-            ret = self.handle_request(message)
+            ret = self._request_layer.handle_request(message)
             if isinstance(ret, Request):
-                response = self.process(ret)
+                response = self._request_layer.process(ret)
             else:
                 response = ret
             self.schedule_retrasmission((response, host, port))
@@ -47,198 +59,39 @@ class CoAP(DatagramProtocol):
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
-            rst = self.matcher_response(rst)
+            rst = self._message_layer.matcher_response(rst)
             response = serializer.serialize_response(rst)
             self.transport.write(response, (host, port))
         else:
             # ACK or RST
-            self.handle_message(message)
+            self._message_layer.handle_message(message)
 
-    def retransmit(self, t):
-        response, host, port, future_time = t
-        key = hash(str(host) + str(port) + str(response.mid))
-        call_id, retransmit_count = self._callID[key]
-        if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
-            retransmit_count += 1
-            self.transport.write(response, (host, port))
-            future_time *= 2
-            self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit, (response, host, port,
-                                                                                           future_time)),
-                                 retransmit_count)
-        else:
-            response.timeouted = True
-            del self._callID[key]
+    def purge_mids(self):
+        now = time.time()
+        sent_key_to_delete = []
+        for key in self._sent:
+            message, timestamp = self._sent.get(key)
+            if timestamp + defines.EXCHANGE_LIFETIME <= now:
+                sent_key_to_delete.append(key)
+        received_key_to_delete = []
+        for key in self._received:
+            message, timestamp = self._received.get(key)
+            if timestamp + defines.EXCHANGE_LIFETIME <= now:
+                received_key_to_delete.append(key)
+        for key in sent_key_to_delete:
+            del self._sent[key]
+        for key in received_key_to_delete:
+            del self._received[key]
 
-    def handle_message(self, message):
-        # Matcher
-        host, port = message.source
-        key = hash(str(host) + str(port) + str(message.mid))
-        response = self._sent.get(key, None)
-        if response is None:
-            log.err(defines.types[message.type] + " received without the corresponding message")
-            return
-            # Reliability
-        if message.type == defines.inv_types['ACK']:
-            response.acknowledged = True
-        elif message.type == defines.inv_types['RST']:
-            response.rejected = True
-            # TODO Blockwise
-        # Observing
-        if message.type == defines.inv_types['RST']:
-            for resource in self._relation.keys():
-                host, port = message.source
-                key = hash(str(host) + str(port) + str(response.token))
-                observers = self._relation[resource]
-                del observers[key]
-                log.msg("Cancel observing relation")
-                if len(observers) == 0:
-                    del self._relation[resource]
+    def delete_key(self, key):
+        del self._sent[key]
+        del self._received[key]
 
-        # cancel retransmission
-        log.msg("Cancel retrasmission to:" + host + ":" + str(port))
-        call_id, retrasmission_count = self._callID.get(key, None)
-        if call_id is not None:
-            call_id.cancel()
-        self._sent[key] = response
-        #TODO
-        # delete acknowledged or rejected exchange
-        return
+    def delete_key_sent(self, key):
+        del self._sent[key]
 
-    def handle_request(self, request):
-        host, port = request.source
-        key = hash(str(host) + str(port) + str(request.mid))
-        if key not in self._received:
-            self._received[key] = request
-            # TODO Blockwise
-            return request
-        else:
-            request = self._received[key]
-            request.duplicated = True
-            self._received[key] = request
-            response = self._sent.get(key)
-            if isinstance(response, Response):
-                return response
-            elif request.acknowledged:
-                ack = Message.new_ack(request)
-                return ack
-            elif request.rejected:
-                rst = Message.new_rst(request)
-                return rst
-            else:
-                # The server has not yet decided, whether to acknowledge or
-                # reject the request. We know for sure that the server has
-                # received the request though and can drop this duplicate here.
-                return None
-
-    def process(self, request):
-        method = defines.codes[request.code]
-        if method == 'GET':
-            response = self.handle_get(request)
-        elif method == 'POST':
-            response = self.handle_post(request)
-        elif method == 'PUT':
-            response = self.handle_put(request)
-        elif method == 'DELETE':
-            response = self.handle_delete(request)
-        else:
-            response = None
-        return response
-
-    def handle_put(self, request):
-        path = request.uri_path
-        path = path.strip("/")
-        node = self.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
-        response = Response()
-        response.destination = request.source
-        if resource is None:
-            # Create request
-            response = self.create_resource(path, request, response)
-            log.msg("Resource created")
-            log.msg(self.root.dump())
-            return response
-        else:
-            # Update request
-            response = self.update_resource(path, request, response, resource)
-            log.msg("Resource updated")
-            return response
-
-    def handle_post(self, request):
-        path = request.uri_path
-        path = path.strip("/")
-        node = self.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
-        response = Response()
-        response.destination = request.source
-        if resource is None:
-            # Create request
-            response = self.create_resource(path, request, response, "render_POST")
-            log.msg("Resource created")
-            log.msg(self.root.dump())
-            return response
-        else:
-            # Update request
-            response = self.update_resource(path, request, response, resource, "render_POST")
-            log.msg("Resource updated")
-            return response
-
-    def handle_delete(self, request):
-        path = request.uri_path
-        path = path.strip("/")
-        node = self.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
-        response = Response()
-        response.destination = request.source
-        if resource is None:
-            # Create request
-            response = self.send_error(request, response, 'NOT_FOUND')
-            log.msg("Resource Not Found")
-            return response
-        else:
-            # Delete
-            response = self.delete_resource(request, response, node)
-            log.msg("Resource deleted")
-            return response
-
-    def handle_get(self, request):
-        path = request.uri_path
-        path = path.strip("/")
-        node = self.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
-        response = Response()
-        response.destination = request.source
-        if resource is None:
-            # Not Found
-            response = self.send_error(request, response, 'NOT_FOUND')
-        else:
-            method = getattr(resource, 'render_GET', None)
-            if hasattr(method, '__call__'):
-                #TODO handle ETAG
-                # Render_GET
-                response.code = defines.responses['CONTENT']
-                response.payload = method()
-                response.token = request.token
-                # Observe
-                if request.observe and resource.observable:
-                    response, resource = self.add_observing(resource, response)
-                #TODO Blockwise
-                response = self.reliability_response(request, response)
-                response = self.matcher_response(response)
-            else:
-                response = self.send_error(request, response, 'METHOD_NOT_ALLOWED')
-        return response
+    def delete_key_received(self, key):
+        del self._received[key]
 
     def add_resource(self, path, resource):
         assert isinstance(resource, Resource)
@@ -259,61 +112,64 @@ class CoAP(DatagramProtocol):
         return True
 
     def add_observing(self, resource, response):
-        host, port = response.destination
-        key = hash(str(host) + str(port) + str(response.token))
-        observers = self._relation.get(resource)
-        now = int(round(time.time() * 1000))
-        observe_count = resource.observe_count
-        if observers is None:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
-            observers = {key: (now, host, port, response.token)}
-        elif key not in observers:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
-            observers[key] = (now, host, port, response.token)
-        else:
-            log.msg("Update observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
-            old, host, port, token = observers[key]
-            observers[key] = (now, host, port, token)
-        self._relation[resource] = observers
-        option = Option()
-        option.number = defines.inv_options['Observe']
-        option.value = observe_count
-        response.add_option(option)
-        resource.observe_count += 1
-        return response, resource
+        return self._observe_layer.add_observing(resource, response)
 
-    @staticmethod
-    def reliability_response(request, response):
-        if not (response.type == defines.inv_types['ACK'] or response.type == defines.inv_types['RST']):
-            if request.type == defines.inv_types['CON']:
-                if request.acknowledged:
-                    response.type = defines.inv_types['CON']
-                else:
-                    request.acknowledged = True
-                    response.type = defines.inv_types['ACK']
-                    response.mid = request.mid
-            else:
-                response.type = defines.inv_types['NON']
-        else:
-            response.mid = request.mid
-
-        return response
+    def reliability_response(self, request, response):
+        return self._message_layer.reliability_response(request, response)
 
     def matcher_response(self, response):
-        if response.mid is None:
-            response.mid = self._currentMID % (1 << 16)
-            self._currentMID += 1
-        host, port = response.destination
-        if host is None:
-            raise AttributeError("Response has no destination address set")
-        if port is None or port == 0:
-            raise AttributeError("Response hsa no destination port set")
+        return self._message_layer.matcher_response(response)
+
+    def create_resource(self, path, request, response, render_method="render_PUT"):
+        return self._resource_layer.create_resource(path, request, response, render_method)
+
+    def update_resource(self, path, request, response, resource, render_method="render_PUT"):
+        return self._resource_layer.update_resource(path, request, response, resource, render_method)
+
+    def delete_resource(self, request, response, node):
+        return self._resource_layer.delete_resource(request, response, node)
+
+    def get_resource(self, request, response, resource):
+        return self._resource_layer.get_resource(request, response, resource)
+
+    def notify(self, node):
+        commands = self._observe_layer.notify(node)
+        threads.callMultipleInThread(commands)
+
+    def remove_observers(self, node):
+        commands = self._observe_layer.remove_observers(node)
+        threads.callMultipleInThread(commands)
+
+    def prepare_notification(self, t):
+        ret = self._observe_layer.prepare_notification(t)
+        if ret is not None:
+            reactor.callFromThread(self._observe_layer.send_notification, ret)
+
+    def schedule_retrasmission(self, t):
+        response, host, port = t
+        if response.type == defines.inv_types['CON']:
+            future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+            key = hash(str(host) + str(port) + str(response.mid))
+            self._callID[key] = (reactor.callLater(future_time, self.retransmit,
+                                                   (response, host, port,future_time)), 0)
+
+    def retransmit(self, t):
+        response, host, port, future_time = t
         key = hash(str(host) + str(port) + str(response.mid))
-        self._sent[key] = response
-        return response
+        call_id, retransmit_count = self._callID[key]
+        if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
+            retransmit_count += 1
+            self._sent[key] = (response, time.time())
+            self.transport.write(response, (host, port))
+            future_time *= 2
+            self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit,
+                                                   (response, host, port, future_time)), retransmit_count)
+        elif response.acknowledged or response.rejected:
+            response.timeouted = False
+            del self._callID[key]
+        else:
+            response.timeouted = True
+            del self._callID[key]
 
     @staticmethod
     def send_error(request, response, error):
@@ -322,151 +178,6 @@ class CoAP(DatagramProtocol):
         response.token = request.token
         response.mid = request.mid
         return response
-
-    def create_resource(self, path, request, response, render_method="render_PUT"):
-        paths = path.split("/")
-        old = self.root
-        for p in paths:
-            res = old.find(p)
-            if res is None:
-                if old.value.allow_children:
-                    method = getattr(old.value, render_method, None)
-                    if hasattr(method, '__call__'):
-                        resource = method()
-                        if resource is not None:
-                            resource.path = p
-                            old = old.add_child(resource)
-                            response.code = defines.responses['CREATED']
-                            response.payload = None
-                            # Token
-                            response.token = request.token
-                            # Observe
-                            self.notify(old.parent)
-                            #TODO Blockwise
-                            #Reliability
-                            response = self.reliability_response(request, response)
-                            #Matcher
-                            response = self.matcher_response(response)
-                            return response
-                        else:
-                            return self.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-                    else:
-                        return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
-                else:
-                    return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
-            else:
-                old = res
-
-    def update_resource(self, path, request, response, resource, render_method="render_PUT"):
-        path = path.strip("/")
-        node = self.root.find_complete(path)
-        method = getattr(resource, render_method, None)
-        if hasattr(method, '__call__'):
-            new_resource = method(False, request.payload)
-            if new_resource is not None:
-                node.value = new_resource
-                response.code = defines.responses['CHANGED']
-                response.payload = None
-                # Token
-                response.token = request.token
-                # Observe
-                self.notify(node)
-                #TODO Blockwise
-                #Reliability
-                response = self.reliability_response(request, response)
-                #Matcher
-                response = self.matcher_response(response)
-                return response
-            else:
-                return self.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-        else:
-            return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
-
-    def delete_resource(self, request, response, node):
-        assert isinstance(node, Tree)
-        method = getattr(node.value, 'render_DELETE', None)
-        if hasattr(method, '__call__'):
-            ret = method()
-            if ret:
-                parent = node.parent
-                assert isinstance(parent, Tree)
-                parent.del_child(node)
-                response.code = defines.responses['DELETED']
-                response.payload = None
-                # Token
-                response.token = request.token
-                # Observe
-                self.notify(parent)
-                self.remove_observes(node)
-                #TODO Blockwise
-                #Reliability
-                response = self.reliability_response(request, response)
-                #Matcher
-                response = self.matcher_response(response)
-                return response
-            else:
-                return self.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-        else:
-            return self.send_error(request, response, 'METHOD_NOT_ALLOWED')
-
-    def notify(self, node):
-        assert isinstance(node, Tree)
-        resource = node.value
-        observers = self._relation.get(resource)
-        if observers is None:
-            return
-        now = int(round(time.time() * 1000))
-        commands = []
-        for item in observers.keys():
-            old, host, port, token = observers[item]
-            #send notification
-            commands.append((self.prepare_notification, [(resource, host, port, token)], {}))
-            observers[item] = (now, host, port, token)
-        resource.observe_count += 1
-        self._relation[resource] = observers
-        threads.callMultipleInThread(commands)
-
-    def prepare_notification(self, t):
-        resource, host, port, token = t
-        response = Response()
-        response.destination = (host, port)
-        response.token = token
-        option = Option()
-        option.number = defines.inv_options['Observe']
-        option.value = resource.observe_count
-        response.add_option(option)
-        method = getattr(resource, 'render_GET', None)
-        if hasattr(method, '__call__'):
-            # Render_GET
-            response.code = defines.responses['CONTENT']
-            response.payload = method()
-            #TODO Blockwise
-            #Reliability
-            request = Request()
-            request.type = defines.inv_types['CON']
-            request.acknowledged = True
-            response = self.reliability_response(request, response)
-            #Matcher
-            response = self.matcher_response(response)
-            reactor.callFromThread(self.send_notification, (response, host, port))
-
-    def send_notification(self, t):
-        response, host, port = t
-        serializer = Serializer()
-        self.schedule_retrasmission(t)
-        response = serializer.serialize_response(response)
-        self.transport.write(response, (host, port))
-
-    def schedule_retrasmission(self, t):
-        response, host, port = t
-        if response.type == defines.inv_types['CON']:
-            future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
-            key = hash(str(host) + str(port) + str(response.mid))
-            self._callID[key] = (reactor.callLater(future_time, self.retransmit, (response, host, port,
-                                                                                  future_time)), 0)
-
-    def remove_observers(self, node):
-        pass
 
 
 class CoAPServer(CoAP):
