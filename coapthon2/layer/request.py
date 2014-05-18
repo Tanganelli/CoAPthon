@@ -64,14 +64,14 @@ class RequestLayer(object):
         response.destination = request.source
         if resource is None:
             # Create request
-            response = self._parent.create_resource(path, request, response)
-            log.msg("Resource created")
-            log.msg(self._parent.root.dump())
+            # response = self._parent.create_resource(path, request, response)
+            # log.msg(self._parent.root.dump())
+            #
+            response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
             return response
         else:
             # Update request
             response = self._parent.update_resource(path, request, response, resource)
-            log.msg("Resource updated")
             return response
 
     def handle_post(self, request):
@@ -87,13 +87,11 @@ class RequestLayer(object):
         if resource is None:
             # Create request
             response = self._parent.create_resource(path, request, response, "render_POST")
-            log.msg("Resource created")
             log.msg(self._parent.root.dump())
             return response
         else:
             # Update request
             response = self._parent.update_resource(path, request, response, resource, "render_POST")
-            log.msg("Resource updated")
             return response
 
     def handle_delete(self, request):
@@ -114,22 +112,24 @@ class RequestLayer(object):
         else:
             # Delete
             response = self._parent.delete_resource(request, response, node)
-            log.msg("Resource deleted")
             return response
 
     def handle_get(self, request):
         path = request.uri_path
-        path = path.strip("/")
-        node = self._parent.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
         response = Response()
         response.destination = request.source
-        if resource is None:
-            # Not Found
-            response = self._parent.send_error(request, response, 'NOT_FOUND')
+        if path == defines.DISCOVERY_URL:
+            response = self._parent.discover(request, response)
         else:
-            response = self._parent.get_resource(request, response, resource)
+            path = path.strip("/")
+            node = self._parent.root.find_complete(path)
+            if node is not None:
+                resource = node.value
+            else:
+                resource = None
+            if resource is None:
+                # Not Found
+                response = self._parent.send_error(request, response, 'NOT_FOUND')
+            else:
+                response = self._parent.get_resource(request, response, resource)
         return response

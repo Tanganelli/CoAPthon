@@ -10,10 +10,10 @@ class Hello(Resource):
         super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
         self.payload = "Hello, world!"
 
-    def render_GET(self):
+    def render_GET(self, query=None):
         return self.payload
 
-    def render_PUT(self, create=True, payload=None):
+    def render_PUT(self, create=True, payload=None, query=None):
         if not create:
             self.payload = payload
             return self

@@ -26,3 +26,11 @@ class Request(Message):
             if option.number == options['Observe']:
                 return True
         return False
+
+    @property
+    def query(self):
+        value = []
+        for option in self.options:
+            if option.number == defines.inv_options['Uri-Query']:
+                value.append(option.value)
+        return value

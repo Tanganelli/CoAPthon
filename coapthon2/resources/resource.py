@@ -1,3 +1,6 @@
+from abc import abstractmethod
+from coapthon2 import defines
+
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
@@ -15,7 +18,7 @@ class Resource(object):
             self.payload = name.payload
         else:
             ## The attributes of this resource.
-            self._attributes = None
+            self._attributes = {}
 
             ## The resource name.
             self.name = name
@@ -79,6 +82,52 @@ class Resource(object):
     def observe_count(self, v):
         assert isinstance(v, int)
         self._observe_count = v
+
+    @property
+    def content_type(self):
+        value = ""
+        lst = self._attributes.get("ct")
+        if lst is not None and len(lst) > 0:
+            value = "ct="
+            for v in lst:
+                value += str(v) + " "
+        if len(value) > 0:
+            value = value[:-1]
+        return value
+
+    @content_type.setter
+    def content_type(self, lst):
+        value = []
+        if isinstance(lst, str):
+            ct = defines.inv_content_types[lst]
+            value.append(ct)
+        else:
+            for ct in lst:
+                ct = defines.inv_content_types[ct]
+                value.append(ct)
+        if len(value) > 0:
+            self._attributes["ct"] = value
+
+    def add_content_type(self, ct):
+        lst = self._attributes.get("ct")
+        if lst is None:
+            lst = []
+        ct = defines.inv_content_types[ct]
+        lst.append(ct)
+        self._attributes["ct"] = lst
+
+    def render_GET(self, query=None):
+        return -1
+
+    def render_PUT(self, create=True, payload=None, query=None):
+        return -1
+
+    def render_POST(self, create=True, payload=None, query=None):
+        return -1
+
+    def render_DELETE(self, query=None):
+        return -1
+
 
 
 

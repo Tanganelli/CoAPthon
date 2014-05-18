@@ -1,3 +1,5 @@
+from coapthon2 import defines
+
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
@@ -56,6 +58,27 @@ class Tree(object):
                 assert isinstance(v, Tree)
                 tab += "\t"
                 return v.dump(msg, tab)
+        return msg
+
+    def corelinkformat(self, msg="", parent=""):
+        if self.value.name != "root":
+            parent += self.value.path + "/"
+            msg += "<" + parent[:-1] + ">;"
+            for k in self.value.attributes:
+                method = getattr(self.value, defines.corelinkformat[k], None)
+                if method is not None:
+                    v = method
+                    msg = msg[:-1] + ";" + v + ","
+                else:
+                    v = self.value.attributes[k]
+                    msg = msg[:-1] + ";" + k + "=" + v + ","
+        else:
+            parent += self.value.path
+        for i in self.children:
+            v = self.children.get(i, None)
+            if v is not None:
+                assert isinstance(v, Tree)
+                return v.corelinkformat(msg, parent)
         return msg
 
     def del_child(self, node):

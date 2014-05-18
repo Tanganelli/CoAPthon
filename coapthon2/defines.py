@@ -27,6 +27,8 @@ EXCHANGE_LIFETIME = MAX_TRANSMIT_SPAN + (2 * MAX_LATENCY) + PROCESSING_DELAY
 
 NON_LIFETIME = MAX_TRANSMIT_SPAN + MAX_LATENCY
 
+DISCOVERY_URL = ".well-known/core"
+
 ################### Message Format ###################
 
 ## number of bits used for the encoding of the CoAP version field.
@@ -151,3 +153,19 @@ responses = {
     "PROXY_NOT_SUPPORTED": 165
 }
 
+################### CoAP Content-Type ###################
+content_types = {
+    0: "text/plain",
+    40: "application/link-format",
+    41: "application/xml",
+    42: "application/octet-stream",
+    47: "application/exi",
+    50: "application/json"
+}
+
+inv_content_types = {v: k for k, v in content_types.iteritems()}
+
+
+corelinkformat = {
+    "ct": "content_type"
+}

@@ -10,7 +10,6 @@ from coapthon2.layer.observe import ObserveLayer
 from coapthon2.layer.request import RequestLayer
 from coapthon2.layer.resource import ResourceLayer
 from coapthon2.messages.message import Message
-from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
 from coapthon2.resources.hello import Hello
@@ -48,6 +47,7 @@ class CoAP(DatagramProtocol):
         serializer = Serializer()
         message = serializer.serialize_request(data, host, port)
         if isinstance(message, Request):
+            log.msg("Received request")
             ret = self._request_layer.handle_request(message)
             if isinstance(ret, Request):
                 response = self._request_layer.process(ret)
@@ -64,6 +64,7 @@ class CoAP(DatagramProtocol):
             self.transport.write(response, (host, port))
         else:
             # ACK or RST
+            log.msg("Received ACK or RST")
             self._message_layer.handle_message(message)
 
     def purge_mids(self):
@@ -83,16 +84,6 @@ class CoAP(DatagramProtocol):
         for key in received_key_to_delete:
             del self._received[key]
 
-    def delete_key(self, key):
-        del self._sent[key]
-        del self._received[key]
-
-    def delete_key_sent(self, key):
-        del self._sent[key]
-
-    def delete_key_received(self, key):
-        del self._received[key]
-
     def add_resource(self, path, resource):
         assert isinstance(resource, Resource)
         path = path.strip("/")
@@ -106,6 +97,7 @@ class CoAP(DatagramProtocol):
                 if len(paths) != i:
                     return False
                 resource.path = p
+                resource.content_type = "text/plain"
                 old = old.add_child(resource)
             else:
                 old = res
@@ -132,13 +124,18 @@ class CoAP(DatagramProtocol):
     def get_resource(self, request, response, resource):
         return self._resource_layer.get_resource(request, response, resource)
 
+    def discover(self, request, response):
+        return self._resource_layer.discover(request, response)
+
     def notify(self, node):
         commands = self._observe_layer.notify(node)
-        threads.callMultipleInThread(commands)
+        if commands is not None:
+            threads.callMultipleInThread(commands)
 
     def remove_observers(self, node):
         commands = self._observe_layer.remove_observers(node)
-        threads.callMultipleInThread(commands)
+        if commands is not None:
+            threads.callMultipleInThread(commands)
 
     def prepare_notification(self, t):
         ret = self._observe_layer.prepare_notification(t)
@@ -164,6 +161,7 @@ class CoAP(DatagramProtocol):
             future_time *= 2
             self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit,
                                                    (response, host, port, future_time)), retransmit_count)
+
         elif response.acknowledged or response.rejected:
             response.timeouted = False
             del self._callID[key]

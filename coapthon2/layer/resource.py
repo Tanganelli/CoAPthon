@@ -17,11 +17,14 @@ class ResourceLayer(object):
                 if old.value.allow_children:
                     method = getattr(old.value, render_method, None)
                     if hasattr(method, '__call__'):
-                        resource = method()
+                        resource = method(payload=request.payload, query=request.query)
                         if resource is not None:
                             resource.path = p
                             old = old.add_child(resource)
-                            response.code = defines.responses['CREATED']
+                            if render_method == "render_PUT":
+                                response.code = defines.responses['CHANGED']
+                            else:
+                                response.code = defines.responses['CREATED']
                             response.payload = None
                             # Token
                             response.token = request.token
@@ -33,6 +36,8 @@ class ResourceLayer(object):
                             #Matcher
                             response = self._parent.matcher_response(response)
                             return response
+                        elif resource == -1:
+                            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
                         else:
                             return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
                     else:
@@ -47,10 +52,13 @@ class ResourceLayer(object):
         node = self._parent.root.find_complete(path)
         method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
-            new_resource = method(False, request.payload)
+            new_resource = method(create=False, payload=request.payload, query=request.query)
             if new_resource is not None:
                 node.value = new_resource
-                response.code = defines.responses['CHANGED']
+                if render_method == "render_PUT":
+                    response.code = defines.responses['CHANGED']
+                else:
+                    response.code = defines.responses['CREATED']
                 response.payload = None
                 # Token
                 response.token = request.token
@@ -62,6 +70,8 @@ class ResourceLayer(object):
                 #Matcher
                 response = self._parent.matcher_response(response)
                 return response
+            elif new_resource == -1:
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
             else:
                 return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
         else:
@@ -71,13 +81,13 @@ class ResourceLayer(object):
         assert isinstance(node, Tree)
         method = getattr(node.value, 'render_DELETE', None)
         if hasattr(method, '__call__'):
-            ret = method()
-            if ret:
+            ret = method(query=request.query)
+            if ret != -1:
                 parent = node.parent
                 assert isinstance(parent, Tree)
                 # Observe
                 self._parent.notify(parent)
-                self._parent.remove_observes(node)
+                self._parent.remove_observers(node)
 
                 parent.del_child(node)
                 response.code = defines.responses['DELETED']
@@ -91,25 +101,44 @@ class ResourceLayer(object):
                 #Matcher
                 response = self._parent.matcher_response(response)
                 return response
+            elif ret == -1:
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
             else:
                 return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
         else:
-            return self._parent.end_error(request, response, 'METHOD_NOT_ALLOWED')
+            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def get_resource(self, request, response, resource):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             #TODO handle ETAG
             # Render_GET
-            response.code = defines.responses['CONTENT']
-            response.payload = method()
-            response.token = request.token
-            # Observe
-            if request.observe and resource.observable:
-                response, resource = self._parent.add_observing(resource, response)
-            #TODO Blockwise
-            response = self._parent.reliability_response(request, response)
-            response = self._parent.matcher_response(response)
+            ret = method(query=request.query)
+            if ret != -1:
+                response.code = defines.responses['CONTENT']
+                response.payload = ret
+                response.token = request.token
+                # Observe
+                if request.observe and resource.observable:
+                    response, resource = self._parent.add_observing(resource, response)
+                #TODO Blockwise
+                response = self._parent.reliability_response(request, response)
+                response = self._parent.matcher_response(response)
+            else:
+                response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
         else:
             response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+        return response
+
+    def discover(self, request, response):
+        node = self._parent.root
+        assert isinstance(node, Tree)
+        response.code = defines.responses['CONTENT']
+        response.payload = node.corelinkformat()
+        response.content_type = defines.inv_content_types["application/link-format"]
+        response.token = request.token
+        #TODO Content-Format
+        #TODO Blockwise
+        response = self._parent.reliability_response(request, response)
+        response = self._parent.matcher_response(response)
         return response
