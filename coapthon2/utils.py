@@ -68,7 +68,7 @@ class Tree(object):
                 method = getattr(self.value, defines.corelinkformat[k], None)
                 if method is not None:
                     v = method
-                    msg = msg[:-1] + ";" + v + ","
+                    msg = msg[:-1] + ";" + str(v) + ","
                 else:
                     v = self.value.attributes[k]
                     msg = msg[:-1] + ";" + k + "=" + v + ","

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from twisted.python import log
 from coapthon2 import defines
 
@@ -14,7 +13,7 @@ class Resource(object):
             self.path = name.path
             self._visible = name.visible
             self.observable = name.observable
-            self._required_content_type = name.actual_content_type
+            self._required_content_type = name.required_content_type
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
             self._payload = name.payload
@@ -60,7 +59,6 @@ class Resource(object):
                 self._payload[defines.inv_content_types[k]] = v
         else:
             self._payload = p
-
 
     @property
     def attributes(self):

@@ -21,4 +21,3 @@ class Hello(Resource):
             new = Hello("hello")
             new.payload = payload
             return new
-

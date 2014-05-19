@@ -24,10 +24,10 @@ log.startLogging(sys.stdout)
 
 class CoAP(DatagramProtocol):
     def __init__(self):
-        self._received = {}
-        self._sent = {}
-        self._callID = {}
-        self._relation = {}
+        self.received = {}
+        self.sent = {}
+        self.call_id = {}
+        self.relation = {}
         self._currentMID = 1
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
@@ -70,19 +70,19 @@ class CoAP(DatagramProtocol):
     def purge_mids(self):
         now = time.time()
         sent_key_to_delete = []
-        for key in self._sent:
-            message, timestamp = self._sent.get(key)
+        for key in self.sent:
+            message, timestamp = self.sent.get(key)
             if timestamp + defines.EXCHANGE_LIFETIME <= now:
                 sent_key_to_delete.append(key)
         received_key_to_delete = []
-        for key in self._received:
-            message, timestamp = self._received.get(key)
+        for key in self.received:
+            message, timestamp = self.received.get(key)
             if timestamp + defines.EXCHANGE_LIFETIME <= now:
                 received_key_to_delete.append(key)
         for key in sent_key_to_delete:
-            del self._sent[key]
+            del self.sent[key]
         for key in received_key_to_delete:
-            del self._received[key]
+            del self.received[key]
 
     def add_resource(self, path, resource):
         assert isinstance(resource, Resource)
@@ -104,6 +104,14 @@ class CoAP(DatagramProtocol):
             else:
                 old = res
         return True
+
+    @property
+    def current_mid(self):
+        return self._currentMID
+
+    @current_mid.setter
+    def current_mid(self, mid):
+        self._currentMID = int(mid)
 
     def add_observing(self, resource, response):
         return self._observe_layer.add_observing(resource, response)
@@ -149,27 +157,27 @@ class CoAP(DatagramProtocol):
         if response.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
-            self._callID[key] = (reactor.callLater(future_time, self.retransmit,
+            self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (response, host, port, future_time)), 0)
 
     def retransmit(self, t):
         response, host, port, future_time = t
         key = hash(str(host) + str(port) + str(response.mid))
-        call_id, retransmit_count = self._callID[key]
+        call_id, retransmit_count = self.call_id[key]
         if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             retransmit_count += 1
-            self._sent[key] = (response, time.time())
+            self.sent[key] = (response, time.time())
             self.transport.write(response, (host, port))
             future_time *= 2
-            self._callID[key] = (reactor.callLater(reactor, future_time, self.retransmit,
+            self.call_id[key] = (reactor.callLater(reactor, future_time, self.retransmit,
                                                    (response, host, port, future_time)), retransmit_count)
 
         elif response.acknowledged or response.rejected:
             response.timeouted = False
-            del self._callID[key]
+            del self.call_id[key]
         else:
             response.timeouted = True
-            del self._callID[key]
+            del self.call_id[key]
 
     @staticmethod
     def send_error(request, response, error):

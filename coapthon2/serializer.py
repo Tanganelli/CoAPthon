@@ -6,7 +6,6 @@ from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
-from coapthon2.utils import bit_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -80,7 +79,7 @@ class Serializer(object):
                     message.payload = self._reader.read(to_end).bytes
             return message
         except ReadError, e:
-            log.err("Error parsing message: %r", e)
+            log.err("Error parsing message: %r", str(e))
         return None
 
     @staticmethod

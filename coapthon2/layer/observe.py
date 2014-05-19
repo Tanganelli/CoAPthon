@@ -17,7 +17,7 @@ class ObserveLayer(object):
     def notify(self, node):
         assert isinstance(node, Tree)
         resource = node.value
-        observers = self._parent._relation.get(resource)
+        observers = self._parent.relation.get(resource)
         if observers is None:
             return
         now = int(round(time.time() * 1000))
@@ -28,7 +28,7 @@ class ObserveLayer(object):
             commands.append((self._parent.prepare_notification, [(resource, host, port, token)], {}))
             observers[item] = (now, host, port, token)
         resource.observe_count += 1
-        self._parent._relation[resource] = observers
+        self._parent.relation[resource] = observers
         return commands
 
     def prepare_notification(self, t, code=None):
@@ -78,7 +78,7 @@ class ObserveLayer(object):
     def add_observing(self, resource, response):
         host, port = response.destination
         key = hash(str(host) + str(port) + str(response.token))
-        observers = self._parent._relation.get(resource)
+        observers = self._parent.relation.get(resource)
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
         if observers is None:
@@ -94,7 +94,7 @@ class ObserveLayer(object):
                     str(port) + " and resource " + str(resource.path))
             old, host, port, token = observers[key]
             observers[key] = (now, host, port, token)
-        self._parent._relation[resource] = observers
+        self._parent.relation[resource] = observers
         option = Option()
         option.number = defines.inv_options['Observe']
         option.value = observe_count
@@ -111,14 +111,14 @@ class ObserveLayer(object):
                 c = self.remove_observers(n)
                 commands += c
             resource = n.value
-            observers = self._parent._relation.get(resource)
+            observers = self._parent.relation.get(resource)
             if observers is not None:
                 for item in observers.keys():
                     old, host, port, token = observers[item]
                     #send notification
                     commands.append((self._parent.prepare_notification, [(resource, host, port, token),
-                                                                 defines.responses['DELETED']], {}))
+                                                                         defines.responses['DELETED']], {}))
                     del observers[item]
                 resource.observe_count += 1
-            del self._parent._relation[resource]
+            del self._parent.relation[resource]
         return commands

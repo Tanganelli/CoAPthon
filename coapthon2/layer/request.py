@@ -15,15 +15,15 @@ class RequestLayer(object):
     def handle_request(self, request):
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.mid))
-        if key not in self._parent._received:
-            self._parent._received[key] = (request, time.time())
+        if key not in self._parent.received:
+            self._parent.received[key] = (request, time.time())
             # TODO Blockwise
             return request
         else:
-            request, timestamp = self._parent._received[key]
+            request, timestamp = self._parent.received[key]
             request.duplicated = True
-            self._parent._received[key] = (request, timestamp)
-            response, timestamp = self._parent._sent.get(key)
+            self._parent.received[key] = (request, timestamp)
+            response, timestamp = self._parent.sent.get(key)
             if isinstance(response, Response):
                 return response
             elif request.acknowledged:
