@@ -167,5 +167,8 @@ inv_content_types = {v: k for k, v in content_types.iteritems()}
 
 
 corelinkformat = {
-    "ct": "content_type"
+    "ct": "content_type",
+    "rt": "resource_type",
+    "if": "interface_type",
+    "sz": "maximum_size_estimated"
 }

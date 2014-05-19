@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from twisted.python import log
 from coapthon2 import defines
 
 __author__ = 'Giacomo Tanganelli'
@@ -13,9 +14,10 @@ class Resource(object):
             self.path = name.path
             self._visible = name.visible
             self.observable = name.observable
+            self._required_content_type = name.actual_content_type
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
-            self.payload = name.payload
+            self._payload = name.payload
         else:
             ## The attributes of this resource.
             self._attributes = {}
@@ -36,7 +38,29 @@ class Resource(object):
 
             self._observe_count = 1
 
-            self.payload = None
+            self._payload = None
+
+            self._required_content_type = None
+
+    @property
+    def payload(self):
+        if isinstance(self._payload, dict):
+            try:
+                return self._payload[self._required_content_type]
+            except KeyError:
+                return None
+        return self._payload
+
+    @payload.setter
+    def payload(self, p):
+        if isinstance(p, dict):
+            self._payload = {}
+            for k in p.keys():
+                v = p[k]
+                self._payload[defines.inv_content_types[k]] = v
+        else:
+            self._payload = p
+
 
     @property
     def attributes(self):
@@ -84,6 +108,20 @@ class Resource(object):
         self._observe_count = v
 
     @property
+    def required_content_type(self):
+        return self._required_content_type
+
+    @required_content_type.setter
+    def required_content_type(self, act):
+        try:
+            if isinstance(act, str):
+                self._required_content_type = defines.inv_content_types[act]
+            elif act in defines.content_types:
+                self._required_content_type = act
+        except KeyError:
+            log.err("Content-Type is incorrect")
+
+    @property
     def content_type(self):
         value = ""
         lst = self._attributes.get("ct")
@@ -115,6 +153,48 @@ class Resource(object):
         ct = defines.inv_content_types[ct]
         lst.append(ct)
         self._attributes["ct"] = lst
+
+    @property
+    def resource_type(self):
+        value = "rt="
+        lst = self._attributes.get("rt")
+        if lst is None:
+            value = ""
+        else:
+            value += "\"" + str(lst) + "\""
+        return value
+
+    @resource_type.setter
+    def resource_type(self, rt):
+        self._attributes["rt"] = rt
+
+    @property
+    def interface_type(self):
+        value = "rt="
+        lst = self._attributes.get("if")
+        if lst is None:
+            value = ""
+        else:
+            value += "\"" + str(lst) + "\""
+        return value
+
+    @interface_type.setter
+    def interface_type(self, ift):
+        self._attributes["if"] = ift
+
+    @property
+    def maximum_size_estimated(self):
+        value = "sz="
+        lst = self._attributes.get("sz")
+        if lst is None:
+            value = ""
+        else:
+            value += "\"" + str(lst) + "\""
+        return value
+
+    @maximum_size_estimated.setter
+    def maximum_size_estimated(self, sz):
+        self._attributes["sz"] = sz
 
     def render_GET(self, query=None):
         return -1

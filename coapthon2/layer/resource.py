@@ -118,6 +118,9 @@ class ResourceLayer(object):
                 response.code = defines.responses['CONTENT']
                 response.payload = ret
                 response.token = request.token
+                if resource.content_type != "":
+                    resource.required_content_type = "text/plain"
+                    response.content_type = resource.required_content_type
                 # Observe
                 if request.observe and resource.observable:
                     response, resource = self._parent.add_observing(resource, response)

@@ -98,6 +98,8 @@ class CoAP(DatagramProtocol):
                     return False
                 resource.path = p
                 resource.content_type = "text/plain"
+                resource.resource_type = "prova"
+                resource.maximum_size_estimated = 10
                 old = old.add_child(resource)
             else:
                 old = res
@@ -148,7 +150,7 @@ class CoAP(DatagramProtocol):
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
             self._callID[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (response, host, port,future_time)), 0)
+                                                   (response, host, port, future_time)), 0)
 
     def retransmit(self, t):
         response, host, port, future_time = t

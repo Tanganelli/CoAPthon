@@ -8,7 +8,7 @@ class Hello(Resource):
 
     def __init__(self, name):
         super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
-        self.payload = "Hello, world!"
+        self.payload = {"text/plain": "Hello, world!"}
 
     def render_GET(self, query=None):
         return self.payload
