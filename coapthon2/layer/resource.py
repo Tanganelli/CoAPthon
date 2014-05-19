@@ -18,7 +18,7 @@ class ResourceLayer(object):
                     method = getattr(old.value, render_method, None)
                     if hasattr(method, '__call__'):
                         resource = method(payload=request.payload, query=request.query)
-                        if resource is not None:
+                        if resource is not None and resource != -1:
                             resource.path = p
                             old = old.add_child(resource)
                             if render_method == "render_PUT":
@@ -53,7 +53,7 @@ class ResourceLayer(object):
         method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
             new_resource = method(create=False, payload=request.payload, query=request.query)
-            if new_resource is not None:
+            if new_resource is not None and new_resource != -1:
                 node.value = new_resource
                 if render_method == "render_PUT":
                     response.code = defines.responses['CHANGED']
@@ -112,15 +112,16 @@ class ResourceLayer(object):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             #TODO handle ETAG
+
+            if resource.content_type != "":
+                    resource.required_content_type = "text/plain"
+                    response.content_type = resource.required_content_type
             # Render_GET
             ret = method(query=request.query)
             if ret != -1:
                 response.code = defines.responses['CONTENT']
-                response.payload = ret
                 response.token = request.token
-                if resource.content_type != "":
-                    resource.required_content_type = "text/plain"
-                    response.content_type = resource.required_content_type
+                response.payload = ret
                 # Observe
                 if request.observe and resource.observable:
                     response, resource = self._parent.add_observing(resource, response)
@@ -140,7 +141,6 @@ class ResourceLayer(object):
         response.payload = node.corelinkformat()
         response.content_type = defines.inv_content_types["application/link-format"]
         response.token = request.token
-        #TODO Content-Format
         #TODO Blockwise
         response = self._parent.reliability_response(request, response)
         response = self._parent.matcher_response(response)

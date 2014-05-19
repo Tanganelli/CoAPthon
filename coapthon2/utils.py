@@ -22,6 +22,18 @@ class Tree(object):
         else:
             self.children = children
 
+    def find_path(self, msg=""):
+        """
+        Find the absolute path of a node
+
+
+        @return : path
+        """
+        msg = self.value.path + "/" + msg
+        if self.parent is not None:
+            return self.parent.find_path(msg)
+        return msg[1:]
+
     def find_complete(self, path):
         paths = path.split("/")
         start = self

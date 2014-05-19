@@ -105,6 +105,7 @@ class ObserveLayer(object):
     def remove_observers(self, node):
         assert isinstance(node, Tree)
         commands = []
+        log.msg("Remove observers for " + node.find_path())
         for n in node.children:
             assert isinstance(n, Tree)
             if len(n.children) > 0:

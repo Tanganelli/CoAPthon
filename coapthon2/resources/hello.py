@@ -21,3 +21,15 @@ class Hello(Resource):
             new = Hello("hello")
             new.payload = payload
             return new
+
+    def render_POST(self, create=True, payload=None, query=None):
+        if not create:
+            self.payload = payload
+            return self
+        else:
+            new = Hello("hello")
+            new.payload = payload
+            return new
+
+    def render_DELETE(self, query=None):
+        return True

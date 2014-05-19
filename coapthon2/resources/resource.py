@@ -47,7 +47,9 @@ class Resource(object):
             try:
                 return self._payload[self._required_content_type]
             except KeyError:
-                return None
+                if defines.inv_content_types["text/plain"] in self._payload:
+                    return self._payload[defines.inv_content_types["text/plain"]]
+
         return self._payload
 
     @payload.setter
