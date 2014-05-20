@@ -21,9 +21,8 @@ class Request(Message):
 
     @property
     def observe(self):
-        options = {v[0]: k for k, v in defines.options.iteritems()}
         for option in self.options:
-            if option.number == options['Observe']:
+            if option.number == defines.inv_options['Observe']:
                 return True
         return False
 
@@ -34,3 +33,10 @@ class Request(Message):
             if option.number == defines.inv_options['Uri-Query']:
                 value.append(option.value)
         return value
+
+    @property
+    def content_type(self):
+        for option in self.options:
+            if option.number == defines.inv_options['Content-Type']:
+                return option.value
+        return None

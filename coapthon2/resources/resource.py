@@ -49,6 +49,9 @@ class Resource(object):
             except KeyError:
                 if defines.inv_content_types["text/plain"] in self._payload:
                     return self._payload[defines.inv_content_types["text/plain"]]
+                else:
+                    val = self._payload.values()
+                    return val[0]
 
         return self._payload
 
@@ -60,7 +63,7 @@ class Resource(object):
                 v = p[k]
                 self._payload[defines.inv_content_types[k]] = v
         else:
-            self._payload = p
+            self._payload = {defines.inv_content_types["text/plain"]: p}
 
     @property
     def attributes(self):
@@ -113,13 +116,14 @@ class Resource(object):
 
     @required_content_type.setter
     def required_content_type(self, act):
-        try:
-            if isinstance(act, str):
-                self._required_content_type = defines.inv_content_types[act]
-            elif act in defines.content_types:
+        if isinstance(act, str):
+            self._required_content_type = defines.inv_content_types[act]
+        else:
+            if act in defines.content_types:
                 self._required_content_type = act
-        except KeyError:
-            log.err("Content-Type is incorrect")
+            else:
+                self._required_content_type = defines.inv_content_types["text/plain"]
+
 
     @property
     def content_type(self):

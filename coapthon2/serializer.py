@@ -57,7 +57,7 @@ class Serializer(object):
                     option_length = self.read_option_value_from_nibble(length)
 
                     # read option
-                    option_name, option_type, option_repeatable = defines.options[current_option]
+                    option_name, option_type, option_repeatable, default = defines.options[current_option]
                     if option_length == 0:
                         value = None
                     elif option_type == defines.INTEGER:
@@ -198,7 +198,7 @@ class Serializer(object):
 
             # write option value
             fmt = 'bytes:'+str(optionlength)+'=option'
-            d = {'option': option.value}
+            d = {'option': option.raw_value.tobytes()}
             self._writer.append(pack(fmt, **d))
             # self._writer.writeBytes(option.getValue())
 
@@ -298,7 +298,7 @@ class Serializer(object):
     def convert_to_raw(number, value, length):
         if length == 0:
             return BitArray()
-        name, value_type, repeatable = defines.options[number]
+        name, value_type, repeatable, default = defines.options[number]
         if value_type == defines.INTEGER:
             return BitArray(uint=value, length=length * 8)
         else:

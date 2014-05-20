@@ -1,4 +1,5 @@
 from bitstring import BitArray
+from coapthon2 import defines
 from coapthon2.utils import bit_len
 
 __author__ = 'Giacomo Tanganelli'
@@ -22,6 +23,12 @@ class Option(object):
     def value(self):
         if type(self._value) is None:
             self._value = BitArray()
+        name, opt_type, repeatable, defaults = defines.options[self._number]
+        if opt_type == defines.INTEGER:
+            if self._value.len > 0:
+                return self._value.uint
+            else:
+                return defaults
         return self._value.tobytes()
 
     @value.setter

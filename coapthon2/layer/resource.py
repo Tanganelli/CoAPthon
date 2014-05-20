@@ -112,10 +112,12 @@ class ResourceLayer(object):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             #TODO handle ETAG
+            if request.content_type is not None:
+                resource.required_content_type = request.content_type
+                response.content_type = resource.required_content_type
+            else:
+                resource.required_content_type = None
 
-            if resource.content_type != "":
-                    resource.required_content_type = "text/plain"
-                    response.content_type = resource.required_content_type
             # Render_GET
             ret = method(query=request.query)
             if ret != -1:

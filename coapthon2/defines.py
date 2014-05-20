@@ -86,25 +86,25 @@ UNKNOWN = 3
 
 #(NAME, VALUE_TYPE, REPEATABLE)
 options = {
-    0: ('Reserved', UNKNOWN, True),
-    1: ('If-Match', OPAQUE, True),
-    3: ('Uri-Host', STRING, False),
-    4: ('ETag', OPAQUE, True),
-    5: ('If-None-Match', INTEGER, False),
-    6: ('Observe', INTEGER, False),
-    7: ('Uri-Port', INTEGER, False),
-    8: ('Location-Path', STRING, True),
-    11: ('Uri-Path', STRING, True),
-    12: ('Content-Type', INTEGER, False),
-    14: ('Max-Age', INTEGER, False),
-    15: ('Uri-Query', STRING, True),
-    17: ('Accept', INTEGER, False),
-    20: ('Location-Query', STRING, True),
-    23: ('Block2', INTEGER, False),
-    27: ('Block1', INTEGER, False),
-    35: ('Proxy-Uri', STRING, False),
-    39: ('Proxy-Scheme', STRING, False),
-    60: ('Size1', INTEGER, False)
+    0: ('Reserved', UNKNOWN, True, None),
+    1: ('If-Match', OPAQUE, True, None),
+    3: ('Uri-Host', STRING, False, None),
+    4: ('ETag', OPAQUE, True, None),
+    5: ('If-None-Match', INTEGER, False, None),
+    6: ('Observe', INTEGER, False, None),
+    7: ('Uri-Port', INTEGER, False, 5683),
+    8: ('Location-Path', STRING, True, None),
+    11: ('Uri-Path', STRING, True, None),
+    12: ('Content-Type', INTEGER, False, 0),
+    14: ('Max-Age', INTEGER, False, 60),
+    15: ('Uri-Query', STRING, True, None),
+    17: ('Accept', INTEGER, False, 0),
+    20: ('Location-Query', STRING, True, None),
+    23: ('Block2', INTEGER, False, None),
+    27: ('Block1', INTEGER, False, None),
+    35: ('Proxy-Uri', STRING, False, None),
+    39: ('Proxy-Scheme', STRING, False, None),
+    60: ('Size1', INTEGER, False, None)
 }
 
 inv_options = {v[0]: k for k, v in options.iteritems()}

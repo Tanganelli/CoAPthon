@@ -40,7 +40,7 @@ class Message(object):
 
     def add_option(self, option):
         assert isinstance(option, Option)
-        name, type_value, repeatable = defines.options[option.number]
+        name, type_value, repeatable, defaults = defines.options[option.number]
         if not repeatable:
             try:
                 self._options.index(option)
