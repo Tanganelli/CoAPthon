@@ -17,6 +17,8 @@ class Resource(object):
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
             self._payload = name.payload
+
+            self._etag = name.etag
         else:
             ## The attributes of this resource.
             self._attributes = {}
@@ -37,9 +39,20 @@ class Resource(object):
 
             self._observe_count = 1
 
-            self._payload = None
+            self._payload = {}
 
             self._required_content_type = None
+
+            self._etag = []
+
+    @property
+    def etag(self):
+        if self._etag:
+            if self._observe_count != self._etag[-1]:
+                self._etag.append(self._observe_count)
+        else:
+            self._etag.append(self._observe_count)
+        return self._etag[-1]
 
     @property
     def payload(self):

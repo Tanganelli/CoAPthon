@@ -90,7 +90,7 @@ class Tree(object):
             v = self.children.get(i, None)
             if v is not None:
                 assert isinstance(v, Tree)
-                return v.corelinkformat(msg, parent)
+                msg += v.corelinkformat(msg, parent)
         return msg
 
     def del_child(self, node):

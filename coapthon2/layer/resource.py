@@ -10,21 +10,31 @@ class ResourceLayer(object):
 
     def create_resource(self, path, request, response, render_method="render_PUT"):
         paths = path.split("/")
+        lp = []
         old = self._parent.root
         for p in paths:
             res = old.find(p)
+            lp.append(p)
             if res is None:
                 if old.value.allow_children:
                     method = getattr(old.value, render_method, None)
                     if hasattr(method, '__call__'):
                         resource = method(payload=request.payload, query=request.query)
+                        if isinstance(resource, dict):
+                            etag = resource["ETag"]
+                            resource = resource["Resource"]
+                        else:
+                            etag = None
                         if resource is not None and resource != -1:
                             resource.path = p
+                            if etag is not None:
+                                response.etag = etag
                             old = old.add_child(resource)
                             if render_method == "render_PUT":
                                 response.code = defines.responses['CHANGED']
                             else:
                                 response.code = defines.responses['CREATED']
+                                response.location_path = lp
                             response.payload = None
                             # Token
                             response.token = request.token
@@ -53,12 +63,22 @@ class ResourceLayer(object):
         method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
             new_resource = method(create=False, payload=request.payload, query=request.query)
+            if isinstance(new_resource, dict):
+                etag = new_resource["ETag"]
+                new_resource = new_resource["Resource"]
+            else:
+                etag = None
             if new_resource is not None and new_resource != -1:
                 node.value = new_resource
+                if etag is not None:
+                    response.etag = etag
                 if render_method == "render_PUT":
                     response.code = defines.responses['CHANGED']
                 else:
                     response.code = defines.responses['CREATED']
+                    p = path.split("/")
+                    response.location_path = p
+
                 response.payload = None
                 # Token
                 response.token = request.token
@@ -112,17 +132,24 @@ class ResourceLayer(object):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             #TODO handle ETAG
+            resource.required_content_type = None
+
             if request.content_type is not None:
                 resource.required_content_type = request.content_type
                 response.content_type = resource.required_content_type
-            else:
-                resource.required_content_type = None
 
             # Render_GET
             ret = method(query=request.query)
+            if isinstance(ret, dict):
+                etag = ret["ETag"]
+                ret = ret["Payload"]
+            else:
+                etag = None
             if ret != -1:
                 response.code = defines.responses['CONTENT']
                 response.token = request.token
+                if etag is not None:
+                    response.etag = etag
                 response.payload = ret
                 # Observe
                 if request.observe and resource.observable:

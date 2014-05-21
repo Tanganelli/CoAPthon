@@ -11,7 +11,7 @@ class Hello(Resource):
         self.payload = {"text/plain": "Hello, world!", "application/xml": "HELLO, XML"}
 
     def render_GET(self, query=None):
-        return self.payload
+        return {"Payload": self.payload, "ETag": self.etag}
 
     def render_PUT(self, create=True, payload=None, query=None):
         if not create:
@@ -29,7 +29,7 @@ class Hello(Resource):
         else:
             new = Hello("hello")
             new.payload = payload
-            return new
+            return {"Resource": new, "ETag": self.etag}
 
     def render_DELETE(self, query=None):
         return True

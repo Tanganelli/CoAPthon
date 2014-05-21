@@ -19,6 +19,7 @@ class ObserveLayer(object):
         resource = node.value
         observers = self._parent.relation.get(resource)
         if observers is None:
+            resource.observe_count += 1
             return
         now = int(round(time.time() * 1000))
         commands = []
