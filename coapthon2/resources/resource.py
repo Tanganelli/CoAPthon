@@ -216,14 +216,17 @@ class Resource(object):
     def render_GET(self, query=None):
         return -1
 
-    def render_PUT(self, create=True, payload=None, query=None):
+    def render_PUT(self, payload=None, query=None):
         return -1
 
-    def render_POST(self, create=True, payload=None, query=None):
+    def render_POST(self, payload=None, query=None):
         return -1
 
     def render_DELETE(self, query=None):
         return -1
+
+    def new_resource(self):
+        return Resource("sumbtree")
 
 
 

@@ -1,4 +1,5 @@
 from coapthon2 import defines
+from coapthon2.resources.resource import Resource
 from coapthon2.utils import Tree
 
 __author__ = 'giacomo'
@@ -8,7 +9,7 @@ class ResourceLayer(object):
     def __init__(self, parent):
         self._parent = parent
 
-    def create_resource(self, path, request, response, render_method="render_PUT"):
+    def create_resource(self, path, request, response):
         paths = path.split("/")
         lp = []
         old = self._parent.root
@@ -17,36 +18,50 @@ class ResourceLayer(object):
             lp.append(p)
             if res is None:
                 if old.value.allow_children:
-                    method = getattr(old.value, render_method, None)
+                    method = getattr(old.value, "render_POST", None)
                     if hasattr(method, '__call__'):
-                        resource = method(payload=request.payload, query=request.query)
-                        if isinstance(resource, dict):
-                            etag = resource["ETag"]
-                            resource = resource["Resource"]
+                        new_payload = method(payload=request.payload, query=request.query)
+                        if isinstance(new_payload, dict):
+                            etag = new_payload.get("ETag")
+                            location_path = new_payload.get("Location-Path")
+                            location_query = new_payload.get("Location-Query")
+                            new_payload = new_payload.get("Payload")
                         else:
                             etag = None
-                        if resource is not None and resource != -1:
+                            location_path = None
+                            location_query = None
+                        if new_payload is not None and new_payload != -1:
+                            method = getattr(old.value, "new_resource", None)
+                            resource = method()
+                            resource.payload = new_payload
                             resource.path = p
                             if etag is not None:
                                 response.etag = etag
-                            old = old.add_child(resource)
-                            if render_method == "render_PUT":
-                                response.code = defines.responses['CHANGED']
+                            if location_path is not None:
+                                lppaths = location_path.split("/")
+                                dad = self.create_subtree(lppaths[:-1])
+                                resource.path = lppaths[-1]
+                                dad.add_child(resource)
+                                response.location_path = location_path
                             else:
-                                response.code = defines.responses['CREATED']
+                                old.add_child(resource)
                                 response.location_path = lp
+
+                            if location_query is not None:
+                                response.location_query = location_query
+
+                            response.code = defines.responses['CREATED']
+
                             response.payload = None
                             # Token
                             response.token = request.token
-                            # Observe
-                            self._parent.notify(old.parent)
                             #TODO Blockwise
                             #Reliability
                             response = self._parent.reliability_response(request, response)
                             #Matcher
                             response = self._parent.matcher_response(response)
                             return response
-                        elif resource == -1:
+                        elif new_payload == -1:
                             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
                         else:
                             return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
@@ -62,35 +77,58 @@ class ResourceLayer(object):
         node = self._parent.root.find_complete(path)
         method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
-            new_resource = method(create=False, payload=request.payload, query=request.query)
-            if isinstance(new_resource, dict):
-                etag = new_resource["ETag"]
-                new_resource = new_resource["Resource"]
+            new_payload = method(payload=request.payload, query=request.query)
+            if isinstance(new_payload, dict):
+                etag = new_payload.get("ETag")
+                location_path = new_payload.get("Location-Path")
+                location_query = new_payload.get("Location-Query")
+                new_payload = new_payload.get("Payload")
             else:
                 etag = None
-            if new_resource is not None and new_resource != -1:
-                node.value = new_resource
+                location_path = None
+                location_query = None
+            if new_payload is not None and new_payload != -1:
                 if etag is not None:
-                    response.etag = etag
+                    response.etag = (etag + 1)
                 if render_method == "render_PUT":
                     response.code = defines.responses['CHANGED']
+                    node.value.payload = new_payload
                 else:
                     response.code = defines.responses['CREATED']
-                    p = path.split("/")
-                    response.location_path = p
+                    method = getattr(resource, "new_resource", None)
+                    if location_path is not None:
+                        resource = method()
+                        lppaths = location_path.split("/")
+                        dad = self.create_subtree(lppaths[:-1])
+                        resource.path = lppaths[-1]
+                        dad.add_child(resource)
+                        response.location_path = lppaths
+                    else:
+                        p = path.split("/")
+                        old_observe_count = node.value.observe_count
+                        node.value = method()
+                        node.value.path = p[-1]
+                        node.value.payload = new_payload
+                        node.value.observe_count = old_observe_count
+                        response.location_path = p
+                        # Observe
+                        self._parent.notify(node)
+
+                    if location_query is not None and len(location_query) > 0:
+
+                        response.location_query = location_query
 
                 response.payload = None
                 # Token
                 response.token = request.token
-                # Observe
-                self._parent.notify(node)
+
                 #TODO Blockwise
                 #Reliability
                 response = self._parent.reliability_response(request, response)
                 #Matcher
                 response = self._parent.matcher_response(response)
                 return response
-            elif new_resource == -1:
+            elif new_payload == -1:
                 return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
             else:
                 return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
@@ -174,3 +212,20 @@ class ResourceLayer(object):
         response = self._parent.reliability_response(request, response)
         response = self._parent.matcher_response(response)
         return response
+
+    def create_subtree(self, paths):
+        node = self._parent.root
+        assert isinstance(paths, list)
+        assert isinstance(node, Tree)
+        last = None
+        while True:
+            last, failed_resource = node.find_complete_last(paths)
+            if failed_resource is None:
+                break
+            resource = Resource(name="subtree", visible=True, observable=False, allow_children=True)
+            method = getattr(resource, "new_resource", None)
+            resource = method()
+            resource.payload = None
+            resource.path = failed_resource
+            last.add_child(resource)
+        return last

@@ -34,6 +34,17 @@ class Tree(object):
             return self.parent.find_path(msg)
         return msg[1:]
 
+    def find_complete_last(self, paths):
+        start = self
+        res = None
+        for p in paths:
+            res = self.find(p, start)
+            if res is None:
+                return start, p
+            else:
+                start = res
+        return res, None
+
     def find_complete(self, path):
         paths = path.split("/")
         start = self
@@ -69,7 +80,7 @@ class Tree(object):
             if v is not None:
                 assert isinstance(v, Tree)
                 tab += "\t"
-                return v.dump(msg, tab)
+                msg += v.dump("", tab)
         return msg
 
     def corelinkformat(self, msg="", parent=""):
@@ -90,7 +101,7 @@ class Tree(object):
             v = self.children.get(i, None)
             if v is not None:
                 assert isinstance(v, Tree)
-                msg += v.corelinkformat(msg, parent)
+                msg += v.corelinkformat("", parent)
         return msg
 
     def del_child(self, node):

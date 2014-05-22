@@ -122,8 +122,8 @@ class CoAP(DatagramProtocol):
     def matcher_response(self, response):
         return self._message_layer.matcher_response(response)
 
-    def create_resource(self, path, request, response, render_method="render_PUT"):
-        return self._resource_layer.create_resource(path, request, response, render_method)
+    def create_resource(self, path, request, response):
+        return self._resource_layer.create_resource(path, request, response)
 
     def update_resource(self, path, request, response, resource, render_method="render_PUT"):
         return self._resource_layer.update_resource(path, request, response, resource, render_method)

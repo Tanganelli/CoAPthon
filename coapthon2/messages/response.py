@@ -57,3 +57,21 @@ class Response(Message):
             option.number = defines.inv_options['Location-Path']
             option.value = o
             self.options.append(option)
+
+    @property
+    def location_query(self):
+        value = []
+        for option in self.options:
+            if option.number == defines.inv_options['Location-Query']:
+                value.append(option.value)
+        return value
+
+    @location_query.setter
+    def location_query(self, lp):
+        if not isinstance(lp, list):
+            lp = [lp]
+        for o in lp:
+            option = Option()
+            option.number = defines.inv_options['Location-Query']
+            option.value = o
+            self.options.append(option)
