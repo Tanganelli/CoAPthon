@@ -62,6 +62,15 @@ class CoAP(DatagramProtocol):
             rst = self._message_layer.matcher_response(rst)
             response = serializer.serialize_response(rst)
             self.transport.write(response, (host, port))
+        elif isinstance(message, tuple):
+            message, error = message
+            response = Response()
+            response.destination = (host, port)
+            response.code = defines.responses[error]
+            response = self.reliability_response(message, response)
+            response = self._message_layer.matcher_response(response)
+            response = serializer.serialize_response(response)
+            self.transport.write(response, (host, port))
         else:
             # ACK or RST
             log.msg("Received ACK or RST")

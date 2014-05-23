@@ -56,10 +56,14 @@ class Resource(object):
 
     @property
     def payload(self):
-        if isinstance(self._payload, dict):
-            try:
-                return self._payload[self._required_content_type]
-            except KeyError:
+        if self._required_content_type is not None:
+            if isinstance(self._payload, dict):
+                try:
+                    return self._payload[self._required_content_type]
+                except KeyError:
+                    return -2
+        else:
+            if isinstance(self._payload, dict):
                 if defines.inv_content_types["text/plain"] in self._payload:
                     return self._payload[defines.inv_content_types["text/plain"]]
                 else:
@@ -132,10 +136,7 @@ class Resource(object):
         if isinstance(act, str):
             self._required_content_type = defines.inv_content_types[act]
         else:
-            if act in defines.content_types:
-                self._required_content_type = act
-            else:
-                self._required_content_type = defines.inv_content_types["text/plain"]
+            self._required_content_type = act
 
 
     @property

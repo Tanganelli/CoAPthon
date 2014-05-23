@@ -57,7 +57,11 @@ class Serializer(object):
                     option_length = self.read_option_value_from_nibble(length)
 
                     # read option
-                    option_name, option_type, option_repeatable, default = defines.options[current_option]
+                    try:
+                        option_name, option_type, option_repeatable, default = defines.options[current_option]
+                    except KeyError:
+                        log.err("unrecognized option")
+                        return message, "BAD_OPTION"
                     if option_length == 0:
                         value = None
                     elif option_type == defines.INTEGER:
@@ -74,7 +78,7 @@ class Serializer(object):
                     self._reader.pos += 8  # skip payload marker
                     if self._reader.len <= self._reader.pos:
                         log.err("Payload Marker with no payload")
-                        return None
+                        return message, "BAD_REQUEST"
                     to_end = self._reader.len - self._reader.pos
                     message.payload = self._reader.read(to_end).bytes
             return message

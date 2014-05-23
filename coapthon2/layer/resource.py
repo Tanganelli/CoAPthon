@@ -47,8 +47,10 @@ class ResourceLayer(object):
                                 old.add_child(resource)
                                 response.location_path = lp
 
-                            if location_query is not None:
-                                response.location_query = location_query
+                            if location_query is not None and len(location_query) > 0:
+                                location_query = location_query.strip("?")
+                                lq = location_query.split("&")
+                                response.location_query = lq
 
                             response.code = defines.responses['CREATED']
 
@@ -116,8 +118,9 @@ class ResourceLayer(object):
                         self._parent.notify(node)
 
                     if location_query is not None and len(location_query) > 0:
-
-                        response.location_query = location_query
+                        location_query = location_query.strip("?")
+                        lq = location_query.split("&")
+                        response.location_query = lq
 
                 response.payload = None
                 # Token
@@ -173,10 +176,15 @@ class ResourceLayer(object):
             #TODO handle ETAG
             resource.required_content_type = None
 
-            if request.content_type is not None:
-                resource.required_content_type = request.content_type
-                response.content_type = resource.required_content_type
+            # if request.content_type is not None:
+            #     resource.required_content_type = request.content_type
+            #     response.content_type = resource.required_content_type
 
+            #Accept
+            if request.accept is not None:
+                resource.required_content_type = request.accept
+                if resource.required_content_type in defines.content_types:
+                    response.content_type = resource.required_content_type
             # Render_GET
             ret = method(query=request.query)
             if isinstance(ret, dict):
@@ -185,13 +193,16 @@ class ResourceLayer(object):
             else:
                 etag = None
             if ret != -1:
+                if ret == -2:
+                    response = self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
+                    return response
                 response.code = defines.responses['CONTENT']
                 response.token = request.token
                 if etag is not None:
                     response.etag = etag
                 response.payload = ret
                 # Observe
-                if request.observe and resource.observable:
+                if request.observe == 0 and resource.observable:
                     response, resource = self._parent.add_observing(resource, response)
                 #TODO Blockwise
                 response = self._parent.reliability_response(request, response)
