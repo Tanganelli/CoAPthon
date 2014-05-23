@@ -71,6 +71,7 @@ class Tree(object):
             self.children[resource.path] = new
         else:
             new = self.children.get(resource.path)
+            new.value = resource
         return new
 
     def dump(self, msg="", tab=""):

@@ -98,6 +98,7 @@ class ResourceLayer(object):
                     method = getattr(resource, "new_resource", None)
                     if location_path is not None:
                         resource = method()
+                        resource.payload = new_payload
                         lppaths = location_path.split("/")
                         dad = self.create_subtree(lppaths[:-1])
                         resource.path = lppaths[-1]
