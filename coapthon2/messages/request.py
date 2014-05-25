@@ -23,8 +23,10 @@ class Request(Message):
     def observe(self):
         for option in self.options:
             if option.number == defines.inv_options['Observe']:
-                return True
-        return False
+                if option.value is None:
+                    return 0
+                return option.value
+        return 1
 
     @property
     def query(self):
@@ -38,6 +40,13 @@ class Request(Message):
     def content_type(self):
         for option in self.options:
             if option.number == defines.inv_options['Content-Type']:
+                return option.value
+        return None
+
+    @property
+    def accept(self):
+        for option in self.options:
+            if option.number == defines.inv_options['Accept']:
                 return option.value
         return None
 

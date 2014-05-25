@@ -20,7 +20,8 @@ class Hello(Resource):
         return {"Payload": payload, "ETag": self.etag}
 
     def render_POST(self, payload=None, query=None):
-        return {"Payload": payload, "ETag": self.etag, "Location-Path": "pippo/prova/hello3", "Location-Query": query}
+        q = "?" + "&".join(query)
+        return {"Payload": payload, "ETag": self.etag, "Location-Path": "pippo/prova/hello3", "Location-Query": q}
 
     def render_DELETE(self, query=None):
         return True
