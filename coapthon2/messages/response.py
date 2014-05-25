@@ -23,7 +23,8 @@ class Response(Message):
         option = Option()
         option.number = defines.inv_options['Content-Type']
         option.value = int(content_type)
-        self.options.append(option)
+        self.add_option(option)
+        #self.options.append(option)
 
     @property
     def etag(self):
@@ -38,7 +39,12 @@ class Response(Message):
         option = Option()
         option.number = defines.inv_options['ETag']
         option.value = etag
-        self.options.append(option)
+        self.add_option(option)
+        #self.options.append(option)
+
+    @etag.deleter
+    def etag(self):
+        self.del_option_name("ETag")
 
     @property
     def location_path(self):
@@ -56,7 +62,8 @@ class Response(Message):
             option = Option()
             option.number = defines.inv_options['Location-Path']
             option.value = o
-            self.options.append(option)
+            self.add_option(option)
+            #self.options.append(option)
 
     @property
     def location_query(self):
@@ -74,4 +81,5 @@ class Response(Message):
             option = Option()
             option.number = defines.inv_options['Location-Query']
             option.value = o
-            self.options.append(option)
+            self.add_option(option)
+            #self.options.append(option)

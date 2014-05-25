@@ -40,3 +40,33 @@ class Request(Message):
             if option.number == defines.inv_options['Content-Type']:
                 return option.value
         return None
+
+    @property
+    def etag(self):
+        value = []
+        for option in self.options:
+            if option.number == defines.inv_options['ETag']:
+                value.append(option.value)
+        return value
+
+    @property
+    def if_match(self):
+        value = []
+        for option in self.options:
+            if option.number == defines.inv_options['If-Match']:
+                value.append(option.value)
+        return value
+
+    @property
+    def has_if_match(self):
+        for option in self.options:
+            if option.number == defines.inv_options['If-Match']:
+                return True
+        return False
+
+    @property
+    def has_if_none_match(self):
+        for option in self.options:
+            if option.number == defines.inv_options['If-None-Match']:
+                return True
+        return False

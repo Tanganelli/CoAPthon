@@ -1,4 +1,3 @@
-from twisted.python import log
 from coapthon2 import defines
 
 __author__ = 'Giacomo Tanganelli'
@@ -137,7 +136,6 @@ class Resource(object):
             else:
                 self._required_content_type = defines.inv_content_types["text/plain"]
 
-
     @property
     def content_type(self):
         value = ""
@@ -226,9 +224,4 @@ class Resource(object):
         return -1
 
     def new_resource(self):
-        return Resource("sumbtree")
-
-
-
-
-
+        return Resource("subtree")

@@ -18,6 +18,10 @@ class ResourceLayer(object):
             lp.append(p)
             if res is None:
                 if old.value.allow_children:
+                    # If-Match
+                    if request.has_if_match:
+                        if str(old.value.etag) not in request.if_match:
+                            return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
                     method = getattr(old.value, "render_POST", None)
                     if hasattr(method, '__call__'):
                         new_payload = method(payload=request.payload, query=request.query)
@@ -75,6 +79,13 @@ class ResourceLayer(object):
     def update_resource(self, path, request, response, resource, render_method="render_PUT"):
         path = path.strip("/")
         node = self._parent.root.find_complete(path)
+        # If-Match
+        if request.has_if_match:
+            if None not in request.if_match and str(resource.etag) not in request.if_match:
+                return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
+        # If-None-Match
+        if request.has_if_none_match:
+            return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
         method = getattr(resource, render_method, None)
         if hasattr(method, '__call__'):
             new_payload = method(payload=request.payload, query=request.query)
@@ -93,16 +104,22 @@ class ResourceLayer(object):
                 if render_method == "render_PUT":
                     response.code = defines.responses['CHANGED']
                     node.value.payload = new_payload
+                    # Observe
+                    self._parent.notify(node)
                 else:
                     response.code = defines.responses['CREATED']
                     method = getattr(resource, "new_resource", None)
                     if location_path is not None:
+                        del response.etag
                         resource = method()
-                        lppaths = location_path.split("/")
-                        dad = self.create_subtree(lppaths[:-1])
-                        resource.path = lppaths[-1]
+                        lp_paths = location_path.split("/")
+                        resource.payload = new_payload
+                        dad = self.create_subtree(lp_paths[:-1])
+                        resource.path = lp_paths[-1]
                         dad.add_child(resource)
-                        response.location_path = lppaths
+                        response.location_path = lp_paths
+                        # Observe
+                        self._parent.notify(self._parent.root.find_complete(location_path))
                     else:
                         p = path.split("/")
                         old_observe_count = node.value.observe_count
@@ -110,12 +127,12 @@ class ResourceLayer(object):
                         node.value.path = p[-1]
                         node.value.payload = new_payload
                         node.value.observe_count = old_observe_count
+                        response.etag = old_observe_count
                         response.location_path = p
                         # Observe
                         self._parent.notify(node)
 
                     if location_query is not None and len(location_query) > 0:
-
                         response.location_query = location_query
 
                 response.payload = None
@@ -169,7 +186,7 @@ class ResourceLayer(object):
     def get_resource(self, request, response, resource):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
-            #TODO handle ETAG
+
             resource.required_content_type = None
 
             if request.content_type is not None:
@@ -184,11 +201,16 @@ class ResourceLayer(object):
             else:
                 etag = None
             if ret != -1:
-                response.code = defines.responses['CONTENT']
+                # handle ETAG
+                if str(etag) in request.etag:
+                    response.code = defines.responses['VALID']
+                else:
+                    response.code = defines.responses['CONTENT']
+                    response.payload = ret
                 response.token = request.token
                 if etag is not None:
                     response.etag = etag
-                response.payload = ret
+
                 # Observe
                 if request.observe and resource.observable:
                     response, resource = self._parent.add_observing(resource, response)

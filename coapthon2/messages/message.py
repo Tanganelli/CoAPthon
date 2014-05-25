@@ -58,6 +58,12 @@ class Message(object):
         except ValueError:
             pass
 
+    def del_option_name(self, name):
+        for o in self._options:
+            assert isinstance(o, Option)
+            if o.number == defines.inv_options[name]:
+                self._options.remove(o)
+
     @property
     def duplicated(self):
         """
