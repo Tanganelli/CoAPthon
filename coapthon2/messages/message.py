@@ -34,6 +34,8 @@ class Message(object):
         ## The timestamp
         self._timestamp = None
 
+        self.code = None
+
     @property
     def options(self):
         return self._options
@@ -198,6 +200,7 @@ class Message(object):
         msg += "Destination: " + str(self.destination) + "\n"
         msg += "Type: " + str(defines.types[self.type]) + "\n"
         msg += "MID: " + str(self.mid) + "\n"
+        msg += "Code: " + str(defines.inv_responses[self.code]) + "\n"
         msg += "Token: " + str(self.token) + "\n"
         for opt in self._options:
             msg += str(opt)

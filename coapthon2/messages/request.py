@@ -9,7 +9,6 @@ __version__ = "2.0"
 class Request(Message):
     def __init__(self):
         super(Request, self).__init__()
-        self.code = None
 
     @property
     def uri_path(self):

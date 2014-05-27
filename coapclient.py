@@ -62,13 +62,13 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         self.transport.connect(host, self.server[1])
         self.discover()
 
-    def send(self, req):
+    def send(self, req, callback):
         self._currentMID += 1
         req.mid = self._currentMID
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
-        self.sent[key] = (req, time.time(), self.discover_results)
-        self.sent_token[key_token] = (req, time.time(), self.discover_results)
+        self.sent[key] = (req, time.time(), callback)
+        self.sent_token[key_token] = (req, time.time(), callback)
         self.schedule_retrasmission(req)
         serializer = Serializer()
         datagram = serializer.serialize(req)
@@ -107,7 +107,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
-        self.send(req)
+        self.send(req, self.discover_results)
 
     def discover_results(self, mid):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -128,16 +128,18 @@ class EchoClientDatagramProtocol(DatagramProtocol):
             path = path.split("/")
             path = path[1:]
             link_format = link_format[result.end(1) + 2:]
-            pattern = "([^,])*"
+            pattern = "([^<,])*"
             result = re.match(pattern, link_format)
             attributes = result.group(0)
-            attributes = attributes.split(";")
             dict_att = {}
-            for att in attributes:
-                a = att.split("=")
-                # TODO check correctness
-                dict_att[a[0]] = a[1]
-            link_format = link_format[result.end(0) + 1:]
+            if len(attributes) > 0:
+                attributes = attributes.split(";")
+                for att in attributes:
+                    a = att.split("=")
+                    # TODO check correctness
+                    dict_att[a[0]] = a[1]
+                link_format = link_format[result.end(0) + 1:]
+
             while True:
                 last, p = self.root.find_complete_last(path)
                 if p is not None:
@@ -149,6 +151,46 @@ class EchoClientDatagramProtocol(DatagramProtocol):
                 else:
                     break
         log.msg(self.root.dump())
+        self.get("/hello/hello2")
+
+    def get(self, path):
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        self.send(req, self.get_results)
+
+    def get_results(self, mid):
+        key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
+        response = self.received.get(key)
+        if key in self.call_id.keys():
+            handler, retransmit_count = self.call_id.get(key)
+            if handler is not None:
+                log.msg("Cancel retrasmission")
+                handler.cancel()
+        if response is not None:
+            print response
+
+        self.post("/hello/hello2", "TEST")
+
+    def post(self, path, payload):
+        req = Request()
+        req.code = defines.inv_codes['POST']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req.payload = payload
+        self.send(req, self.post_results)
+
+    def post_results(self, mid):
+        key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
+        response = self.received.get(key)
+        if key in self.call_id.keys():
+            handler, retransmit_count = self.call_id.get(key)
+            if handler is not None:
+                log.msg("Cancel retrasmission")
+                handler.cancel()
+        if response is not None:
+            print response
 
     def schedule_retrasmission(self, request):
         host, port = self.server

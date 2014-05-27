@@ -8,7 +8,6 @@ __author__ = 'Giacomo Tanganelli'
 class Response(Message):
     def __init__(self):
         super(Response, self).__init__()
-        self.code = None
 
     @property
     def content_type(self):
