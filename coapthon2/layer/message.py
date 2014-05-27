@@ -41,7 +41,10 @@ class MessageLayer(object):
 
     def handle_message(self, message):
         # Matcher
-        host, port = message.source
+        try:
+            host, port = message.source
+        except AttributeError:
+            return
         key = hash(str(host) + str(port) + str(message.mid))
         response, timestamp = self._parent.sent.get(key, None)
         if response is None:

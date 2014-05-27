@@ -117,6 +117,7 @@ codes = {
     4: 'DELETE',
 }
 
+inv_codes = {v: k for k, v in codes.iteritems()}
 ################### CoAP Type ###################
 types = {
     0: 'CON',
@@ -153,6 +154,7 @@ responses = {
     "PROXY_NOT_SUPPORTED": 165
 }
 
+inv_responses = {v: k for k, v in responses.iteritems()}
 ################### CoAP Content-Type ###################
 content_types = {
     0: "text/plain",

@@ -192,3 +192,15 @@ class Message(object):
         rst.token = None
         rst.destination = message.source
         return rst
+
+    def __str__(self):
+        msg = "Source: " + str(self.source) + "\n"
+        msg += "Destination: " + str(self.destination) + "\n"
+        msg += "Type: " + str(defines.types[self.type]) + "\n"
+        msg += "MID: " + str(self.mid) + "\n"
+        msg += "Token: " + str(self.token) + "\n"
+        for opt in self._options:
+            msg += str(opt)
+        msg += "Payload: " + "\n"
+        msg += str(self.payload) + "\n"
+        return msg

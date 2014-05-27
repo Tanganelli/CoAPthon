@@ -18,7 +18,7 @@ class Serializer(object):
         self._reader = None
         self._writer = None
 
-    def serialize_request(self, raw, host, port):
+    def deserialize(self, raw, host, port):
         self._reader = BitStream(bytes=raw, length=(len(raw) * 8))
         version = self._reader.read(defines.VERSION_BITS).uint
         message_type = self._reader.read(defines.TYPE_BITS).uint
@@ -27,7 +27,7 @@ class Serializer(object):
         mid = self._reader.read(defines.MESSAGE_ID_BITS).uint
         if self.is_response(code):
             message = Response()
-            pass
+            message.code = code
         elif self.is_request(code):
             message = Request()
             message.code = code
@@ -83,7 +83,7 @@ class Serializer(object):
                     message.payload = self._reader.read(to_end).bytes
             return message
         except ReadError, e:
-            log.err("Error parsing message: %r", str(e))
+            log.err("Error parsing message: " + str(e))
         return None
 
     @staticmethod
@@ -133,7 +133,7 @@ class Serializer(object):
         else:
             raise ValueError("Unsupported option nibble " + nibble)
 
-    def serialize_response(self, response):
+    def serialize(self, response):
 
         fmt = 'uint:' + str(defines.VERSION_BITS) + '=version,' \
             'uint:' + str(defines.TYPE_BITS) + '=type,' \

@@ -73,7 +73,7 @@ class ObserveLayer(object):
         response, host, port = t
         serializer = Serializer()
         self._parent.schedule_retrasmission(t)
-        response = serializer.serialize_response(response)
+        response = serializer.serialize(response)
         self._parent.transport.write(response, (host, port))
 
     def add_observing(self, resource, response):

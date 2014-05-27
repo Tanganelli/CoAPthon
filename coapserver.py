@@ -45,7 +45,7 @@ class CoAP(DatagramProtocol):
     def datagramReceived(self, data, (host, port)):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
-        message = serializer.serialize_request(data, host, port)
+        message = serializer.deserialize(data, host, port)
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self._request_layer.handle_request(message)
@@ -54,13 +54,13 @@ class CoAP(DatagramProtocol):
             else:
                 response = ret
             self.schedule_retrasmission((response, host, port))
-            response = serializer.serialize_response(response)
+            response = serializer.serialize(response)
             self.transport.write(response, (host, port))
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
             rst = self._message_layer.matcher_response(rst)
-            response = serializer.serialize_response(rst)
+            response = serializer.serialize(rst)
             self.transport.write(response, (host, port))
         elif isinstance(message, tuple):
             message, error = message
@@ -69,9 +69,9 @@ class CoAP(DatagramProtocol):
             response.code = defines.responses[error]
             response = self.reliability_response(message, response)
             response = self._message_layer.matcher_response(response)
-            response = serializer.serialize_response(response)
+            response = serializer.serialize(response)
             self.transport.write(response, (host, port))
-        else:
+        elif message is not None:
             # ACK or RST
             log.msg("Received ACK or RST")
             self._message_layer.handle_message(message)
@@ -79,12 +79,12 @@ class CoAP(DatagramProtocol):
     def purge_mids(self):
         now = time.time()
         sent_key_to_delete = []
-        for key in self.sent:
+        for key in self.sent.keys():
             message, timestamp = self.sent.get(key)
             if timestamp + defines.EXCHANGE_LIFETIME <= now:
                 sent_key_to_delete.append(key)
         received_key_to_delete = []
-        for key in self.received:
+        for key in self.received.keys():
             message, timestamp = self.received.get(key)
             if timestamp + defines.EXCHANGE_LIFETIME <= now:
                 received_key_to_delete.append(key)
@@ -176,7 +176,9 @@ class CoAP(DatagramProtocol):
         if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             retransmit_count += 1
             self.sent[key] = (response, time.time())
-            self.transport.write(response, (host, port))
+            serializer = Serializer()
+            datagram = serializer.serialize(response)
+            self.transport.write(datagram, (host, port))
             future_time *= 2
             self.call_id[key] = (reactor.callLater(reactor, future_time, self.retransmit,
                                                    (response, host, port, future_time)), retransmit_count)

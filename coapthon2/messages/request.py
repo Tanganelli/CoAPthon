@@ -1,5 +1,6 @@
 from coapthon2 import defines
 from coapthon2.messages.message import Message
+from coapthon2.messages.option import Option
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -18,6 +19,15 @@ class Request(Message):
                 value += option.value + '/'
         value = value[:-1]
         return value
+
+    @uri_path.setter
+    def uri_path(self, path):
+        paths = path.split("/")
+        for p in paths:
+            option = Option()
+            option.number = defines.inv_options['Uri-Path']
+            option.value = p
+            self.add_option(option)
 
     @property
     def observe(self):

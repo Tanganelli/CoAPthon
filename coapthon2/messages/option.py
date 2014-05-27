@@ -57,3 +57,7 @@ class Option(object):
     def length(self):
         assert(type(self._value) is BitArray)
         return len(self._value.tobytes())
+
+    def __str__(self):
+        name, opt_type, repeatable, defaults = defines.options[self._number]
+        return name + ": " + str(self.raw_value) + "\n"
