@@ -135,6 +135,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
             dict_att = {}
             for att in attributes:
                 a = att.split("=")
+                # TODO check correctness
                 dict_att[a[0]] = a[1]
             link_format = link_format[result.end(0) + 1:]
             while True:
