@@ -1,6 +1,7 @@
 import random
 import re
 import time
+from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
 from coapthon2.messages.request import Request
@@ -32,8 +33,13 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
+        self.operations = []
 
     def startProtocol(self):
+        self.operations.append((self.discover,))
+        self.operations.append((self.get, ("/hello",)))
+        self.operations.append((self.post, ("/hello", "Test")))
+        self.operations.append((self.discover,))
         host, port = self.server
         if host is not None:
             self.start(host)
@@ -52,15 +58,40 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         for key in sent_key_to_delete:
             message, timestamp, callback = self.sent.get(key)
             key_token = hash(str(self.server[0]) + str(self.server[1]) + str(message.token))
-            del self.sent[key]
-            del self.sent_token[key_token]
-            del self.received[key]
-            del self.received_token[key_token]
+            try:
+                del self.sent[key]
+            except KeyError:
+                pass
+            try:
+                del self.received[key]
+            except KeyError:
+                pass
+            try:
+                del self.sent_token[key_token]
+            except KeyError:
+                pass
+            try:
+                del self.received_token[key_token]
+            except KeyError:
+                pass
 
     def start(self, host):
         self.server = (host, self.server[1])
         self.transport.connect(host, self.server[1])
-        self.discover()
+        function, arguments = self.get_operation()
+        function()
+
+    def get_operation(self):
+        try:
+            to_exec = self.operations.pop(0)
+            arguments = None
+            if len(to_exec) > 1:
+                function, arguments = to_exec
+            else:
+                function = to_exec[0]
+            return function, arguments
+        except IndexError:
+            return None, None
 
     def send(self, req, callback):
         self._currentMID += 1
@@ -85,6 +116,15 @@ class EchoClientDatagramProtocol(DatagramProtocol):
             log.err("Received request")
         else:
             self.handle_message(message)
+
+        function, arguments = self.get_operation()
+        if function is None:
+            reactor.stop()
+        else:
+            if arguments is not None:
+                function(arguments)
+            else:
+                function()
 
     def handle_message(self, message):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
@@ -115,8 +155,11 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if key in self.call_id.keys():
             handler, retransmit_count = self.call_id.get(key)
             if handler is not None:
-                log.msg("Cancel retrasmission")
-                handler.cancel()
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
         if response is not None:
             self.parse_core_link_format(response.payload)
 
@@ -151,9 +194,9 @@ class EchoClientDatagramProtocol(DatagramProtocol):
                 else:
                     break
         log.msg(self.root.dump())
-        self.get("/hello/hello2")
 
-    def get(self, path):
+    def get(self, t):
+        path = t[0]
         req = Request()
         req.code = defines.inv_codes['GET']
         req.uri_path = path
@@ -166,14 +209,16 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if key in self.call_id.keys():
             handler, retransmit_count = self.call_id.get(key)
             if handler is not None:
-                log.msg("Cancel retrasmission")
-                handler.cancel()
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
         if response is not None:
             print response
 
-        self.post("/hello/hello2", "TEST")
-
-    def post(self, path, payload):
+    def post(self, t):
+        path, payload = t
         req = Request()
         req.code = defines.inv_codes['POST']
         req.uri_path = path
@@ -187,8 +232,11 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if key in self.call_id.keys():
             handler, retransmit_count = self.call_id.get(key)
             if handler is not None:
-                log.msg("Cancel retrasmission")
-                handler.cancel()
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
         if response is not None:
             print response
 
