@@ -38,8 +38,12 @@ class EchoClientDatagramProtocol(DatagramProtocol):
     def startProtocol(self):
         self.operations.append((self.discover,))
         self.operations.append((self.get, ("/hello",)))
+        self.operations.append((self.put, ("/hello", "Test")))
         self.operations.append((self.post, ("/hello", "Test")))
         self.operations.append((self.discover,))
+        self.operations.append((self.delete, ("/pippo/prova/hello3",)))
+        self.operations.append((self.discover,))
+        self.operations.append((self.get, ("/pippo/prova/hello3",)))
         host, port = self.server
         if host is not None:
             self.start(host)
@@ -240,6 +244,51 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if response is not None:
             print response
 
+    def put(self, t):
+        path, payload = t
+        req = Request()
+        req.code = defines.inv_codes['PUT']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req.payload = payload
+        self.send(req, self.put_results)
+
+    def put_results(self, mid):
+        key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
+        response = self.received.get(key)
+        if key in self.call_id.keys():
+            handler, retransmit_count = self.call_id.get(key)
+            if handler is not None:
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
+        if response is not None:
+            print response
+
+    def delete(self, t):
+        path = t[0]
+        req = Request()
+        req.code = defines.inv_codes['DELETE']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        self.send(req, self.delete_results)
+
+    def delete_results(self, mid):
+        key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
+        response = self.received.get(key)
+        if key in self.call_id.keys():
+            handler, retransmit_count = self.call_id.get(key)
+            if handler is not None:
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
+        if response is not None:
+            print response
+
     def schedule_retrasmission(self, request):
         host, port = self.server
         if request.type == defines.inv_types['CON']:
@@ -249,17 +298,19 @@ class EchoClientDatagramProtocol(DatagramProtocol):
                                                    (request, host, port, future_time)), 0)
 
     def retransmit(self, t):
+        log.msg("Retransmit")
         request, host, port, future_time = t
         key = hash(str(host) + str(port) + str(request.mid))
         call_id, retransmit_count = self.call_id[key]
         if retransmit_count < defines.MAX_RETRANSMIT and (not request.acknowledged and not request.rejected):
             retransmit_count += 1
-            self.sent[key] = (request, time.time())
+            req, timestamp, callback = self.sent[key]
+            self.sent[key] = (request, time.time(), callback)
             serializer = Serializer()
             datagram = serializer.serialize(request)
             self.transport.write(datagram, (host, port))
             future_time *= 2
-            self.call_id[key] = (reactor.callLater(reactor, future_time, self.retransmit,
+            self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (request, host, port, future_time)), retransmit_count)
 
         elif request.acknowledged or request.rejected:
@@ -267,6 +318,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
             del self.call_id[key]
         else:
             request.timeouted = True
+            log.err("Request timeouted")
             del self.call_id[key]
 
 
