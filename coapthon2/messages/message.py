@@ -200,7 +200,10 @@ class Message(object):
         msg += "Destination: " + str(self.destination) + "\n"
         msg += "Type: " + str(defines.types[self.type]) + "\n"
         msg += "MID: " + str(self.mid) + "\n"
-        msg += "Code: " + str(defines.inv_responses[self.code]) + "\n"
+        try:
+            msg += "Code: " + str(defines.inv_responses[self.code]) + "\n"
+        except KeyError:
+            msg += "Code: " + str(defines.codes[self.code]) + "\n"
         msg += "Token: " + str(self.token) + "\n"
         for opt in self._options:
             msg += str(opt)

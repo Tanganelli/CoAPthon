@@ -60,4 +60,7 @@ class Option(object):
 
     def __str__(self):
         name, opt_type, repeatable, defaults = defines.options[self._number]
-        return name + ": " + str(self.raw_value) + "\n"
+        if name == "ETag":
+            return name + ": " + str(self.raw_value) + "\n"
+        else:
+            return name + ": " + str(self.value) + "\n"

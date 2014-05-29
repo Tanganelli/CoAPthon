@@ -1,3 +1,4 @@
+from bitstring import BitArray
 from coapthon2 import defines
 
 __author__ = 'Giacomo Tanganelli'
@@ -47,10 +48,10 @@ class Resource(object):
     @property
     def etag(self):
         if self._etag:
-            if self._observe_count != self._etag[-1]:
-                self._etag.append(self._observe_count)
+            if BitArray(uint=self._observe_count, length=8).tobytes() != self._etag[-1]:
+                self._etag.append(BitArray(uint=self._observe_count, length=8).tobytes())
         else:
-            self._etag.append(self._observe_count)
+            self._etag.append(BitArray(uint=self._observe_count, length=8).tobytes())
         return self._etag[-1]
 
     @property

@@ -14,7 +14,7 @@ class Hello(Resource):
         return Hello()
 
     def render_GET(self, query=None):
-        return {"Payload": self.payload, "ETag": self.etag}
+        return {"Payload": self.payload, "ETag": self.etag, "Max-Age": 30}
 
     def render_PUT(self, payload=None, query=None):
         return {"Payload": payload, "ETag": self.etag}

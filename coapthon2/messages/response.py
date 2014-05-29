@@ -23,7 +23,6 @@ class Response(Message):
         option.number = defines.inv_options['Content-Type']
         option.value = int(content_type)
         self.add_option(option)
-        #self.options.append(option)
 
     @property
     def etag(self):
@@ -39,7 +38,6 @@ class Response(Message):
         option.number = defines.inv_options['ETag']
         option.value = etag
         self.add_option(option)
-        #self.options.append(option)
 
     @etag.deleter
     def etag(self):
@@ -81,4 +79,18 @@ class Response(Message):
             option.number = defines.inv_options['Location-Query']
             option.value = o
             self.add_option(option)
-            #self.options.append(option)
+
+    @property
+    def max_age(self):
+        value = 0
+        for option in self.options:
+            if option.number == defines.inv_options['Max-Age']:
+                value = int(option.value)
+        return value
+
+    @max_age.setter
+    def max_age(self, max_age):
+        option = Option()
+        option.number = defines.inv_options['Max-Age']
+        option.value = int(max_age)
+        self.add_option(option)

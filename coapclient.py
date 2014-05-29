@@ -4,6 +4,7 @@ import time
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
+from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
 from coapthon2.resources.resource import Resource
@@ -17,7 +18,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
 
-class EchoClientDatagramProtocol(DatagramProtocol):
+class CoAP(DatagramProtocol):
     def __init__(self):
         self.received = {}
         self.sent = {}
@@ -37,13 +38,17 @@ class EchoClientDatagramProtocol(DatagramProtocol):
 
     def startProtocol(self):
         self.operations.append((self.discover,))
-        self.operations.append((self.get, ("/hello",)))
-        self.operations.append((self.put, ("/hello", "Test")))
-        self.operations.append((self.post, ("/hello", "Test")))
-        self.operations.append((self.discover,))
-        self.operations.append((self.delete, ("/pippo/prova/hello3",)))
-        self.operations.append((self.discover,))
-        self.operations.append((self.get, ("/pippo/prova/hello3",)))
+        args = ("/hello",)
+        kwargs = {"Accept": defines.inv_content_types["application/xml"]}
+        self.operations.append((self.get, args, kwargs))
+        # args = ("/hello", "Test")
+        # self.operations.append((self.put, args))
+        # self.operations.append((self.post, args))
+        # self.operations.append((self.discover,))
+        # args = ("/pippo/prova/hello3",)
+        # self.operations.append((self.delete, args))
+        # self.operations.append((self.discover,))
+        # self.operations.append((self.get, args))
         host, port = self.server
         if host is not None:
             self.start(host)
@@ -82,20 +87,23 @@ class EchoClientDatagramProtocol(DatagramProtocol):
     def start(self, host):
         self.server = (host, self.server[1])
         self.transport.connect(host, self.server[1])
-        function, arguments = self.get_operation()
-        function()
+        function, args, kwargs = self.get_operation()
+        function(*args, **kwargs)
 
     def get_operation(self):
         try:
             to_exec = self.operations.pop(0)
-            arguments = None
-            if len(to_exec) > 1:
-                function, arguments = to_exec
+            args = []
+            kwargs = {}
+            if len(to_exec) == 3:
+                function, args, kwargs = to_exec
+            elif len(to_exec) == 2:
+                function, args = to_exec
             else:
                 function = to_exec[0]
-            return function, arguments
+            return function, args, kwargs
         except IndexError:
-            return None, None
+            return None, None, None
 
     def send(self, req, callback):
         self._currentMID += 1
@@ -106,6 +114,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         self.sent_token[key_token] = (req, time.time(), callback)
         self.schedule_retrasmission(req)
         serializer = Serializer()
+        print req
         datagram = serializer.serialize(req)
         log.msg("Send datagram")
         self.transport.write(datagram)
@@ -121,14 +130,11 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         else:
             self.handle_message(message)
 
-        function, arguments = self.get_operation()
+        function, args, kwargs = self.get_operation()
         if function is None:
             reactor.stop()
         else:
-            if arguments is not None:
-                function(arguments)
-            else:
-                function()
+            function(*args, **kwargs)
 
     def handle_message(self, message):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
@@ -146,7 +152,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
             self.received[key] = response
             callback(req.mid)
 
-    def discover(self):
+    def discover(self, *args, **kwargs):
         req = Request()
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
@@ -165,6 +171,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
+            print response
             self.parse_core_link_format(response.payload)
 
     def parse_core_link_format(self, link_format):
@@ -199,9 +206,15 @@ class EchoClientDatagramProtocol(DatagramProtocol):
                     break
         log.msg(self.root.dump())
 
-    def get(self, t):
-        path = t[0]
+    def get(self, *args, **kwargs):
+        path = args[0]
         req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
+
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -221,9 +234,14 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if response is not None:
             print response
 
-    def post(self, t):
-        path, payload = t
+    def post(self, *args, **kwargs):
+        path, payload = args
         req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
         req.code = defines.inv_codes['POST']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -244,9 +262,14 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if response is not None:
             print response
 
-    def put(self, t):
-        path, payload = t
+    def put(self, *args, **kwargs):
+        path, payload = args
         req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
         req.code = defines.inv_codes['PUT']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -267,9 +290,14 @@ class EchoClientDatagramProtocol(DatagramProtocol):
         if response is not None:
             print response
 
-    def delete(self, t):
-        path = t[0]
+    def delete(self, *args, **kwargs):
+        path = args[0]
         req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
         req.code = defines.inv_codes['DELETE']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -323,7 +351,7 @@ class EchoClientDatagramProtocol(DatagramProtocol):
 
 
 def main():
-    protocol = EchoClientDatagramProtocol()
+    protocol = CoAP()
     t = reactor.listenUDP(0, protocol)
     reactor.run()
 

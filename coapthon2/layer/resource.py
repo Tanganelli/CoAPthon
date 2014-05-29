@@ -1,3 +1,4 @@
+from bitstring import BitArray
 from coapthon2 import defines
 from coapthon2.resources.resource import Resource
 from coapthon2.utils import Tree
@@ -190,9 +191,7 @@ class ResourceLayer(object):
     def get_resource(self, request, response, resource):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
-
             resource.required_content_type = None
-
             # if request.content_type is not None:
             #     resource.required_content_type = request.content_type
             #     response.content_type = resource.required_content_type
@@ -205,24 +204,28 @@ class ResourceLayer(object):
             # Render_GET
             ret = method(query=request.query)
             if isinstance(ret, dict):
-                etag = ret["ETag"]
-                ret = ret["Payload"]
+                etag = ret.get("ETag")
+                max_age = ret.get("Max-Age")
+                ret = ret.get("Payload")
             else:
                 etag = None
+                max_age = None
             if ret != -1:
                 if ret == -2:
                     response = self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
                     return response
                 # handle ETAG
-                if str(etag) in request.etag:
+                etag = BitArray(bytes=etag, length=8).tobytes()
+                if etag in request.etag:
                     response.code = defines.responses['VALID']
                 else:
                     response.code = defines.responses['CONTENT']
                     response.payload = ret
-                response.code = defines.responses['CONTENT']
                 response.token = request.token
                 if etag is not None:
                     response.etag = etag
+                if max_age is not None:
+                    response.max_age = max_age
 
                 # Observe
                 if request.observe == 0 and resource.observable:
