@@ -21,6 +21,7 @@ class Request(Message):
 
     @uri_path.setter
     def uri_path(self, path):
+        path = path.strip("/")
         paths = path.split("/")
         for p in paths:
             option = Option()
