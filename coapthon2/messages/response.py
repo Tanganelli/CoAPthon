@@ -94,3 +94,11 @@ class Response(Message):
         option.number = defines.inv_options['Max-Age']
         option.value = int(max_age)
         self.add_option(option)
+
+    @property
+    def observe(self):
+        value = 0
+        for option in self.options:
+            if option.number == defines.inv_options['Observe']:
+                value = int(option.value)
+        return value

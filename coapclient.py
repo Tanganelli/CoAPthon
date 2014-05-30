@@ -4,6 +4,7 @@ import time
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
+from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
@@ -39,8 +40,8 @@ class CoAP(DatagramProtocol):
     def startProtocol(self):
         self.operations.append((self.discover,))
         args = ("/hello",)
-        kwargs = {"Accept": defines.inv_content_types["application/xml"]}
-        self.operations.append((self.get, args, kwargs))
+        kwargs = {}
+        self.operations.append((self.observe, args, kwargs))
         # args = ("/hello", "Test")
         # self.operations.append((self.put, args))
         # self.operations.append((self.post, args))
@@ -131,8 +132,11 @@ class CoAP(DatagramProtocol):
             self.handle_message(message)
 
         function, args, kwargs = self.get_operation()
-        if function is None:
+        key = hash(str(host) + str(port) + str(message.token))
+        if function is None and len(self.relation) == 0:
             reactor.stop()
+        elif key in self.relation:
+            self.handle_notification(message)
         else:
             function(*args, **kwargs)
 
@@ -233,6 +237,53 @@ class CoAP(DatagramProtocol):
                     pass
         if response is not None:
             print response
+
+    def observe(self, *args, **kwargs):
+        path = args[0]
+        req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.observe = 0
+        req.token = "ciao"
+        req.type = defines.inv_types["CON"]
+        self.send(req, self.observe_results)
+
+    def observe_results(self, mid):
+        key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
+        response = self.received.get(key)
+        if key in self.call_id.keys():
+            handler, retransmit_count = self.call_id.get(key)
+            if handler is not None:
+                try:
+                    log.msg("Cancel retrasmission")
+                    handler.cancel()
+                except AlreadyCancelled:
+                    pass
+        if response is not None:
+            if response.observe != 0:
+                #TODO add observing results
+                host, port = response.source
+                key = hash(str(host) + str(port) + str(response.token))
+                self.relation[key] = (response, time.time())
+            print response
+
+    def handle_notification(self, response):
+        host, port = response.source
+        key = hash(str(host) + str(port) + str(response.token))
+        self.relation[key] = (response, time.time())
+        if response.type == defines.inv_types["CON"]:
+            ack = Message.new_ack(response)
+            serializer = Serializer()
+            datagram = serializer.serialize(ack)
+            log.msg("Send datagram")
+            self.transport.write(datagram)
+        print response
 
     def post(self, *args, **kwargs):
         path, payload = args

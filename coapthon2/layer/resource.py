@@ -93,6 +93,7 @@ class ResourceLayer(object):
         if hasattr(method, '__call__'):
             new_payload = method(payload=request.payload, query=request.query)
             if isinstance(new_payload, dict):
+                #TODO handle content-type
                 etag = new_payload.get("ETag")
                 location_path = new_payload.get("Location-Path")
                 location_query = new_payload.get("Location-Query")
@@ -102,6 +103,8 @@ class ResourceLayer(object):
                 location_path = None
                 location_query = None
             if new_payload is not None and new_payload != -1:
+                etag = BitArray(bytes=etag, length=8)
+                etag = etag.uint
                 if etag is not None:
                     response.etag = (etag + 1)
                 if render_method == "render_PUT":

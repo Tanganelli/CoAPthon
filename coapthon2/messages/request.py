@@ -38,6 +38,14 @@ class Request(Message):
                 return option.value
         return 1
 
+    @observe.setter
+    def observe(self, ob):
+        option = Option()
+        option.number = defines.inv_options['Observe']
+        option.value = ob
+        self.del_option_name("Observe")
+        self.add_option(option)
+
     @property
     def query(self):
         value = []

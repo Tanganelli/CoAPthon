@@ -210,6 +210,8 @@ class Serializer(object):
             lastoptionnumber = option.number
 
         payload = response.payload
+        if isinstance(payload, dict):
+            payload = payload.get("Payload")
         if payload is not None and len(payload) > 0:
             # if payload is present and of non-zero length, it is prefixed by
             # an one-byte Payload Marker (0xFF) which indicates the end of
