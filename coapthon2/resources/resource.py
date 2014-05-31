@@ -83,6 +83,10 @@ class Resource(object):
             self._payload = {defines.inv_content_types["text/plain"]: p}
 
     @property
+    def raw_payload(self):
+        return self._payload
+
+    @property
     def attributes(self):
         return self._attributes
 

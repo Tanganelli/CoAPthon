@@ -109,7 +109,14 @@ class ResourceLayer(object):
                     response.etag = (etag + 1)
                 if render_method == "render_PUT":
                     response.code = defines.responses['CHANGED']
-                    node.value.payload = new_payload
+
+                    if isinstance(node.value.raw_payload, dict):
+                        if request.content_type is not None and request.content_type in defines.content_types:
+                            node.value.raw_payload[request.content_type] = new_payload
+                        else:
+                            node.value.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
+                    else:
+                        node.value.payload = new_payload
                     # Observe
                     self._parent.notify(node)
                 else:
@@ -195,10 +202,6 @@ class ResourceLayer(object):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             resource.required_content_type = None
-            # if request.content_type is not None:
-            #     resource.required_content_type = request.content_type
-            #     response.content_type = resource.required_content_type
-
             #Accept
             if request.accept is not None:
                 resource.required_content_type = request.accept
