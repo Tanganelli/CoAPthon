@@ -7,12 +7,14 @@ __version__ = "2.0"
 
 class Hello(Resource):
 
-    def __init__(self, server, name="HelloResource"):
-        super(Hello, self).__init__(server, name, visible=True, observable=True, allow_children=True)
+    def __init__(self, name="HelloResource"):
+        super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
         self.payload = {"text/plain": "Hello, world!", "application/xml": "HELLO, XML"}
 
     def render_GET(self, query=None):
-        return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
+        #return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
+        time.sleep(0.5)
+        return {"Payload": self.payload, "ETag": self.etag}
 
     def render_GET_separate(self, query=None):
         time.sleep(5)

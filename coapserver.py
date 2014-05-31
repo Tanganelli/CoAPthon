@@ -30,7 +30,7 @@ class CoAP(DatagramProtocol):
         self.relation = {}
         self._currentMID = 1
 
-        root = Resource(self, 'root', visible=False, observable=False, allow_children=True)
+        root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
 
@@ -221,9 +221,9 @@ class CoAP(DatagramProtocol):
 class CoAPServer(CoAP):
     def __init__(self):
         CoAP.__init__(self)
-        if self.add_resource('hello/', Hello(self, 'hello')):
+        if self.add_resource('hello/', Hello('hello')):
             log.msg(self.root.dump())
-        if self.add_resource('hello/hello2', Hello(self, 'hello')):
+        if self.add_resource('hello/hello2', Hello('hello')):
             log.msg(self.root.dump())
 
 

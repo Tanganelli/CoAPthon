@@ -5,7 +5,7 @@ __version__ = "2.0"
 
 
 class Resource(object):
-    def __init__(self, server, name, visible=True, observable=True, allow_children=True):
+    def __init__(self, name, visible=True, observable=True, allow_children=True):
         if isinstance(name, Resource):
             self._attributes = name.attributes
             self.name = name.name
@@ -16,8 +16,6 @@ class Resource(object):
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
             self._payload = name.payload
-            self._server = server
-
             self._etag = name.etag
         else:
             ## The attributes of this resource.
@@ -25,8 +23,6 @@ class Resource(object):
 
             ## The resource name.
             self.name = name
-
-            self._server = server
 
             ## The resource path.
             self.path = None

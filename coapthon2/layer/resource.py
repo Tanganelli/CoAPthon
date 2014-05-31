@@ -1,4 +1,4 @@
-from bitstring import BitArray
+from threading import Timer
 from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.resources.resource import Resource
@@ -14,7 +14,10 @@ class ResourceLayer(object):
     def edit_resorce(self, request, response, node, lp, p):
         method = getattr(node.value, "render_POST", None)
         if hasattr(method, '__call__'):
+            t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            t.start()
             new_payload = method(payload=request.payload, query=request.query)
+            t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
                 location_query = new_payload.get("Location-Query")
@@ -103,7 +106,10 @@ class ResourceLayer(object):
     def add_resorce(self, request, response, old, lp, p):
         method = getattr(old.value, "render_POST", None)
         if hasattr(method, '__call__'):
+            t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            t.start()
             new_payload = method(payload=request.payload, query=request.query)
+            t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
                 location_query = new_payload.get("Location-Query")
@@ -210,7 +216,10 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
         method = getattr(resource, "render_PUT", None)
         if hasattr(method, '__call__'):
+            t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            t.start()
             new_payload = method(payload=request.payload, query=request.query)
+            t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
                 separate = new_payload.get("Separate")
@@ -271,7 +280,10 @@ class ResourceLayer(object):
         assert isinstance(node, Tree)
         method = getattr(node.value, 'render_DELETE', None)
         if hasattr(method, '__call__'):
+            t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            t.start()
             ret = method(query=request.query)
+            t.cancel()
             if ret != -1:
                 parent = node.parent
                 assert isinstance(parent, Tree)
@@ -307,7 +319,10 @@ class ResourceLayer(object):
                 if resource.required_content_type in defines.content_types:
                     response.content_type = resource.required_content_type
             # Render_GET
+            t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            t.start()
             ret = method(query=request.query)
+            t.cancel()
             if isinstance(ret, dict):
                 etag = ret.get("ETag")
                 max_age = ret.get("Max-Age")
@@ -391,3 +406,13 @@ class ResourceLayer(object):
             resource.path = failed_resource
             last.add_child(resource)
         return last
+
+    def send_ack(self, *args):
+        # Handle separate
+        request = args[0]
+        ack = Message.new_ack(request)
+        ack.mid = self._parent.current_mid % (1 << 16)
+        self._parent.current_mid += 1
+        host, port = request.source
+        self._parent.send(ack, host, port)
+        request.acknowledged = True
