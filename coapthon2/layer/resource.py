@@ -1,5 +1,6 @@
 from bitstring import BitArray
 from coapthon2 import defines
+from coapthon2.messages.message import Message
 from coapthon2.resources.resource import Resource
 from coapthon2.utils import Tree
 
@@ -10,78 +11,196 @@ class ResourceLayer(object):
     def __init__(self, parent):
         self._parent = parent
 
+    def edit_resorce(self, request, response, node, lp, p):
+        method = getattr(node.value, "render_POST", None)
+        if hasattr(method, '__call__'):
+            new_payload = method(payload=request.payload, query=request.query)
+            if isinstance(new_payload, dict):
+                etag = new_payload.get("ETag")
+                location_query = new_payload.get("Location-Query")
+                resource = new_payload.get("Resource")
+                separate = new_payload.get("Separate")
+                callback = new_payload.get("Callback")
+                new_payload = new_payload.get("Payload")
+            else:
+                etag = None
+                location_query = request.query
+                resource = None
+                separate = None
+                callback = None
+
+            if separate is not None:
+                # Handle separate
+                ack = Message.new_ack(request)
+                ack.mid = self._parent.current_mid % (1 << 16)
+                self._parent.current_mid += 1
+                host, port = request.source
+                self._parent.send(ack, host, port)
+                request.acknowledged = True
+                new_payload = callback(payload=request.payload, query=request.query)
+                if isinstance(new_payload, dict):
+                    etag = new_payload.get("ETag")
+                    location_query = new_payload.get("Location-Query")
+                    resource = new_payload.get("Resource")
+                    new_payload = new_payload.get("Payload")
+                else:
+                    etag = None
+                    location_query = request.query
+                    resource = None
+
+            if new_payload is not None and new_payload != -1:
+                if resource is None:
+                    origin = node.value
+                    assert isinstance(origin, Resource)
+                    origin_class = origin.__class__
+                    resource = origin_class(self._parent)
+                elif not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+
+                if request.content_type is not None and request.content_type in defines.content_types:
+                    resource.raw_payload[request.content_type] = new_payload
+                else:
+                    resource.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
+
+                resource.path = p
+                resource.observe_count = node.value.observe_count
+                # Observe
+                self._parent.update_relations(node, resource)
+                node.value = resource
+                # Observe
+                self._parent.notify(node)
+                if etag is not None:
+                    resource.etag = etag
+                    response.etag = resource.etag
+                response.location_path = lp
+
+                if location_query is not None and len(location_query) > 0 and location_query != "?":
+                    if isinstance(location_query, str):
+                        location_query = location_query.strip("?")
+                        lq = location_query.split("&")
+                    else:
+                        lq = location_query
+                    response.location_query = lq
+
+                response.code = defines.responses['CREATED']
+
+                response.payload = None
+                # Token
+                response.token = request.token
+                #TODO Blockwise
+                #Reliability
+                response = self._parent.reliability_response(request, response)
+                #Matcher
+                response = self._parent.matcher_response(response)
+                return response
+            elif new_payload == -1:
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            else:
+                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+        else:
+            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+
+    def add_resorce(self, request, response, old, lp, p):
+        method = getattr(old.value, "render_POST", None)
+        if hasattr(method, '__call__'):
+            new_payload = method(payload=request.payload, query=request.query)
+            if isinstance(new_payload, dict):
+                etag = new_payload.get("ETag")
+                location_query = new_payload.get("Location-Query")
+                resource = new_payload.get("Resource")
+                separate = new_payload.get("Separate")
+                callback = new_payload.get("Callback")
+                new_payload = new_payload.get("Payload")
+            else:
+                etag = None
+                location_query = request.query
+                resource = None
+                separate = None
+                callback = None
+
+            if separate is not None:
+                # Handle separate
+                ack = Message.new_ack(request)
+                ack.mid = self._parent.current_mid % (1 << 16)
+                self._parent.current_mid += 1
+                host, port = request.source
+                self._parent.send(ack, host, port)
+                request.acknowledged = True
+                new_payload = callback(payload=request.payload, query=request.query)
+                if isinstance(new_payload, dict):
+                    etag = new_payload.get("ETag")
+                    location_query = new_payload.get("Location-Query")
+                    resource = new_payload.get("Resource")
+                    new_payload = new_payload.get("Payload")
+                else:
+                    etag = None
+                    location_query = request.query
+                    resource = None
+
+            if new_payload is not None and new_payload != -1:
+                if resource is None:
+                    origin = old.value
+                    assert isinstance(origin, Resource)
+                    origin_class = origin.__class__
+                    resource = origin_class(self._parent)
+                elif not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+
+                if request.content_type is not None and request.content_type in defines.content_types:
+                    resource.raw_payload[request.content_type] = new_payload
+                else:
+                    resource.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
+
+                resource.path = p
+                node = old.add_child(resource)
+                # Observe
+                self._parent.notify(node)
+                if etag is not None:
+                    resource.etag = etag
+                    response.etag = resource.etag
+                response.location_path = lp
+
+                if location_query is not None and len(location_query) > 0 and location_query != "?":
+                    if isinstance(location_query, str):
+                        location_query = location_query.strip("?")
+                        lq = location_query.split("&")
+                    else:
+                        lq = location_query
+                    response.location_query = lq
+
+                response.code = defines.responses['CREATED']
+
+                response.payload = None
+                # Token
+                response.token = request.token
+                #TODO Blockwise
+                #Reliability
+                response = self._parent.reliability_response(request, response)
+                #Matcher
+                response = self._parent.matcher_response(response)
+                return response
+            elif new_payload == -1:
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            else:
+                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+        else:
+            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+
     def create_resource(self, path, request, response):
         paths = path.split("/")
-        lp = []
-        old = self._parent.root
-        for p in paths:
-            res = old.find(p)
-            lp.append(p)
-            if res is None:
-                if old.value.allow_children:
-                    # If-Match
-                    if request.has_if_match:
-                        if str(old.value.etag) not in request.if_match:
-                            return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
-                    method = getattr(old.value, "render_POST", None)
-                    if hasattr(method, '__call__'):
-                        new_payload = method(payload=request.payload, query=request.query)
-                        if isinstance(new_payload, dict):
-                            etag = new_payload.get("ETag")
-                            location_path = new_payload.get("Location-Path")
-                            location_query = new_payload.get("Location-Query")
-                            new_payload = new_payload.get("Payload")
-                        else:
-                            etag = None
-                            location_path = None
-                            location_query = None
-                        if new_payload is not None and new_payload != -1:
-                            method = getattr(old.value, "new_resource", None)
-                            resource = method()
-                            resource.payload = new_payload
-                            resource.path = p
-                            if etag is not None:
-                                response.etag = etag
-                            if location_path is not None:
-                                lppaths = location_path.split("/")
-                                dad = self.create_subtree(lppaths[:-1])
-                                resource.path = lppaths[-1]
-                                dad.add_child(resource)
-                                response.location_path = location_path
-                            else:
-                                old.add_child(resource)
-                                response.location_path = lp
-
-                            if location_query is not None and len(location_query) > 0:
-                                location_query = location_query.strip("?")
-                                lq = location_query.split("&")
-                                response.location_query = lq
-
-                            response.code = defines.responses['CREATED']
-
-                            response.payload = None
-                            # Token
-                            response.token = request.token
-                            #TODO Blockwise
-                            #Reliability
-                            response = self._parent.reliability_response(request, response)
-                            #Matcher
-                            response = self._parent.matcher_response(response)
-                            return response
-                        elif new_payload == -1:
-                            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
-                        else:
-                            return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-                    else:
-                        return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
-                else:
-                    return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+        last, p = self._parent.root.find_complete_last(paths)
+        if p is None:
+            # Resource already present
+            return self.edit_resorce(request, response, last, path, paths[-1])
+        else:
+            lp = last.find_path() + p
+            if last.value.allow_children:
+                    return self.add_resorce(request, response, last, lp[1:], p)
             else:
-                old = res
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
-    def update_resource(self, path, request, response, resource, render_method="render_PUT"):
-        path = path.strip("/")
-        node = self._parent.root.find_complete(path)
+    def update_resource(self, request, response, node):
+        resource = node.value
         # If-Match
         if request.has_if_match:
             if None not in request.if_match and str(resource.etag) not in request.if_match:
@@ -89,71 +208,52 @@ class ResourceLayer(object):
         # If-None-Match
         if request.has_if_none_match:
             return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
-        method = getattr(resource, render_method, None)
+        method = getattr(resource, "render_PUT", None)
         if hasattr(method, '__call__'):
             new_payload = method(payload=request.payload, query=request.query)
             if isinstance(new_payload, dict):
-                #TODO handle content-type
                 etag = new_payload.get("ETag")
-                location_path = new_payload.get("Location-Path")
-                location_query = new_payload.get("Location-Query")
+                separate = new_payload.get("Separate")
+                callback = new_payload.get("Callback")
                 new_payload = new_payload.get("Payload")
             else:
                 etag = None
-                location_path = None
-                location_query = None
-            if new_payload is not None and new_payload != -1:
-                etag = BitArray(bytes=etag, length=8)
-                etag = etag.uint
-                if etag is not None:
-                    response.etag = (etag + 1)
-                if render_method == "render_PUT":
-                    response.code = defines.responses['CHANGED']
-
-                    if isinstance(node.value.raw_payload, dict):
-                        if request.content_type is not None and request.content_type in defines.content_types:
-                            node.value.raw_payload[request.content_type] = new_payload
-                        else:
-                            node.value.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
-                    else:
-                        node.value.payload = new_payload
-                    # Observe
-                    self._parent.notify(node)
+                separate = None
+                callback = None
+            if separate is not None:
+                # Handle separate
+                ack = Message.new_ack(request)
+                ack.mid = self._parent.current_mid % (1 << 16)
+                self._parent.current_mid += 1
+                host, port = request.source
+                self._parent.send(ack, host, port)
+                request.acknowledged = True
+                new_payload = callback(payload=request.payload, query=request.query)
+                if isinstance(new_payload, dict):
+                    etag = new_payload.get("ETag")
+                    new_payload = new_payload.get("Payload")
                 else:
-                    response.code = defines.responses['CREATED']
-                    method = getattr(resource, "new_resource", None)
-                    if location_path is not None:
-                        del response.etag
-                        resource = method()
-                        lp_paths = location_path.split("/")
-                        resource.payload = new_payload
-                        dad = self.create_subtree(lp_paths[:-1])
-                        resource.path = lp_paths[-1]
-                        dad.add_child(resource)
-                        response.location_path = lp_paths
-                        # Observe
-                        self._parent.notify(self._parent.root.find_complete(location_path))
+                    etag = None
+
+            if new_payload is not None and new_payload != -1:
+                if etag is not None:
+                    resource.etag = etag
+                    response.etag = resource.etag
+                if isinstance(node.value.raw_payload, dict):
+                    if request.content_type is not None and request.content_type in defines.content_types:
+                        node.value.raw_payload[request.content_type] = new_payload
                     else:
-                        p = path.split("/")
-                        old_observe_count = node.value.observe_count
-                        node.value = method()
-                        node.value.path = p[-1]
-                        node.value.payload = new_payload
-                        node.value.observe_count = old_observe_count
-                        response.etag = old_observe_count
-                        response.location_path = p
-                        # Observe
-                        self._parent.notify(node)
+                        node.value.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
+                else:
+                    node.value.payload = new_payload
 
-                    if location_query is not None and len(location_query) > 0:
-                        location_query = location_query.strip("?")
-                        lq = location_query.split("&")
-                        response.location_query = lq
+                # Observe
+                self._parent.notify(node)
 
+                response.code = defines.responses['CHANGED']
                 response.payload = None
                 # Token
                 response.token = request.token
-
                 #TODO Blockwise
                 #Reliability
                 response = self._parent.reliability_response(request, response)
@@ -176,7 +276,7 @@ class ResourceLayer(object):
                 parent = node.parent
                 assert isinstance(parent, Tree)
                 # Observe
-                self._parent.notify(parent)
+                self._parent.notify_deletion(node)
                 self._parent.remove_observers(node)
 
                 parent.del_child(node)
@@ -184,7 +284,6 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
-
                 #TODO Blockwise
                 #Reliability
                 response = self._parent.reliability_response(request, response)
@@ -212,16 +311,35 @@ class ResourceLayer(object):
             if isinstance(ret, dict):
                 etag = ret.get("ETag")
                 max_age = ret.get("Max-Age")
+                separate = ret.get("Separate")
+                callback = ret.get("Callback")
                 ret = ret.get("Payload")
             else:
                 etag = None
                 max_age = None
+                separate = None
+                callback = None
+            if separate is not None:
+                # Handle separate
+                ack = Message.new_ack(request)
+                ack.mid = self._parent.current_mid % (1 << 16)
+                self._parent.current_mid += 1
+                host, port = request.source
+                self._parent.send(ack, host, port)
+                request.acknowledged = True
+                ret = callback(query=request.query)
+                if isinstance(ret, dict):
+                    etag = ret.get("ETag")
+                    max_age = ret.get("Max-Age")
+                    ret = ret.get("Payload")
+                else:
+                    etag = None
+                    max_age = None
             if ret != -1:
                 if ret == -2:
                     response = self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
                     return response
                 # handle ETAG
-                etag = BitArray(bytes=etag, length=8).tobytes()
                 if etag in request.etag:
                     response.code = defines.responses['VALID']
                 else:

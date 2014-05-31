@@ -1,4 +1,3 @@
-from bitstring import BitArray
 from coapthon2 import defines
 
 __author__ = 'Giacomo Tanganelli'
@@ -6,7 +5,7 @@ __version__ = "2.0"
 
 
 class Resource(object):
-    def __init__(self, name, visible=True, observable=True, allow_children=True):
+    def __init__(self, server, name, visible=True, observable=True, allow_children=True):
         if isinstance(name, Resource):
             self._attributes = name.attributes
             self.name = name.name
@@ -17,6 +16,7 @@ class Resource(object):
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
             self._payload = name.payload
+            self._server = server
 
             self._etag = name.etag
         else:
@@ -25,6 +25,8 @@ class Resource(object):
 
             ## The resource name.
             self.name = name
+
+            self._server = server
 
             ## The resource path.
             self.path = None
@@ -46,13 +48,25 @@ class Resource(object):
             self._etag = []
 
     @property
+    def server(self):
+        return self._server
+
+    @server.setter
+    def server(self, s):
+        from coapserver import CoAP
+        assert isinstance(s, CoAP)
+        self._server = s
+
+    @property
     def etag(self):
         if self._etag:
-            if BitArray(uint=self._observe_count, length=8).tobytes() != self._etag[-1]:
-                self._etag.append(BitArray(uint=self._observe_count, length=8).tobytes())
+            return self._etag[-1]
         else:
-            self._etag.append(BitArray(uint=self._observe_count, length=8).tobytes())
-        return self._etag[-1]
+            return None
+
+    @etag.setter
+    def etag(self, etag):
+        self._etag.append(etag)
 
     @property
     def payload(self):

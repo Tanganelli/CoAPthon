@@ -14,6 +14,24 @@ class ObserveLayer(object):
     def __init__(self, parent):
         self._parent = parent
 
+    def notify_deletion(self, node):
+        assert isinstance(node, Tree)
+        resource = node.value
+        observers = self._parent.relation.get(resource)
+        if observers is None:
+            resource.observe_count += 1
+            return
+        now = int(round(time.time() * 1000))
+        commands = []
+        for item in observers.keys():
+            old, host, port, token = observers[item]
+            #send notification
+            commands.append((self._parent.prepare_notification, [(resource, host, port, token)], {}))
+            observers[item] = (now, host, port, token)
+        resource.observe_count += 1
+        self._parent.relation[resource] = observers
+        return commands
+
     def notify(self, node):
         assert isinstance(node, Tree)
         resource = node.value
@@ -69,6 +87,27 @@ class ObserveLayer(object):
                 return response, host, port
         return None
 
+    def prepare_notification_deletion(self, t):
+        resource, host, port, token = t
+        response = Response()
+        response.destination = (host, port)
+        response.token = token
+        option = Option()
+        option.number = defines.inv_options['Observe']
+        option.value = resource.observe_count
+        response.add_option(option)
+        response.code = defines.responses['DELETED']
+        response.payload = None
+        #TODO Blockwise
+        #Reliability
+        request = Request()
+        request.type = defines.inv_types['CON']
+        request.acknowledged = True
+        response = self._parent.reliability_response(request, response)
+        #Matcher
+        response = self._parent.matcher_response(response)
+        return response, host, port
+
     def send_notification(self, t):
         response, host, port = t
         serializer = Serializer()
@@ -106,7 +145,7 @@ class ObserveLayer(object):
     def remove_observers(self, node):
         assert isinstance(node, Tree)
         commands = []
-        log.msg("Remove observers for " + node.find_path())
+        log.msg("Remove observers")
         for n in node.children:
             assert isinstance(n, Tree)
             if len(n.children) > 0:
@@ -124,3 +163,10 @@ class ObserveLayer(object):
                 resource.observe_count += 1
             del self._parent.relation[resource]
         return commands
+
+    def update_relations(self, node, resource):
+        old_resource = node.value
+        observers = self._parent.relation.get(old_resource)
+        if observers is not None:
+            del self._parent.relation[old_resource]
+            self._parent.relation[resource] = observers

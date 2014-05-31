@@ -111,4 +111,7 @@ class Tree(object):
             v = node.children.get(k, None)
             if v is not None:
                 return self.del_child(v)
-        del self.children[node.value.path]
+        try:
+            del self.children[node.value.path]
+        except KeyError:
+            pass

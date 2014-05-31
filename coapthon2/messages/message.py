@@ -175,7 +175,8 @@ class Message(object):
         types = {v: k for k, v in defines.types.iteritems()}
         ack.type = types['ACK']
         ack.mid = message.mid
-        ack.token = None
+        ack.code = 0
+        ack.token = message.token
         ack.destination = message.source
         return ack
 
@@ -192,6 +193,7 @@ class Message(object):
         rst.type = types['RST']
         rst.mid = message.mid
         rst.token = None
+        rst.code = 0
         rst.destination = message.source
         return rst
 

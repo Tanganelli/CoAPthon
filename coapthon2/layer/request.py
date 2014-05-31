@@ -58,35 +58,22 @@ class RequestLayer(object):
         path = request.uri_path
         path = path.strip("/")
         node = self._parent.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+        if node is None:
+            response = self._parent.send_error(request, response, 'NOT_FOUND')
             return response
 
         # Update request
-        response = self._parent.update_resource(path, request, response, resource)
+        response = self._parent.update_resource(request, response, node)
         return response
 
     def handle_post(self, request):
         path = request.uri_path
         path = path.strip("/")
-        node = self._parent.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
-            resource = None
         response = Response()
         response.destination = request.source
-        if resource is None:
-            # Create request
-            response = self._parent.create_resource(path, request, response)
-            log.msg(self._parent.root.dump())
-            return response
-        else:
-            # Update request
-            response = self._parent.update_resource(path, request, response, resource, "render_POST")
-            return response
+        # Create request
+        response = self._parent.create_resource(path, request, response)
+        return response
 
     def handle_delete(self, request):
         path = request.uri_path

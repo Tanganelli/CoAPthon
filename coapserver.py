@@ -30,7 +30,7 @@ class CoAP(DatagramProtocol):
         self.relation = {}
         self._currentMID = 1
 
-        root = Resource('root', visible=False, observable=False, allow_children=True)
+        root = Resource(self, 'root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
 
@@ -41,6 +41,12 @@ class CoAP(DatagramProtocol):
         self._resource_layer = ResourceLayer(self)
         self._message_layer = MessageLayer(self)
         self._observe_layer = ObserveLayer(self)
+
+    def send(self, message, host, port):
+        serializer = Serializer()
+        message = serializer.serialize(message)
+        log.msg("Send separate response")
+        self.transport.write(message, (host, port))
 
     def datagramReceived(self, data, (host, port)):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
@@ -125,6 +131,9 @@ class CoAP(DatagramProtocol):
     def add_observing(self, resource, response):
         return self._observe_layer.add_observing(resource, response)
 
+    def update_relations(self, node, resource):
+        self._observe_layer.update_relations(node, resource)
+
     def reliability_response(self, request, response):
         return self._message_layer.reliability_response(request, response)
 
@@ -134,8 +143,8 @@ class CoAP(DatagramProtocol):
     def create_resource(self, path, request, response):
         return self._resource_layer.create_resource(path, request, response)
 
-    def update_resource(self, path, request, response, resource, render_method="render_PUT"):
-        return self._resource_layer.update_resource(path, request, response, resource, render_method)
+    def update_resource(self, path, request, response):
+        return self._resource_layer.update_resource(path, request, response)
 
     def delete_resource(self, request, response, node):
         return self._resource_layer.delete_resource(request, response, node)
@@ -151,6 +160,11 @@ class CoAP(DatagramProtocol):
         if commands is not None:
             threads.callMultipleInThread(commands)
 
+    def notify_deletion(self, node):
+        commands = self._observe_layer.notify(node)
+        if commands is not None:
+            threads.callMultipleInThread(commands)
+
     def remove_observers(self, node):
         commands = self._observe_layer.remove_observers(node)
         if commands is not None:
@@ -158,6 +172,11 @@ class CoAP(DatagramProtocol):
 
     def prepare_notification(self, t):
         ret = self._observe_layer.prepare_notification(t)
+        if ret is not None:
+            reactor.callFromThread(self._observe_layer.send_notification, ret)
+
+    def prepare_notification_deletion(self, t):
+        ret = self._observe_layer.prepare_notification_deletion(t)
         if ret is not None:
             reactor.callFromThread(self._observe_layer.send_notification, ret)
 
@@ -202,9 +221,9 @@ class CoAP(DatagramProtocol):
 class CoAPServer(CoAP):
     def __init__(self):
         CoAP.__init__(self)
-        if self.add_resource('hello/', Hello('hello')):
+        if self.add_resource('hello/', Hello(self, 'hello')):
             log.msg(self.root.dump())
-        if self.add_resource('hello/hello2', Hello('hello')):
+        if self.add_resource('hello/hello2', Hello(self, 'hello')):
             log.msg(self.root.dump())
 
 
