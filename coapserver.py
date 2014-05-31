@@ -199,7 +199,7 @@ class CoAP(DatagramProtocol):
             datagram = serializer.serialize(response)
             self.transport.write(datagram, (host, port))
             future_time *= 2
-            self.call_id[key] = (reactor.callLater(reactor, future_time, self.retransmit,
+            self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (response, host, port, future_time)), retransmit_count)
 
         elif response.acknowledged or response.rejected:

@@ -38,10 +38,11 @@ class CoAP(DatagramProtocol):
         self.operations = []
 
     def startProtocol(self):
-        self.operations.append((self.discover,))
+        #self.operations.append((self.discover,))
         args = ("/hello",)
         kwargs = {}
-        self.operations.append((self.observe, args, kwargs))
+        self.operations.append((self.get, args, kwargs))
+        #self.operations.append((self.observe, args, kwargs))
         # args = ("/hello", "Test")
         # self.operations.append((self.put, args))
         # self.operations.append((self.post, args))

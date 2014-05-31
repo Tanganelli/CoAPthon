@@ -13,7 +13,7 @@ class Hello(Resource):
 
     def render_GET(self, query=None):
         #return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
-        time.sleep(0.5)
+        time.sleep(5)
         return {"Payload": self.payload, "ETag": self.etag}
 
     def render_GET_separate(self, query=None):
