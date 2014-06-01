@@ -6,7 +6,15 @@ __version__ = "2.0"
 
 
 class Message(object):
+    """
+    Manage messages.
+    """
     def __init__(self):
+
+        """
+        Initialize a CoAP Message.
+
+        """
         ## The type. One of {CON, NON, ACK or RST}.
         self.type = None
         ## The 16-bit Message Identification.
@@ -33,14 +41,26 @@ class Message(object):
         self._duplicate = False
         ## The timestamp
         self._timestamp = None
-
+        ## The code
         self.code = None
 
     @property
     def options(self):
+        """
+        Property for retrieving the options of the message.
+
+        @return: the options
+        """
         return self._options
 
     def add_option(self, option):
+        """
+        Add an option to the message.
+
+        @type option: coapthon2.messages.option.Option
+        @param option: the option
+        @raise TypeError: if the option is not repeatable and such option is already present in the message
+        """
         assert isinstance(option, Option)
         name, type_value, repeatable, defaults = defines.options[option.number]
         if not repeatable:
@@ -53,6 +73,12 @@ class Message(object):
             self._options.append(option)
 
     def del_option(self, option):
+        """
+        Delete an option from the message
+
+        @type option: coapthon2.messages.option.Option
+        @param option: the option
+        """
         assert isinstance(option, Option)
         try:
             while True:
@@ -198,6 +224,11 @@ class Message(object):
         return rst
 
     def __str__(self):
+        """
+        Return the message as a formatted string.
+
+        @return: the string representing the message
+        """
         msg = "Source: " + str(self.source) + "\n"
         msg += "Destination: " + str(self.destination) + "\n"
         msg += "Type: " + str(defines.types[self.type]) + "\n"

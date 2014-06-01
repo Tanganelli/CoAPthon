@@ -14,11 +14,26 @@ log.startLogging(sys.stdout)
 
 
 class Serializer(object):
+    """
+    Class for serialize and de-serialize messages.
+    """
     def __init__(self):
+        """
+        Initialize a Serilizer.
+
+        """
         self._reader = None
         self._writer = None
 
     def deserialize(self, raw, host, port):
+        """
+        De-serialize a stream of byte to a message.
+
+        @param raw: received bytes
+        @param host: source host
+        @param port: source port
+        @return: the message
+        """
         self._reader = BitStream(bytes=raw, length=(len(raw) * 8))
         version = self._reader.read(defines.VERSION_BITS).uint
         message_type = self._reader.read(defines.TYPE_BITS).uint
@@ -91,7 +106,7 @@ class Serializer(object):
         """
         Checks if is request.
 
-        @return: true, if is request
+        @return: True, if is request
         """
         return defines.REQUEST_CODE_LOWER_BOUND <= code <= defines.REQUEST_CODE_UPPER_BOUNT
 
@@ -100,23 +115,13 @@ class Serializer(object):
         """
         Checks if is response.
 
-        @return: true, if is response
+        @return: True, if is response
         """
         return defines.RESPONSE_CODE_LOWER_BOUND <= code <= defines.RESPONSE_CODE_UPPER_BOUND
 
-    @staticmethod
-    def is_empty(code):
-        """
-        Checks if is empty.
-
-        @return: true, if is empty
-        """
-        return code == defines.EMPTY_CODE
-
     def read_option_value_from_nibble(self, nibble):
         """
-        Calculates the value used in the extended option fields as specified in
-        draft-ietf-core-coap-14, section 3.1
+        Calculates the value used in the extended option fields.
 
         @param nibble: the 4-bit option header value.
         @return: the value calculated from the nibble and the extended option value.
@@ -133,30 +138,35 @@ class Serializer(object):
         else:
             raise ValueError("Unsupported option nibble " + nibble)
 
-    def serialize(self, response):
+    def serialize(self, message):
+        """
+        Serialize message to a stream of byte.
 
+        @param message: the message
+        @return: the stream of bytes
+        """
         fmt = 'uint:' + str(defines.VERSION_BITS) + '=version,' \
             'uint:' + str(defines.TYPE_BITS) + '=type,' \
             'uint:' + str(defines.TOKEN_LENGTH_BITS) + '=tokenlen,' \
             'uint:' + str(defines.CODE_BITS) + '=code,' \
             'uint:' + str(defines.MESSAGE_ID_BITS) + '=mid'
         d = {'version': defines.VERSION,
-             'type': response.type,
-             'code': response.code,
-             'mid': response.mid}
-        if response.token is None or response.token == "":
+             'type': message.type,
+             'code': message.code,
+             'mid': message.mid}
+        if message.token is None or message.token == "":
             d['tokenlen'] = 0
         else:
-            d['tokenlen'] = len(response.token)
+            d['tokenlen'] = len(message.token)
 
         self._writer = pack(fmt, **d)
 
-        if response.token is not None and len(response.token) > 0:
-            fmt = 'bytes:' + str(len(response.token)) + '=token'
-            d = {'token': response.token}
+        if message.token is not None and len(message.token) > 0:
+            fmt = 'bytes:' + str(len(message.token)) + '=token'
+            d = {'token': message.token}
             self._writer.append(pack(fmt, **d))
 
-        options = self.as_sorted_list(response.options)  # already sorted
+        options = self.as_sorted_list(message.options)  # already sorted
         lastoptionnumber = 0
         for option in options:
 
@@ -209,7 +219,7 @@ class Serializer(object):
             # update last option number
             lastoptionnumber = option.number
 
-        payload = response.payload
+        payload = message.payload
         if isinstance(payload, dict):
             payload = payload.get("Payload")
         if payload is not None and len(payload) > 0:
@@ -302,6 +312,14 @@ class Serializer(object):
 
     @staticmethod
     def convert_to_raw(number, value, length):
+        """
+        Get the value of an option as a BitArray.
+
+        @param number: the option number
+        @param value: the option value
+        @param length: the option length
+        @return: the value of an option as a BitArray
+        """
         if length == 0:
             return BitArray()
         name, value_type, repeatable, default = defines.options[number]

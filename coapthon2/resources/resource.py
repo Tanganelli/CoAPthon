@@ -5,7 +5,18 @@ __version__ = "2.0"
 
 
 class Resource(object):
+    """
+    The Resource class.
+    """
     def __init__(self, name, visible=True, observable=True, allow_children=True):
+        """
+        Initialize a new Resource.
+
+        @param name: the name or a Resource object to copy from.
+        @param visible: if the resource is visible
+        @param observable: if the resource is observable
+        @param allow_children: if the resource could has children
+        """
         if isinstance(name, Resource):
             self._attributes = name.attributes
             self.name = name.name
@@ -44,17 +55,12 @@ class Resource(object):
             self._etag = []
 
     @property
-    def server(self):
-        return self._server
-
-    @server.setter
-    def server(self, s):
-        from coapserver import CoAP
-        assert isinstance(s, CoAP)
-        self._server = s
-
-    @property
     def etag(self):
+        """
+        Get the last valid ETag of the resource.
+
+        @return: the ETag value or None if the resource doesn't have any ETag
+        """
         if self._etag:
             return self._etag[-1]
         else:
@@ -62,10 +68,21 @@ class Resource(object):
 
     @etag.setter
     def etag(self, etag):
+        """
+        Set the ETag of the resource.
+
+        @param etag: the ETag
+        """
         self._etag.append(etag)
 
     @property
     def payload(self):
+        """
+        Get the payload of the resource according to the content type specified by required_content_type or
+        "text/plain" by default.
+
+        @return: the payload.
+        """
         if self._required_content_type is not None:
             if isinstance(self._payload, dict):
                 try:
@@ -84,6 +101,11 @@ class Resource(object):
 
     @payload.setter
     def payload(self, p):
+        """
+        Set the payload of the resource.
+
+        @param p: the new payload
+        """
         if isinstance(p, dict):
             self._payload = {}
             for k in p.keys():
@@ -94,59 +116,124 @@ class Resource(object):
 
     @property
     def raw_payload(self):
+        """
+        Get the payload of the resource as a dict of all different payloads defined for the resource.
+
+        @return: the payload as dict
+        """
         return self._payload
 
     @property
     def attributes(self):
+        """
+        Get the CoRE Link Format attribute of the resource.
+
+        @return: the attribute of the resource
+        """
         return self._attributes
 
     @attributes.setter
     def attributes(self, att):
         #TODO assert
+        """
+        Set the CoRE Link Format attribute of the resource.
+
+        @param att: the attributes
+        """
         self._attributes = att
 
     @property
     def visible(self):
+        """
+        Get if the resource is visible.
+
+        @return: True, if visible
+        """
         return self._visible
 
     @visible.setter
     def visible(self, v):
+        """
+        Set if the resource is visible.
+
+        @param v: the visibility (True or False)
+        """
         assert isinstance(v, bool)
         self._visible = v
 
     @property
     def observable(self):
+        """
+        Get if the resource is observable.
+
+        @return: True, if observable
+        """
         return self._observable
 
     @observable.setter
     def observable(self, v):
+        """
+        Set if the resource is observable.
+
+        @param v: the observability (True or False)
+        """
         assert isinstance(v, bool)
         self._observable = v
 
     @property
     def allow_children(self):
+        """
+        Get if the resource allow children.
+
+        @return: True, if allow children
+        """
         return self._allow_children
 
     @allow_children.setter
     def allow_children(self, v):
+        """
+        Set if the resource  allow children.
+
+        @param v: the  allow children (True or False)
+        """
         assert isinstance(v, bool)
         self._allow_children = v
 
     @property
     def observe_count(self):
+        """
+        Get the Observe counter.
+
+        @return: the Observe counter value
+        """
         return self._observe_count
 
     @observe_count.setter
     def observe_count(self, v):
+        """
+        Set the Observe counter.
+
+        @param v: the Observe counter value
+        """
         assert isinstance(v, int)
         self._observe_count = v
 
     @property
     def required_content_type(self):
+        """
+        Get the actual required Content-Type.
+
+        @return: the actual required Content-Type.
+        """
         return self._required_content_type
 
     @required_content_type.setter
     def required_content_type(self, act):
+        """
+        Set the actual required Content-Type.
+
+        @param act: the actual required Content-Type.
+        """
         if isinstance(act, str):
             self._required_content_type = defines.inv_content_types[act]
         else:
@@ -154,6 +241,11 @@ class Resource(object):
 
     @property
     def content_type(self):
+        """
+        Get the CoRE Link Format ct attribute of the resource.
+
+        @return: the CoRE Link Format ct attribute
+        """
         value = ""
         lst = self._attributes.get("ct")
         if lst is not None and len(lst) > 0:
@@ -166,6 +258,11 @@ class Resource(object):
 
     @content_type.setter
     def content_type(self, lst):
+        """
+        Set the CoRE Link Format ct attribute of the resource.
+
+        @param lst: the list of CoRE Link Format ct attribute of the resource
+        """
         value = []
         if isinstance(lst, str):
             ct = defines.inv_content_types[lst]
@@ -178,6 +275,11 @@ class Resource(object):
             self._attributes["ct"] = value
 
     def add_content_type(self, ct):
+        """
+        Add a CoRE Link Format ct attribute to the resource.
+
+        @param ct: the CoRE Link Format ct attribute
+        """
         lst = self._attributes.get("ct")
         if lst is None:
             lst = []
@@ -187,6 +289,11 @@ class Resource(object):
 
     @property
     def resource_type(self):
+        """
+        Get the CoRE Link Format rt attribute of the resource.
+
+        @return: the CoRE Link Format rt attribute
+        """
         value = "rt="
         lst = self._attributes.get("rt")
         if lst is None:
@@ -197,11 +304,21 @@ class Resource(object):
 
     @resource_type.setter
     def resource_type(self, rt):
+        """
+        Set the CoRE Link Format rt attribute of the resource.
+
+        @param rt: the CoRE Link Format rt attribute
+        """
         self._attributes["rt"] = rt
 
     @property
     def interface_type(self):
-        value = "rt="
+        """
+        Get the CoRE Link Format if attribute of the resource.
+
+        @return: the CoRE Link Format if attribute
+        """
+        value = "if="
         lst = self._attributes.get("if")
         if lst is None:
             value = ""
@@ -211,10 +328,20 @@ class Resource(object):
 
     @interface_type.setter
     def interface_type(self, ift):
+        """
+        Set the CoRE Link Format if attribute of the resource.
+
+        @param ift: the CoRE Link Format if attribute
+        """
         self._attributes["if"] = ift
 
     @property
     def maximum_size_estimated(self):
+        """
+        Get the CoRE Link Format sz attribute of the resource.
+
+        @return: the CoRE Link Format sz attribute
+        """
         value = "sz="
         lst = self._attributes.get("sz")
         if lst is None:
@@ -225,19 +352,47 @@ class Resource(object):
 
     @maximum_size_estimated.setter
     def maximum_size_estimated(self, sz):
+        """
+        Set the CoRE Link Format sz attribute of the resource.
+
+        @param sz: the CoRE Link Format sz attribute
+        """
         self._attributes["sz"] = sz
 
     def render_GET(self, query=None):
+        """
+        Method to be redefined to render a GET request on the resource.
+
+        @param query: the request query
+        @return: the response
+        """
         return -1
 
     def render_PUT(self, payload=None, query=None):
+        """
+        Method to be redefined to render a PUTT request on the resource.
+
+        @param payload: the request payload
+        @param query: the request query
+        @return: the response
+        """
         return -1
 
     def render_POST(self, payload=None, query=None):
+        """
+        Method to be redefined to render a POST request on the resource.
+
+        @param payload: the request payload
+        @param query: the request query
+        @return: the response
+        """
         return -1
 
     def render_DELETE(self, query=None):
-        return -1
+        """
+        Method to be redefined to render a DELETE request on the resource.
 
-    def new_resource(self):
-        return Resource("subtree")
+        @param query: the request query
+        @return: the response
+        """
+        return -1

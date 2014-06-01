@@ -8,11 +8,25 @@ __author__ = 'giacomo'
 
 
 class RequestLayer(object):
-
+    """
+    Handles the Request Layer functionality.
+    """
     def __init__(self, parent):
+        """
+        Initialize a Request Layer.
+
+        @type parent: coapserver.CoAP
+        @param parent: the CoAP server
+        """
         self._parent = parent
 
     def handle_request(self, request):
+        """
+        Handles requests.
+
+        @param request: the request
+        @return: the response
+        """
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.mid))
         if key not in self._parent.received:
@@ -42,6 +56,12 @@ class RequestLayer(object):
                 return None
 
     def process(self, request):
+        """
+        Processes a request message.
+
+        @param request: the request
+        @return: the response
+        """
         method = defines.codes[request.code]
         if method == 'GET':
             response = self.handle_get(request)
@@ -56,6 +76,12 @@ class RequestLayer(object):
         return response
 
     def handle_put(self, request):
+        """
+        Handles a PUT request
+
+        @param request: the request
+        @return: the response
+        """
         response = Response()
         response.destination = request.source
         path = request.uri_path
@@ -70,6 +96,12 @@ class RequestLayer(object):
         return response
 
     def handle_post(self, request):
+        """
+        Handles a POST request.
+
+        @param request: the request
+        @return: the response
+        """
         path = request.uri_path
         path = path.strip("/")
         response = Response()
@@ -79,6 +111,12 @@ class RequestLayer(object):
         return response
 
     def handle_delete(self, request):
+        """
+        Handles a DELETE request.
+
+        @param request: the request
+        @return: the response
+        """
         path = request.uri_path
         path = path.strip("/")
         node = self._parent.root.find_complete(path)
@@ -99,6 +137,12 @@ class RequestLayer(object):
             return response
 
     def handle_get(self, request):
+        """
+        Handles a GET request.
+
+        @param request: the request
+        @return: the response
+        """
         path = request.uri_path
         response = Response()
         response.destination = request.source

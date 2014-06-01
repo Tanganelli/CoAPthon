@@ -5,6 +5,12 @@ __version__ = "2.0"
 
 
 def bit_len(int_type):
+    """
+    Get the number of bits needed to encode the int passed.
+
+    @param int_type: the int to be converted
+    @return: the number of bits needed to encode the int passed.
+    """
     length = 0
     while int_type:
         int_type >>= 1
@@ -25,7 +31,6 @@ class Tree(object):
     def find_path(self, msg=""):
         """
         Find the absolute path of a node
-
 
         @return : path
         """

@@ -8,10 +8,30 @@ __author__ = 'giacomo'
 
 
 class ResourceLayer(object):
+    """
+    Handles the Resources.
+    """
     def __init__(self, parent):
+        """
+        Initialize a Resource Layer.
+
+        @type parent: coapserver.CoAP
+        @param parent: the CoAP server
+        """
         self._parent = parent
 
     def edit_resorce(self, request, response, node, lp, p):
+        """
+        Render a POST on an already created resource.
+
+        @type node: coapthon2.utils.Tree
+        @param request: the request
+        @param response: the response
+        @param node: the node which has the resource
+        @param lp: the location_path attribute of the resource
+        @param p: the local path of the resource (only the last section of the split path)
+        @return: the response
+        """
         method = getattr(node.value, "render_POST", None)
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
@@ -104,6 +124,17 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def add_resorce(self, request, response, old, lp, p):
+        """
+        Render a POST on aa new resource.
+
+        @type old: coapthon2.utils.Tree
+        @param request: the request
+        @param response: the response
+        @param old: the node which has the parent of the resource
+        @param lp: the location_path attribute of the resource
+        @param p: the local path of the resource (only the last section of the split path)
+        @return: the response
+        """
         method = getattr(old.value, "render_POST", None)
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
@@ -193,6 +224,14 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def create_resource(self, path, request, response):
+        """
+        Render a POST request.
+
+        @param path: the path of the request
+        @param request: the request
+        @param response: the response
+        @return: the response
+        """
         paths = path.split("/")
         last, p = self._parent.root.find_complete_last(paths)
         if p is None:
@@ -206,6 +245,15 @@ class ResourceLayer(object):
                 return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def update_resource(self, request, response, node):
+        """
+        Render a PUT request.
+
+        @type node: coapthon2.utils.Tree
+        @param request: the request
+        @param response: the response
+        @param node: the node which has the resource
+        @return: the response
+        """
         resource = node.value
         # If-Match
         if request.has_if_match:
@@ -277,6 +325,15 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def delete_resource(self, request, response, node):
+        """
+        Render a DELETE request.
+
+        @type node: coapthon2.utils.Tree
+        @param request: the request
+        @param response: the response
+        @param node: the node which has the resource
+        @return: the response
+        """
         assert isinstance(node, Tree)
         method = getattr(node.value, 'render_DELETE', None)
         if hasattr(method, '__call__'):
@@ -310,6 +367,14 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def get_resource(self, request, response, resource):
+        """
+        Render a GET request.
+
+        @param request: the request
+        @param response: the response
+        @param resource: the resource required
+        @return: the response
+        """
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             resource.required_content_type = None
@@ -363,7 +428,7 @@ class ResourceLayer(object):
 
                 # Observe
                 if request.observe == 0 and resource.observable:
-                    response, resource = self._parent.add_observing(resource, response)
+                    response = self._parent.add_observing(resource, response)
                 #TODO Blockwise
                 response = self._parent.reliability_response(request, response)
                 response = self._parent.matcher_response(response)
@@ -374,6 +439,13 @@ class ResourceLayer(object):
         return response
 
     def discover(self, request, response):
+        """
+        Render a GET request to the .weel-know/core link.
+
+        @param request: the request
+        @param response: the response
+        @return: the response
+        """
         node = self._parent.root
         assert isinstance(node, Tree)
         response.code = defines.responses['CONTENT']
@@ -404,6 +476,11 @@ class ResourceLayer(object):
 
     def send_ack(self, *args):
         # Handle separate
+        """
+        Sends an ACK message for the request.
+
+        @param args: [request]
+        """
         request = args[0]
         ack = Message.new_ack(request)
         host, port = request.source

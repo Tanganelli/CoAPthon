@@ -11,10 +11,26 @@ __author__ = 'giacomo'
 
 
 class ObserveLayer(object):
+    """
+    Handles the Observing feature.
+    """
     def __init__(self, parent):
+        """
+        Initialize a Observe Layer.
+
+        @type parent: coapserver.CoAP
+        @param parent: the CoAP server
+        """
         self._parent = parent
 
     def notify_deletion(self, node):
+        """
+        Finds the observers that must be notified about the cancellation of the observed resource.
+
+        @type node: coapthon2.utils.Tree
+        @param node: the node which has the deleted resource
+        @return: the list of commands that must be executed to notify clients
+        """
         assert isinstance(node, Tree)
         resource = node.value
         observers = self._parent.relation.get(resource)
@@ -33,6 +49,13 @@ class ObserveLayer(object):
         return commands
 
     def notify(self, node):
+        """
+        Finds the observers that must be notified about the update of the observed resource.
+
+        @type node: coapthon2.utils.Tree
+        @param node: the node which has the deleted resource
+        @return: the list of commands that must be executed to notify clients
+        """
         assert isinstance(node, Tree)
         resource = node.value
         observers = self._parent.relation.get(resource)
@@ -50,44 +73,59 @@ class ObserveLayer(object):
         self._parent.relation[resource] = observers
         return commands
 
-    def prepare_notification(self, t, code=None):
+    def prepare_notification(self, t):
+        """
+        Create the notification message.
+
+
+        @type t: (resource, host, port, token)
+        @param t: the arguments of the notification message
+        @return: the notification message
+        """
         resource, host, port, token = t
         response = Response()
         response.destination = (host, port)
         response.token = token
-        if code is None:
-            option = Option()
-            option.number = defines.inv_options['Observe']
-            option.value = resource.observe_count
-            response.add_option(option)
-            method = getattr(resource, 'render_GET', None)
-            if hasattr(method, '__call__'):
-                # Render_GET
-                response.code = defines.responses['CONTENT']
-                response.payload = method()
-                #TODO Blockwise
-                #Reliability
-                request = Request()
-                request.type = defines.inv_types['CON']
-                request.acknowledged = True
-                response = self._parent.reliability_response(request, response)
-                #Matcher
-                response = self._parent.matcher_response(response)
-                return response, host, port
-            else:
-                response.code = code
-                #TODO Blockwise
-                #Reliability
-                request = Request()
-                request.type = defines.inv_types['CON']
-                request.acknowledged = True
-                response = self._parent.reliability_response(request, response)
-                #Matcher
-                response = self._parent.matcher_response(response)
-                return response, host, port
-        return None
+
+        option = Option()
+        option.number = defines.inv_options['Observe']
+        option.value = resource.observe_count
+        response.add_option(option)
+        method = getattr(resource, 'render_GET', None)
+        if hasattr(method, '__call__'):
+            # Render_GET
+            response.code = defines.responses['CONTENT']
+            response.payload = method()
+            #TODO Blockwise
+            #Reliability
+            request = Request()
+            request.type = defines.inv_types['CON']
+            request.acknowledged = True
+            response = self._parent.reliability_response(request, response)
+            #Matcher
+            response = self._parent.matcher_response(response)
+            return response
+        else:
+            response.code = defines.responses['METHOD_NOT_ALLOWED']
+            #TODO Blockwise
+            #Reliability
+            request = Request()
+            request.type = defines.inv_types['CON']
+            request.acknowledged = True
+            response = self._parent.reliability_response(request, response)
+            #Matcher
+            response = self._parent.matcher_response(response)
+            return response
 
     def prepare_notification_deletion(self, t):
+        """
+        Create the notification message for deleted resource.
+
+
+        @type t: (resource, host, port, token)
+        @param t: the arguments of the notification message
+        @return: the notification message
+        """
         resource, host, port, token = t
         response = Response()
         response.destination = (host, port)
@@ -106,16 +144,29 @@ class ObserveLayer(object):
         response = self._parent.reliability_response(request, response)
         #Matcher
         response = self._parent.matcher_response(response)
-        return response, host, port
+        return response
 
-    def send_notification(self, t):
-        response, host, port = t
+    def send_notification(self, notification_message):
+        """
+        Sends a notification message.
+
+        @param notification_message: the notification message
+        """
+        assert isinstance(notification_message, Response)
+        host, port = notification_message.destination
         serializer = Serializer()
-        self._parent.schedule_retrasmission(t)
-        response = serializer.serialize(response)
-        self._parent.transport.write(response, (host, port))
+        self._parent.schedule_retrasmission(notification_message)
+        notification_message = serializer.serialize(notification_message)
+        self._parent.transport.write(notification_message, (host, port))
 
     def add_observing(self, resource, response):
+        """
+        Add an observer to a resource and sets the Observe option in the response.
+
+        @param resource: the resource of interest
+        @param response: the response
+        @return: response
+        """
         host, port = response.destination
         key = hash(str(host) + str(port) + str(response.token))
         observers = self._parent.relation.get(resource)
@@ -139,10 +190,16 @@ class ObserveLayer(object):
         option.number = defines.inv_options['Observe']
         option.value = observe_count
         response.add_option(option)
-        resource.observe_count += 1
-        return response, resource
+        return response
 
     def remove_observers(self, node):
+        """
+        Remove all the observers of a resource and notifies the delete of the resource observed.
+
+        @type node: coapthon2.utils.Tree
+        @param node: the node which has the deleted resource
+        @return: the list of commands that must be executed to notify clients
+        """
         assert isinstance(node, Tree)
         commands = []
         log.msg("Remove observers")
@@ -165,6 +222,13 @@ class ObserveLayer(object):
         return commands
 
     def update_relations(self, node, resource):
+        """
+        Update a relation. It is used when a resource change due a POST request, without changing its path.
+
+        @type node: coapthon2.utils.Tree
+        @param node: the node which has the deleted resource
+        @param resource: the new resource
+        """
         old_resource = node.value
         observers = self._parent.relation.get(old_resource)
         if observers is not None:

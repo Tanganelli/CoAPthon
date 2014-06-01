@@ -6,11 +6,26 @@ __author__ = 'giacomo'
 
 
 class MessageLayer(object):
+    """
+    Handles message functionality: Acknowledgment, Reset.
+    """
     def __init__(self, parent):
+        """
+        Initialize a Message Layer.
+
+        @type parent: coapserver.CoAP
+        @param parent: the CoAP server
+        """
         self._parent = parent
 
     @staticmethod
     def reliability_response(request, response):
+        """
+        Sets Message type according to the request
+        @param request: the request object
+        @param response: the response object
+        @return: the response
+        """
         if not (response.type == defines.inv_types['ACK'] or response.type == defines.inv_types['RST']):
             if request.type == defines.inv_types['CON']:
                 if request.acknowledged:
@@ -27,6 +42,12 @@ class MessageLayer(object):
         return response
 
     def matcher_response(self, response):
+        """
+        Sets MID if not already set. Save the sent message for acknowledge and duplication handling.
+        @param response: the response
+        @return: the response
+        @raise AttributeError: if the message destination is not properly set.
+        """
         if response.mid is None:
             response.mid = self._parent.current_mid % (1 << 16)
             self._parent.current_mid += 1
@@ -40,17 +61,25 @@ class MessageLayer(object):
         return response
 
     def handle_message(self, message):
+        """
+        Handles ACK and RST. Handles mapping with the response previously sent and verify if an Observing relation
+        must be deleted.
+
+        @param message: the message received
+        """
         # Matcher
         try:
             host, port = message.source
         except AttributeError:
             return
         key = hash(str(host) + str(port) + str(message.mid))
-        response, timestamp = self._parent.sent.get(key, None)
-        if response is None:
+
+        t = self._parent.sent.get(key)
+        if t is None:
             log.err(defines.types[message.type] + " received without the corresponding message")
             return
-            # Reliability
+        response, timestamp = t
+        # Reliability
         if message.type == defines.inv_types['ACK']:
             response.acknowledged = True
         elif message.type == defines.inv_types['RST']:
@@ -61,16 +90,17 @@ class MessageLayer(object):
             for resource in self._parent.relation.keys():
                 host, port = message.source
                 key = hash(str(host) + str(port) + str(response.token))
-                observers = self._parent.relation[resource]
-                del observers[key]
-                log.msg("Cancel observing relation")
-                if len(observers) == 0:
-                    del self._parent.relation[resource]
+                observers = self._parent.relation.get(resource)
+                if observers is not None:
+                    del observers[key]
+                    log.msg("Cancel observing relation")
+                    if len(observers) == 0:
+                        del self._parent.relation[resource]
 
         # cancel retransmission
         log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         try:
-            call_id, retrasmission_count = self._parent.call_id.get(key, None)
+            call_id, retrasmission_count = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
         except TypeError:
