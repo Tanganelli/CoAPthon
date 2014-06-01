@@ -202,6 +202,8 @@ class Message(object):
         msg += "Destination: " + str(self.destination) + "\n"
         msg += "Type: " + str(defines.types[self.type]) + "\n"
         msg += "MID: " + str(self.mid) + "\n"
+        if self.code is None:
+            self.code = 0
         try:
             msg += "Code: " + str(defines.inv_responses[self.code]) + "\n"
         except KeyError:

@@ -132,23 +132,41 @@ class CoAP(DatagramProtocol):
         else:
             self.handle_message(message)
 
-        function, args, kwargs = self.get_operation()
-        key = hash(str(host) + str(port) + str(message.token))
-        if function is None and len(self.relation) == 0:
-            reactor.stop()
-        elif key in self.relation:
-            self.handle_notification(message)
+        key = hash(str(host) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+           and key in self.sent.keys():
+            #Separate Response
+            print "Separate Response"
         else:
-            function(*args, **kwargs)
+            function, args, kwargs = self.get_operation()
+            key = hash(str(host) + str(port) + str(message.token))
+            if function is None and len(self.relation) == 0:
+                reactor.stop()
+            elif key in self.relation:
+                self.handle_notification(message)
+            else:
+                function(*args, **kwargs)
 
     def handle_message(self, message):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+           and key in self.sent.keys():
+            return None
         if key in self.sent.keys():
             self.received[key] = message
-            req, timestamp, callback = self.sent[key]
-            callback(message.mid)
+            if message.type == defines.inv_types["RST"]:
+                print message
+            else:
+                req, timestamp, callback = self.sent[key]
+                callback(message.mid)
 
     def handle_response(self, response):
+        if response.type == defines.inv_types["CON"]:
+            ack = Message.new_ack(response)
+            serializer = Serializer()
+            datagram = serializer.serialize(ack)
+            log.msg("Send ACK")
+            self.transport.write(datagram)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
@@ -406,6 +424,7 @@ def main():
     protocol = CoAP()
     t = reactor.listenUDP(0, protocol)
     reactor.run()
+
 
 if __name__ == '__main__':
     main()

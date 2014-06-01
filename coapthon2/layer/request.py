@@ -20,10 +20,13 @@ class RequestLayer(object):
             # TODO Blockwise
             return request
         else:
-            request, timestamp = self._parent.received[key]
+            request, timestamp = self._parent.received.get(key)
             request.duplicated = True
             self._parent.received[key] = (request, timestamp)
-            response, timestamp = self._parent.sent.get(key)
+            try:
+                response, timestamp = self._parent.sent.get(key)
+            except TypeError:
+                response = None
             if isinstance(response, Response):
                 return response
             elif request.acknowledged:

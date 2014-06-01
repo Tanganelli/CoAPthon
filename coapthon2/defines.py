@@ -112,6 +112,7 @@ inv_options = {v[0]: k for k, v in options.iteritems()}
 
 ################### CoAP Code ###################
 codes = {
+    0: 'EMPTY',
     1: 'GET',
     2: 'POST',
     3: 'PUT',

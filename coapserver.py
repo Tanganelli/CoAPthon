@@ -83,6 +83,7 @@ class CoAP(DatagramProtocol):
             self._message_layer.handle_message(message)
 
     def purge_mids(self):
+        log.msg("Purge MIDs")
         now = time.time()
         sent_key_to_delete = []
         for key in self.sent.keys():
@@ -189,9 +190,13 @@ class CoAP(DatagramProtocol):
                                                    (response, host, port, future_time)), 0)
 
     def retransmit(self, t):
+        log.msg("Retransmit")
         response, host, port, future_time = t
         key = hash(str(host) + str(port) + str(response.mid))
-        call_id, retransmit_count = self.call_id[key]
+        t = self.call_id.get(key)
+        if t is None:
+            return None
+        call_id, retransmit_count = t
         if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             retransmit_count += 1
             self.sent[key] = (response, time.time())
