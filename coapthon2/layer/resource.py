@@ -336,12 +336,7 @@ class ResourceLayer(object):
                 callback = None
             if separate is not None:
                 # Handle separate
-                ack = Message.new_ack(request)
-                ack.mid = self._parent.current_mid % (1 << 16)
-                self._parent.current_mid += 1
-                host, port = request.source
-                self._parent.send(ack, host, port)
-                request.acknowledged = True
+                self.send_ack(request)
                 ret = callback(query=request.query)
                 if isinstance(ret, dict):
                     etag = ret.get("ETag")
@@ -411,8 +406,6 @@ class ResourceLayer(object):
         # Handle separate
         request = args[0]
         ack = Message.new_ack(request)
-        ack.mid = self._parent.current_mid % (1 << 16)
-        self._parent.current_mid += 1
         host, port = request.source
         self._parent.send(ack, host, port)
         request.acknowledged = True

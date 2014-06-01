@@ -176,7 +176,7 @@ class Message(object):
         ack.type = types['ACK']
         ack.mid = message.mid
         ack.code = 0
-        ack.token = message.token
+        ack.token = None
         ack.destination = message.source
         return ack
 
