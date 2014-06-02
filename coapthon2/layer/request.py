@@ -4,7 +4,8 @@ from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.response import Response
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 
 class RequestLayer(object):

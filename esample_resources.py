@@ -5,6 +5,40 @@ __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
 
+class Storage(Resource):
+    def __init__(self, name="StorageResource"):
+        super(Storage, self).__init__(name, visible=True, observable=True, allow_children=True)
+        self.payload = "Storage Resource for PUT, POST and DELETE"
+
+    def render_GET(self, query=None):
+        return self.payload
+
+    def render_POST(self, payload=None, query=None):
+        q = "?" + "&".join(query)
+        res = Child()
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
+
+
+class Child(Resource):
+    def __init__(self, name="ChildResource"):
+        super(Child, self).__init__(name, visible=True, observable=True, allow_children=True)
+        self.payload = ""
+
+    def render_GET(self, query=None):
+        return self.payload
+
+    def render_PUT(self, payload=None, query=None):
+        return payload
+
+    def render_POST(self, payload=None, query=None):
+        q = "?" + "&".join(query)
+        res = Child()
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
+
+    def render_DELETE(self, query=None):
+        return True
+
+
 class Hello(Resource):
 
     def __init__(self, name="HelloResource"):

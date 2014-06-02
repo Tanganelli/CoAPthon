@@ -3,7 +3,8 @@ from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 
 class MessageLayer(object):

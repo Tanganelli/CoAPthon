@@ -7,7 +7,8 @@ from coapthon2.messages.response import Response
 from coapthon2.serializer import Serializer
 from coapthon2.utils import Tree
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"
 
 
 class ObserveLayer(object):

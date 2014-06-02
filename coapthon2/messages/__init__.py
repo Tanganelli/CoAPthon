@@ -1,1 +1,2 @@
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
+__version__ = "2.0"

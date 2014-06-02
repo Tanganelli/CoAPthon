@@ -102,3 +102,6 @@ class Option(object):
             return name + ": " + str(self.raw_value) + "\n"
         else:
             return name + ": " + str(self.value) + "\n"
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
