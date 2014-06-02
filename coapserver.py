@@ -59,7 +59,7 @@ class CoAP(DatagramProtocol):
                 response = self._request_layer.process(ret)
             else:
                 response = ret
-            self.schedule_retrasmission((response, host, port))
+            self.schedule_retrasmission(response)
             response = serializer.serialize(response)
             self.transport.write(response, (host, port))
         elif isinstance(message, Response):
@@ -172,26 +172,35 @@ class CoAP(DatagramProtocol):
             threads.callMultipleInThread(commands)
 
     def prepare_notification(self, t):
-        ret = self._observe_layer.prepare_notification(t)
-        if ret is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, ret)
+        notification, resource = self._observe_layer.prepare_notification(t)
+        if notification is not None:
+            reactor.callFromThread(self._observe_layer.send_notification, (notification, resource))
 
     def prepare_notification_deletion(self, t):
-        ret = self._observe_layer.prepare_notification_deletion(t)
-        if ret is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, ret)
+        notification, resource = self._observe_layer.prepare_notification_deletion(t)
+        if notification is not None:
+            reactor.callFromThread(self._observe_layer.send_notification, (notification, resource))
 
     def schedule_retrasmission(self, t):
-        response, host, port = t
+        if isinstance(t, tuple):
+            response, resource = t
+        else:
+            response = t
+        host, port = response.destination
         if response.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (response, host, port, future_time)), 0)
+                                                   (t, host, port, future_time)), 1)
 
     def retransmit(self, t):
         log.msg("Retransmit")
-        response, host, port, future_time = t
+        notification, host, port, future_time = t
+        if isinstance(notification, tuple):
+            response, resource = notification
+        else:
+            response = notification
+            resource = None
         key = hash(str(host) + str(port) + str(response.mid))
         t = self.call_id.get(key)
         if t is None:
@@ -205,13 +214,15 @@ class CoAP(DatagramProtocol):
             self.transport.write(datagram, (host, port))
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (response, host, port, future_time)), retransmit_count)
+                                                   (notification, host, port, future_time)), retransmit_count)
 
         elif response.acknowledged or response.rejected:
             response.timeouted = False
             del self.call_id[key]
         else:
             response.timeouted = True
+            if resource is not None:
+                self._observe_layer.remove_observer(response, resource)
             del self.call_id[key]
 
     @staticmethod

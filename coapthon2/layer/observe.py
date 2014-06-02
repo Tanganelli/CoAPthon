@@ -104,7 +104,7 @@ class ObserveLayer(object):
             response = self._parent.reliability_response(request, response)
             #Matcher
             response = self._parent.matcher_response(response)
-            return response
+            return response, resource
         else:
             response.code = defines.responses['METHOD_NOT_ALLOWED']
             #TODO Blockwise
@@ -115,7 +115,7 @@ class ObserveLayer(object):
             response = self._parent.reliability_response(request, response)
             #Matcher
             response = self._parent.matcher_response(response)
-            return response
+            return response, resource
 
     def prepare_notification_deletion(self, t):
         """
@@ -144,18 +144,19 @@ class ObserveLayer(object):
         response = self._parent.reliability_response(request, response)
         #Matcher
         response = self._parent.matcher_response(response)
-        return response
+        return response, resource
 
-    def send_notification(self, notification_message):
+    def send_notification(self, t):
         """
         Sends a notification message.
 
-        @param notification_message: the notification message
+        @param t: (the notification message, the resource)
         """
-        assert isinstance(notification_message, Response)
+        assert isinstance(t, tuple)
+        notification_message, resource = t
         host, port = notification_message.destination
         serializer = Serializer()
-        self._parent.schedule_retrasmission(notification_message)
+        self._parent.schedule_retrasmission(t)
         notification_message = serializer.serialize(notification_message)
         self._parent.transport.write(notification_message, (host, port))
 
@@ -233,4 +234,19 @@ class ObserveLayer(object):
         observers = self._parent.relation.get(old_resource)
         if observers is not None:
             del self._parent.relation[old_resource]
+            self._parent.relation[resource] = observers
+
+    def remove_observer(self, response, resource):
+        """
+        Remove an observer for a certain resource.
+
+        @param response: the response message which has not been acknowledge
+        @param resource: the resource
+        """
+        log.msg("Remove observer for the resource")
+        host, port = response.destination
+        key = hash(str(host) + str(port) + str(response.token))
+        observers = self._parent.relation.get(resource)
+        if key in observers.keys():
+            del observers[key]
             self._parent.relation[resource] = observers

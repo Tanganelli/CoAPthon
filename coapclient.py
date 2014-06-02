@@ -37,11 +37,16 @@ class CoAP(DatagramProtocol):
         self.root = Tree(root)
         self.operations = []
 
+    def set_operations(self, operations):
+        for op in operations:
+            function, args, kwargs = op
+            self.operations.append((function, args, kwargs))
+
     def startProtocol(self):
         #self.operations.append((self.discover,))
-        args = ("/hello",)
-        kwargs = {}
-        self.operations.append((self.get, args, kwargs))
+        # args = ("/hello",)
+        # kwargs = {}
+        # self.operations.append((self.get, args, kwargs))
         #self.operations.append((self.observe, args, kwargs))
         # args = ("/hello", "Test")
         # self.operations.append((self.put, args))
@@ -54,7 +59,6 @@ class CoAP(DatagramProtocol):
         host, port = self.server
         if host is not None:
             self.start(host)
-
         l = task.LoopingCall(self.purge_mids)
         l.start(defines.EXCHANGE_LIFETIME)
 
@@ -422,6 +426,10 @@ class CoAP(DatagramProtocol):
 
 def main():
     protocol = CoAP()
+    function = protocol.observe
+    args = ("/hello",)
+    kwargs = {}
+    protocol.set_operations([(function, args, kwargs)])
     t = reactor.listenUDP(0, protocol)
     reactor.run()
 

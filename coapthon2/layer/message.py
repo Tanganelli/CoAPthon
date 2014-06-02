@@ -1,4 +1,5 @@
 import time
+from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
 
@@ -103,6 +104,8 @@ class MessageLayer(object):
             call_id, retrasmission_count = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
+        except AlreadyCancelled:
+            pass
         except TypeError:
             pass
         self._parent.sent[key] = (response, time.time())
