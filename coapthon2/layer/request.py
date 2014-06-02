@@ -16,8 +16,8 @@ class RequestLayer(object):
         """
         Initialize a Request Layer.
 
-        @type parent: coapserver.CoAP
-        @param parent: the CoAP server
+        :type parent: coapserver.CoAP
+        :param parent: the CoAP server
         """
         self._parent = parent
 
@@ -25,8 +25,8 @@ class RequestLayer(object):
         """
         Handles requests.
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.mid))
@@ -60,8 +60,8 @@ class RequestLayer(object):
         """
         Processes a request message.
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         method = defines.codes[request.code]
         if method == 'GET':
@@ -80,8 +80,8 @@ class RequestLayer(object):
         """
         Handles a PUT request
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         response = Response()
         response.destination = request.source
@@ -100,8 +100,8 @@ class RequestLayer(object):
         """
         Handles a POST request.
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         path = request.uri_path
         path = path.strip("/")
@@ -115,8 +115,8 @@ class RequestLayer(object):
         """
         Handles a DELETE request.
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         path = request.uri_path
         path = path.strip("/")
@@ -141,8 +141,8 @@ class RequestLayer(object):
         """
         Handles a GET request.
 
-        @param request: the request
-        @return: the response
+        :param request: the request
+        :return: the response
         """
         path = request.uri_path
         response = Response()

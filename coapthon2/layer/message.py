@@ -15,8 +15,8 @@ class MessageLayer(object):
         """
         Initialize a Message Layer.
 
-        @type parent: coapserver.CoAP
-        @param parent: the CoAP server
+        :type parent: coapserver.CoAP
+        :param parent: the CoAP server
         """
         self._parent = parent
 
@@ -24,9 +24,10 @@ class MessageLayer(object):
     def reliability_response(request, response):
         """
         Sets Message type according to the request
-        @param request: the request object
-        @param response: the response object
-        @return: the response
+
+        :param request: the request object
+        :param response: the response object
+        :return: the response
         """
         if not (response.type == defines.inv_types['ACK'] or response.type == defines.inv_types['RST']):
             if request.type == defines.inv_types['CON']:
@@ -46,9 +47,10 @@ class MessageLayer(object):
     def matcher_response(self, response):
         """
         Sets MID if not already set. Save the sent message for acknowledge and duplication handling.
-        @param response: the response
-        @return: the response
-        @raise AttributeError: if the message destination is not properly set.
+
+        :param response: the response
+        :return: the response
+        :raise AttributeError: if the message destination is not properly set.
         """
         if response.mid is None:
             response.mid = self._parent.current_mid % (1 << 16)
@@ -67,7 +69,7 @@ class MessageLayer(object):
         Handles ACK and RST. Handles mapping with the response previously sent and verify if an Observing relation
         must be deleted.
 
-        @param message: the message received
+        :param message: the message received
         """
         # Matcher
         try:

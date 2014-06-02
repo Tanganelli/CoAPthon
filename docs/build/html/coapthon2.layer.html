@@ -1,0 +1,629 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.layer package &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="coapthon2-layer-package">
+<h1>coapthon2.layer package<a class="headerlink" href="#coapthon2-layer-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coapthon2.layer.message">
+<span id="coapthon2-layer-message-module"></span><h2>coapthon2.layer.message module<a class="headerlink" href="#module-coapthon2.layer.message" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.layer.message.MessageLayer">
+<em class="property">class </em><tt class="descclassname">coapthon2.layer.message.</tt><tt class="descname">MessageLayer</tt><big>(</big><em>parent</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/message.html#MessageLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.message.MessageLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Handles message functionality: Acknowledgment, Reset.</p>
+<dl class="method">
+<dt id="coapthon2.layer.message.MessageLayer.handle_message">
+<tt class="descname">handle_message</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/message.html#MessageLayer.handle_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.message.MessageLayer.handle_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles ACK and RST. Handles mapping with the response previously sent and verify if an Observing relation
+must be deleted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> &#8211; the message received</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.message.MessageLayer.matcher_response">
+<tt class="descname">matcher_response</tt><big>(</big><em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/message.html#MessageLayer.matcher_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.message.MessageLayer.matcher_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets MID if not already set. Save the sent message for acknowledge and duplication handling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> &#8211; the response</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises AttributeError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if the message destination is not properly set.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coapthon2.layer.message.MessageLayer.reliability_response">
+<em class="property">static </em><tt class="descname">reliability_response</tt><big>(</big><em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/message.html#MessageLayer.reliability_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.message.MessageLayer.reliability_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets Message type according to the request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request object</li>
+<li><strong>response</strong> &#8211; the response object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.layer.observe">
+<span id="coapthon2-layer-observe-module"></span><h2>coapthon2.layer.observe module<a class="headerlink" href="#module-coapthon2.layer.observe" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.layer.observe.ObserveLayer">
+<em class="property">class </em><tt class="descclassname">coapthon2.layer.observe.</tt><tt class="descname">ObserveLayer</tt><big>(</big><em>parent</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Handles the Observing feature.</p>
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.add_observing">
+<tt class="descname">add_observing</tt><big>(</big><em>resource</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.add_observing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.add_observing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an observer to a resource and sets the Observe option in the response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resource</strong> &#8211; the resource of interest</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.notify">
+<tt class="descname">notify</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.notify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.notify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the observers that must be notified about the update of the observed resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the list of commands that must be executed to notify clients</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.notify_deletion">
+<tt class="descname">notify_deletion</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.notify_deletion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.notify_deletion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the observers that must be notified about the cancellation of the observed resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the list of commands that must be executed to notify clients</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.prepare_notification">
+<tt class="descname">prepare_notification</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.prepare_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.prepare_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the notification message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>(resource, host, port, token)</em>) &#8211; the arguments of the notification message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the notification message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.prepare_notification_deletion">
+<tt class="descname">prepare_notification_deletion</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.prepare_notification_deletion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.prepare_notification_deletion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the notification message for deleted resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>(resource, host, port, token)</em>) &#8211; the arguments of the notification message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the notification message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.remove_observer">
+<tt class="descname">remove_observer</tt><big>(</big><em>response</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.remove_observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.remove_observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an observer for a certain resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>response</strong> &#8211; the response message which has not been acknowledge</li>
+<li><strong>resource</strong> &#8211; the resource</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.remove_observers">
+<tt class="descname">remove_observers</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.remove_observers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.remove_observers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all the observers of a resource and notifies the delete of the resource observed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the list of commands that must be executed to notify clients</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.send_notification">
+<tt class="descname">send_notification</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.send_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.send_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a notification message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; (the notification message, the resource)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.observe.ObserveLayer.update_relations">
+<tt class="descname">update_relations</tt><big>(</big><em>node</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/observe.html#ObserveLayer.update_relations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.observe.ObserveLayer.update_relations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a relation. It is used when a resource change due a POST request, without changing its path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</li>
+<li><strong>resource</strong> &#8211; the new resource</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.layer.request">
+<span id="coapthon2-layer-request-module"></span><h2>coapthon2.layer.request module<a class="headerlink" href="#module-coapthon2.layer.request" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.layer.request.RequestLayer">
+<em class="property">class </em><tt class="descclassname">coapthon2.layer.request.</tt><tt class="descname">RequestLayer</tt><big>(</big><em>parent</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Handles the Request Layer functionality.</p>
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.handle_delete">
+<tt class="descname">handle_delete</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.handle_delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.handle_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles a DELETE request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.handle_get">
+<tt class="descname">handle_get</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.handle_get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.handle_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles a GET request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.handle_post">
+<tt class="descname">handle_post</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.handle_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.handle_post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles a POST request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.handle_put">
+<tt class="descname">handle_put</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.handle_put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.handle_put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles a PUT request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.handle_request">
+<tt class="descname">handle_request</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.handle_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.handle_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles requests.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.request.RequestLayer.process">
+<tt class="descname">process</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/request.html#RequestLayer.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.request.RequestLayer.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes a request message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; the request</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.layer.resource">
+<span id="coapthon2-layer-resource-module"></span><h2>coapthon2.layer.resource module<a class="headerlink" href="#module-coapthon2.layer.resource" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.layer.resource.ResourceLayer">
+<em class="property">class </em><tt class="descclassname">coapthon2.layer.resource.</tt><tt class="descname">ResourceLayer</tt><big>(</big><em>parent</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Handles the Resources.</p>
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.add_resorce">
+<tt class="descname">add_resorce</tt><big>(</big><em>request</em>, <em>response</em>, <em>old</em>, <em>lp</em>, <em>p</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.add_resorce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.add_resorce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a POST on aa new resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>old</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the parent of the resource</li>
+<li><strong>lp</strong> &#8211; the location_path attribute of the resource</li>
+<li><strong>p</strong> &#8211; the local path of the resource (only the last section of the split path)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.create_resource">
+<tt class="descname">create_resource</tt><big>(</big><em>path</em>, <em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.create_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.create_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a POST request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> &#8211; the path of the request</li>
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.create_subtree">
+<tt class="descname">create_subtree</tt><big>(</big><em>paths</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.create_subtree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.create_subtree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.delete_resource">
+<tt class="descname">delete_resource</tt><big>(</big><em>request</em>, <em>response</em>, <em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.delete_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.delete_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a DELETE request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the resource</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.discover">
+<tt class="descname">discover</tt><big>(</big><em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a GET request to the .weel-know/core link.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.edit_resorce">
+<tt class="descname">edit_resorce</tt><big>(</big><em>request</em>, <em>response</em>, <em>node</em>, <em>lp</em>, <em>p</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.edit_resorce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.edit_resorce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a POST on an already created resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the resource</li>
+<li><strong>lp</strong> &#8211; the location_path attribute of the resource</li>
+<li><strong>p</strong> &#8211; the local path of the resource (only the last section of the split path)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.get_resource">
+<tt class="descname">get_resource</tt><big>(</big><em>request</em>, <em>response</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.get_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.get_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a GET request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>resource</strong> &#8211; the resource required</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.send_ack">
+<tt class="descname">send_ack</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.send_ack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.send_ack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an ACK message for the request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> &#8211; [request]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.layer.resource.ResourceLayer.update_resource">
+<tt class="descname">update_resource</tt><big>(</big><em>request</em>, <em>response</em>, <em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/layer/resource.html#ResourceLayer.update_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.layer.resource.ResourceLayer.update_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a PUT request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the resource</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">coapthon2.layer package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-coapthon2.layer.message">coapthon2.layer.message module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.layer.observe">coapthon2.layer.observe module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.layer.request">coapthon2.layer.request module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.layer.resource">coapthon2.layer.resource module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coapthon2.layer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

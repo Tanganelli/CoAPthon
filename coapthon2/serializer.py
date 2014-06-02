@@ -19,7 +19,7 @@ class Serializer(object):
     """
     def __init__(self):
         """
-        Initialize a Serilizer.
+        Initialize a Serializer.
 
         """
         self._reader = None
@@ -29,10 +29,10 @@ class Serializer(object):
         """
         De-serialize a stream of byte to a message.
 
-        @param raw: received bytes
-        @param host: source host
-        @param port: source port
-        @return: the message
+        :param raw: received bytes
+        :param host: source host
+        :param port: source port
+        :return: the message
         """
         self._reader = BitStream(bytes=raw, length=(len(raw) * 8))
         version = self._reader.read(defines.VERSION_BITS).uint
@@ -106,7 +106,7 @@ class Serializer(object):
         """
         Checks if is request.
 
-        @return: True, if is request
+        :return: True, if is request
         """
         return defines.REQUEST_CODE_LOWER_BOUND <= code <= defines.REQUEST_CODE_UPPER_BOUNT
 
@@ -115,7 +115,7 @@ class Serializer(object):
         """
         Checks if is response.
 
-        @return: True, if is response
+        :return: True, if is response
         """
         return defines.RESPONSE_CODE_LOWER_BOUND <= code <= defines.RESPONSE_CODE_UPPER_BOUND
 
@@ -123,8 +123,8 @@ class Serializer(object):
         """
         Calculates the value used in the extended option fields.
 
-        @param nibble: the 4-bit option header value.
-        @return: the value calculated from the nibble and the extended option value.
+        :param nibble: the 4-bit option header value.
+        :return: the value calculated from the nibble and the extended option value.
         """
         if nibble <= 12:
             return nibble
@@ -142,8 +142,8 @@ class Serializer(object):
         """
         Serialize message to a stream of byte.
 
-        @param message: the message
-        @return: the stream of bytes
+        :param message: the message
+        :return: the stream of bytes
         """
         fmt = 'uint:' + str(defines.VERSION_BITS) + '=version,' \
             'uint:' + str(defines.TYPE_BITS) + '=type,' \
@@ -237,8 +237,8 @@ class Serializer(object):
         """
         Returns the 4-bit option header value.
 
-        @param optionvalue: the option value (delta or length) to be encoded.
-        @return: the 4-bit option header value.
+        :param optionvalue: the option value (delta or length) to be encoded.
+        :return: the 4-bit option header value.
          """
         if optionvalue <= 12:
             return optionvalue
@@ -253,7 +253,7 @@ class Serializer(object):
         """
         Returns all options in a list sorted according to their option numbers.
 
-        @return: the sorted list
+        :return: the sorted list
         """
         '''
         if self._if_match_list:
@@ -315,10 +315,10 @@ class Serializer(object):
         """
         Get the value of an option as a BitArray.
 
-        @param number: the option number
-        @param value: the option value
-        @param length: the option length
-        @return: the value of an option as a BitArray
+        :param number: the option number
+        :param value: the option value
+        :param length: the option length
+        :return: the value of an option as a BitArray
         """
         if length == 0:
             return BitArray()

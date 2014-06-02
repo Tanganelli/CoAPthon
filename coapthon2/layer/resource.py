@@ -16,8 +16,8 @@ class ResourceLayer(object):
         """
         Initialize a Resource Layer.
 
-        @type parent: coapserver.CoAP
-        @param parent: the CoAP server
+        :type parent: coapserver.CoAP
+        :param parent: the CoAP server
         """
         self._parent = parent
 
@@ -25,13 +25,13 @@ class ResourceLayer(object):
         """
         Render a POST on an already created resource.
 
-        @type node: coapthon2.utils.Tree
-        @param request: the request
-        @param response: the response
-        @param node: the node which has the resource
-        @param lp: the location_path attribute of the resource
-        @param p: the local path of the resource (only the last section of the split path)
-        @return: the response
+        :type node: coapthon2.utils.Tree
+        :param request: the request
+        :param response: the response
+        :param node: the node which has the resource
+        :param lp: the location_path attribute of the resource
+        :param p: the local path of the resource (only the last section of the split path)
+        :return: the response
         """
         method = getattr(node.value, "render_POST", None)
         if hasattr(method, '__call__'):
@@ -128,13 +128,13 @@ class ResourceLayer(object):
         """
         Render a POST on aa new resource.
 
-        @type old: coapthon2.utils.Tree
-        @param request: the request
-        @param response: the response
-        @param old: the node which has the parent of the resource
-        @param lp: the location_path attribute of the resource
-        @param p: the local path of the resource (only the last section of the split path)
-        @return: the response
+        :type old: coapthon2.utils.Tree
+        :param request: the request
+        :param response: the response
+        :param old: the node which has the parent of the resource
+        :param lp: the location_path attribute of the resource
+        :param p: the local path of the resource (only the last section of the split path)
+        :return: the response
         """
         method = getattr(old.value, "render_POST", None)
         if hasattr(method, '__call__'):
@@ -228,10 +228,10 @@ class ResourceLayer(object):
         """
         Render a POST request.
 
-        @param path: the path of the request
-        @param request: the request
-        @param response: the response
-        @return: the response
+        :param path: the path of the request
+        :param request: the request
+        :param response: the response
+        :return: the response
         """
         paths = path.split("/")
         last, p = self._parent.root.find_complete_last(paths)
@@ -249,11 +249,11 @@ class ResourceLayer(object):
         """
         Render a PUT request.
 
-        @type node: coapthon2.utils.Tree
-        @param request: the request
-        @param response: the response
-        @param node: the node which has the resource
-        @return: the response
+        :type node: coapthon2.utils.Tree
+        :param request: the request
+        :param response: the response
+        :param node: the node which has the resource
+        :return: the response
         """
         resource = node.value
         # If-Match
@@ -329,11 +329,11 @@ class ResourceLayer(object):
         """
         Render a DELETE request.
 
-        @type node: coapthon2.utils.Tree
-        @param request: the request
-        @param response: the response
-        @param node: the node which has the resource
-        @return: the response
+        :type node: coapthon2.utils.Tree
+        :param request: the request
+        :param response: the response
+        :param node: the node which has the resource
+        :return: the response
         """
         assert isinstance(node, Tree)
         method = getattr(node.value, 'render_DELETE', None)
@@ -371,10 +371,10 @@ class ResourceLayer(object):
         """
         Render a GET request.
 
-        @param request: the request
-        @param response: the response
-        @param resource: the resource required
-        @return: the response
+        :param request: the request
+        :param response: the response
+        :param resource: the resource required
+        :return: the response
         """
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
@@ -443,9 +443,9 @@ class ResourceLayer(object):
         """
         Render a GET request to the .weel-know/core link.
 
-        @param request: the request
-        @param response: the response
-        @return: the response
+        :param request: the request
+        :param response: the response
+        :return: the response
         """
         node = self._parent.root
         assert isinstance(node, Tree)
@@ -480,7 +480,7 @@ class ResourceLayer(object):
         """
         Sends an ACK message for the request.
 
-        @param args: [request]
+        :param args: [request]
         """
         request = args[0]
         ack = Message.new_ack(request)

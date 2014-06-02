@@ -59,9 +59,6 @@ PAYLOAD_MARKER = 0xFF
 ## CoAP version supported by this Californium version.
 VERSION = 1
 
-## The code value of an empty message.
-EMPTY_CODE = 0
-
 ## The lowest value of a request code.
 REQUEST_CODE_LOWER_BOUND = 1
 

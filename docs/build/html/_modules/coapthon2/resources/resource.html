@@ -1,0 +1,490 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.resources.resource &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for coapthon2.resources.resource</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">coapthon2</span> <span class="kn">import</span> <span class="n">defines</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Giacomo Tanganelli&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;2.0&quot;</span>
+
+
+<div class="viewcode-block" id="Resource"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource">[docs]</a><span class="k">class</span> <span class="nc">Resource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Resource class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">observable</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">allow_children</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a new Resource.</span>
+
+<span class="sd">        :param name: the name or a Resource object to copy from.</span>
+<span class="sd">        :param visible: if the resource is visible</span>
+<span class="sd">        :param observable: if the resource is observable</span>
+<span class="sd">        :param allow_children: if the resource could has children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Resource</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">attributes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">path</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_visible</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">visible</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observable</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">observable</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">required_content_type</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_allow_children</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">allow_children</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observe_count</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">observe_count</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">payload</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_etag</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">etag</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">## The attributes of this resource.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="c">## The resource name.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+            <span class="c">## The resource path.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="c">## Indicates whether this resource is visible to clients.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_visible</span> <span class="o">=</span> <span class="n">visible</span>
+
+            <span class="c">## Indicates whether this resource is observable by clients.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_observable</span> <span class="o">=</span> <span class="n">observable</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_allow_children</span> <span class="o">=</span> <span class="n">allow_children</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_observe_count</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span> <span class="o">=</span> <span class="bp">None</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_etag</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">etag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the last valid ETag of the resource.</span>
+
+<span class="sd">        :return: the ETag value or None if the resource doesn&#39;t have any ETag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_etag</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_etag</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="nd">@etag.setter</span>
+<div class="viewcode-block" id="Resource.etag"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.etag">[docs]</a>    <span class="k">def</span> <span class="nf">etag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">etag</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the ETag of the resource.</span>
+
+<span class="sd">        :param etag: the ETag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_etag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">etag</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">payload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the payload of the resource according to the content type specified by required_content_type or</span>
+<span class="sd">        &quot;text/plain&quot; by default.</span>
+
+<span class="sd">        :return: the payload.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="s">&quot;text/plain&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">[</span><span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="s">&quot;text/plain&quot;</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span>
+
+    <span class="nd">@payload.setter</span>
+<div class="viewcode-block" id="Resource.payload"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.payload">[docs]</a>    <span class="k">def</span> <span class="nf">payload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the payload of the resource.</span>
+
+<span class="sd">        :param p: the new payload</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">[</span><span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="n">k</span><span class="p">]]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span> <span class="o">=</span> <span class="p">{</span><span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="s">&quot;text/plain&quot;</span><span class="p">]:</span> <span class="n">p</span><span class="p">}</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Resource.raw_payload"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.raw_payload">[docs]</a>    <span class="k">def</span> <span class="nf">raw_payload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the payload of the resource as a dict of all different payloads defined for the resource.</span>
+
+<span class="sd">        :return: the payload as dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CoRE Link Format attribute of the resource.</span>
+
+<span class="sd">        :return: the attribute of the resource</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span>
+
+    <span class="nd">@attributes.setter</span>
+<div class="viewcode-block" id="Resource.attributes"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.attributes">[docs]</a>    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att</span><span class="p">):</span>
+        <span class="c">#TODO assert</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the CoRE Link Format attribute of the resource.</span>
+
+<span class="sd">        :param att: the attributes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span> <span class="o">=</span> <span class="n">att</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get if the resource is visible.</span>
+
+<span class="sd">        :return: True, if visible</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visible</span>
+
+    <span class="nd">@visible.setter</span>
+<div class="viewcode-block" id="Resource.visible"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.visible">[docs]</a>    <span class="k">def</span> <span class="nf">visible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set if the resource is visible.</span>
+
+<span class="sd">        :param v: the visibility (True or False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_visible</span> <span class="o">=</span> <span class="n">v</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get if the resource is observable.</span>
+
+<span class="sd">        :return: True, if observable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observable</span>
+
+    <span class="nd">@observable.setter</span>
+<div class="viewcode-block" id="Resource.observable"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.observable">[docs]</a>    <span class="k">def</span> <span class="nf">observable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set if the resource is observable.</span>
+
+<span class="sd">        :param v: the observability (True or False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observable</span> <span class="o">=</span> <span class="n">v</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">allow_children</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get if the resource allow children.</span>
+
+<span class="sd">        :return: True, if allow children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allow_children</span>
+
+    <span class="nd">@allow_children.setter</span>
+<div class="viewcode-block" id="Resource.allow_children"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.allow_children">[docs]</a>    <span class="k">def</span> <span class="nf">allow_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set if the resource  allow children.</span>
+
+<span class="sd">        :param v: the  allow children (True or False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allow_children</span> <span class="o">=</span> <span class="n">v</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">observe_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Observe counter.</span>
+
+<span class="sd">        :return: the Observe counter value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observe_count</span>
+
+    <span class="nd">@observe_count.setter</span>
+<div class="viewcode-block" id="Resource.observe_count"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.observe_count">[docs]</a>    <span class="k">def</span> <span class="nf">observe_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the Observe counter.</span>
+
+<span class="sd">        :param v: the Observe counter value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observe_count</span> <span class="o">=</span> <span class="n">v</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">required_content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the actual required Content-Type.</span>
+
+<span class="sd">        :return: the actual required Content-Type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span>
+
+    <span class="nd">@required_content_type.setter</span>
+<div class="viewcode-block" id="Resource.required_content_type"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.required_content_type">[docs]</a>    <span class="k">def</span> <span class="nf">required_content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">act</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the actual required Content-Type.</span>
+
+<span class="sd">        :param act: the actual required Content-Type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="n">act</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_required_content_type</span> <span class="o">=</span> <span class="n">act</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CoRE Link Format ct attribute of the resource.</span>
+
+<span class="sd">        :return: the CoRE Link Format ct attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;ct&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;ct=&quot;</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; &quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@content_type.setter</span>
+<div class="viewcode-block" id="Resource.content_type"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.content_type">[docs]</a>    <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the CoRE Link Format ct attribute of the resource.</span>
+
+<span class="sd">        :param lst: the list of CoRE Link Format ct attribute of the resource</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">ct</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="n">lst</span><span class="p">]</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">:</span>
+                <span class="n">ct</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="n">ct</span><span class="p">]</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="s">&quot;ct&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Resource.add_content_type"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.add_content_type">[docs]</a>    <span class="k">def</span> <span class="nf">add_content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ct</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a CoRE Link Format ct attribute to the resource.</span>
+
+<span class="sd">        :param ct: the CoRE Link Format ct attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;ct&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_content_types</span><span class="p">[</span><span class="n">ct</span><span class="p">]</span>
+        <span class="n">lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="s">&quot;ct&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lst</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resource_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CoRE Link Format rt attribute of the resource.</span>
+
+<span class="sd">        :return: the CoRE Link Format rt attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;rt=&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;rt&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@resource_type.setter</span>
+<div class="viewcode-block" id="Resource.resource_type"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.resource_type">[docs]</a>    <span class="k">def</span> <span class="nf">resource_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the CoRE Link Format rt attribute of the resource.</span>
+
+<span class="sd">        :param rt: the CoRE Link Format rt attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="s">&quot;rt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rt</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interface_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CoRE Link Format if attribute of the resource.</span>
+
+<span class="sd">        :return: the CoRE Link Format if attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;if=&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;if&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@interface_type.setter</span>
+<div class="viewcode-block" id="Resource.interface_type"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.interface_type">[docs]</a>    <span class="k">def</span> <span class="nf">interface_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ift</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the CoRE Link Format if attribute of the resource.</span>
+
+<span class="sd">        :param ift: the CoRE Link Format if attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="s">&quot;if&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ift</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_size_estimated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the CoRE Link Format sz attribute of the resource.</span>
+
+<span class="sd">        :return: the CoRE Link Format sz attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;sz=&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;sz&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lst</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@maximum_size_estimated.setter</span>
+<div class="viewcode-block" id="Resource.maximum_size_estimated"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.maximum_size_estimated">[docs]</a>    <span class="k">def</span> <span class="nf">maximum_size_estimated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sz</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the CoRE Link Format sz attribute of the resource.</span>
+
+<span class="sd">        :param sz: the CoRE Link Format sz attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="s">&quot;sz&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sz</span>
+</div>
+<div class="viewcode-block" id="Resource.render_GET"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.render_GET">[docs]</a>    <span class="k">def</span> <span class="nf">render_GET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to be redefined to render a GET request on the resource.</span>
+
+<span class="sd">        :param query: the request query</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Resource.render_PUT"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.render_PUT">[docs]</a>    <span class="k">def</span> <span class="nf">render_PUT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to be redefined to render a PUTT request on the resource.</span>
+
+<span class="sd">        :param payload: the request payload</span>
+<span class="sd">        :param query: the request query</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Resource.render_POST"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.render_POST">[docs]</a>    <span class="k">def</span> <span class="nf">render_POST</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to be redefined to render a POST request on the resource.</span>
+
+<span class="sd">        :param payload: the request payload</span>
+<span class="sd">        :param query: the request query</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Resource.render_DELETE"><a class="viewcode-back" href="../../../coapthon2.resources.html#coapthon2.resources.resource.Resource.render_DELETE">[docs]</a>    <span class="k">def</span> <span class="nf">render_DELETE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to be redefined to render a DELETE request on the resource.</span>
+
+<span class="sd">        :param query: the request query</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

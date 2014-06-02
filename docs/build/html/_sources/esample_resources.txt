@@ -1,0 +1,7 @@
+esample_resources module
+========================
+
+.. automodule:: esample_resources
+    :members:
+    :undoc-members:
+    :show-inheritance:

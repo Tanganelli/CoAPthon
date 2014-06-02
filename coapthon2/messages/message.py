@@ -49,7 +49,7 @@ class Message(object):
         """
         Property for retrieving the options of the message.
 
-        @return: the options
+        :return: the options
         """
         return self._options
 
@@ -57,9 +57,9 @@ class Message(object):
         """
         Add an option to the message.
 
-        @type option: coapthon2.messages.option.Option
-        @param option: the option
-        @raise TypeError: if the option is not repeatable and such option is already present in the message
+        :type option: coapthon2.messages.option.Option
+        :param option: the option
+        :raise TypeError: if the option is not repeatable and such option is already present in the message
         """
         assert isinstance(option, Option)
         name, type_value, repeatable, defaults = defines.options[option.number]
@@ -76,8 +76,8 @@ class Message(object):
         """
         Delete an option from the message
 
-        @type option: coapthon2.messages.option.Option
-        @param option: the option
+        :type option: coapthon2.messages.option.Option
+        :param option: the option
         """
         assert isinstance(option, Option)
         try:
@@ -97,7 +97,7 @@ class Message(object):
         """
         Checks if this message is a duplicate.
 
-        @return: True, if is a duplicate
+        :return: True, if is a duplicate
         """
         return self._duplicate
 
@@ -106,7 +106,7 @@ class Message(object):
         """
         Marks this message as a duplicate.
 
-        @param d: if a duplicate
+        :param d: if a duplicate
         """
         assert isinstance(d, bool)
         self._duplicate = d
@@ -116,7 +116,7 @@ class Message(object):
         """
         Checks if is this message has been acknowledged.
 
-        @return: True, if is acknowledged
+        :return: True, if is acknowledged
         """
         return self._acknowledged
 
@@ -125,7 +125,7 @@ class Message(object):
         """
         Marks this message as acknowledged.
 
-        @param a: if acknowledged
+        :param a: if acknowledged
         """
         assert isinstance(a, bool)
         self._acknowledged = a
@@ -135,7 +135,7 @@ class Message(object):
         """
         Checks if this message has been rejected.
 
-        @return: True, if is rejected
+        :return: True, if is rejected
         """
         return self._rejected
 
@@ -144,7 +144,7 @@ class Message(object):
         """
         Marks this message as rejected.
 
-        @param r: if rejected
+        :param r: if rejected
         """
         assert isinstance(r, bool)
         self._rejected = r
@@ -155,7 +155,7 @@ class Message(object):
         Checks if this message has timeouted. Confirmable messages in particular
         might timeout.
 
-        @return: True, if has timeouted
+        :return: True, if has timeouted
         """
         return self._timeouted
 
@@ -165,7 +165,7 @@ class Message(object):
         Marks this message as timeouted. Confirmable messages in particular might
         timeout.
 
-        @param t: if timeouted
+        :param t: if timeouted
         """
         assert isinstance(t, bool)
         self._timeouted = t
@@ -175,7 +175,7 @@ class Message(object):
         """
         Checks if this message has been canceled.
 
-        @return: True, if is canceled
+        :return: True, if is canceled
         """
         return self._canceled
 
@@ -184,7 +184,7 @@ class Message(object):
         """
         Marks this message as canceled.
 
-        @param c: if canceled
+        :param c: if canceled
         """
         assert isinstance(c, bool)
         self._canceled = c
@@ -194,8 +194,8 @@ class Message(object):
         """
         Create a new acknowledgment for the specified message.
 
-        @param message: the message to acknowledge
-        @return: the acknowledgment
+        :param message: the message to acknowledge
+        :return: the acknowledgment
         """
         ack = Message()
         types = {v: k for k, v in defines.types.iteritems()}
@@ -211,8 +211,8 @@ class Message(object):
         """
         Create a new reset message for the specified message.
 
-        @param message: the message to reject
-        @return: the rst message
+        :param message: the message to reject
+        :return: the rst message
         """
         rst = Message()
         types = {v: k for k, v in defines.types.iteritems()}
@@ -227,7 +227,7 @@ class Message(object):
         """
         Return the message as a formatted string.
 
-        @return: the string representing the message
+        :return: the string representing the message
         """
         msg = "Source: " + str(self.source) + "\n"
         msg += "Destination: " + str(self.destination) + "\n"

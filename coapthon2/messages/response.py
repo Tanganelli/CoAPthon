@@ -21,7 +21,7 @@ class Response(Message):
         """
         Get the Content-Type option of a response.
 
-        @return: the Content-Type value or 0 if not specified by the response
+        :return: the Content-Type value or 0 if not specified by the response
         """
         value = 0
         for option in self.options:
@@ -34,8 +34,8 @@ class Response(Message):
         """
         Set the Content-Type option of a response.
 
-        @type content_type: int
-        @param content_type: the Content-Type
+        :type content_type: int
+        :param content_type: the Content-Type
         """
         option = Option()
         option.number = defines.inv_options['Content-Type']
@@ -47,7 +47,7 @@ class Response(Message):
         """
         Get the ETag option of a response.
 
-        @return: the ETag values or [] if not specified by the response
+        :return: the ETag values or [] if not specified by the response
         """
         value = []
         for option in self.options:
@@ -60,7 +60,7 @@ class Response(Message):
         """
         Add an ETag option to the response.
 
-        @param etag: the etag
+        :param etag: the etag
         """
         option = Option()
         option.number = defines.inv_options['ETag']
@@ -80,7 +80,7 @@ class Response(Message):
         """
         Get the Location-Path option of a response.
 
-        @return: the Location-Path
+        :return: the Location-Path
         """
         value = []
         for option in self.options:
@@ -93,7 +93,7 @@ class Response(Message):
         """
         Set the Location-Path option of a response.
 
-        @param lp: the Location-Path
+        :param lp: the Location-Path
         """
         if not isinstance(lp, list):
             lp = [lp]
@@ -109,7 +109,7 @@ class Response(Message):
         """
         Get the Location-Query option of a response.
 
-        @return: the Location-Query
+        :return: the Location-Query
         """
         value = []
         for option in self.options:
@@ -122,7 +122,7 @@ class Response(Message):
         """
         Set the Location-Query option of a response.
 
-        @param lq: the Location-Query
+        :param lq: the Location-Query
         """
         if not isinstance(lq, list):
             lq = [lq]
@@ -137,7 +137,7 @@ class Response(Message):
         """
         Get the Max-Age option of a response.
 
-        @return: the Max-Age value or 0 if not specified by the response
+        :return: the Max-Age value or 0 if not specified by the response
         """
         value = 0
         for option in self.options:
@@ -150,7 +150,7 @@ class Response(Message):
         """
         Set the Max-Age option of a response.
 
-        @param max_age: the Max-Age in seconds
+        :param max_age: the Max-Age in seconds
         """
         option = Option()
         option.number = defines.inv_options['Max-Age']
@@ -162,7 +162,7 @@ class Response(Message):
         """
         Get the Observe option of a response.
 
-        @return: the Observe value
+        :return: the Observe value
         """
         value = 0
         for option in self.options:

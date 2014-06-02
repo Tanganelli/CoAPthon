@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.messages.response &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for coapthon2.messages.response</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">coapthon2</span> <span class="kn">import</span> <span class="n">defines</span>
+<span class="kn">from</span> <span class="nn">coapthon2.messages.message</span> <span class="kn">import</span> <span class="n">Message</span>
+<span class="kn">from</span> <span class="nn">coapthon2.messages.option</span> <span class="kn">import</span> <span class="n">Option</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Giacomo Tanganelli&#39;</span>
+
+
+<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="n">Message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represent a Response message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Response message.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Response</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Content-Type option of a response.</span>
+
+<span class="sd">        :return: the Content-Type value or 0 if not specified by the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Content-Type&#39;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@content_type.setter</span>
+<div class="viewcode-block" id="Response.content_type"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.content_type">[docs]</a>    <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the Content-Type option of a response.</span>
+
+<span class="sd">        :type content_type: int</span>
+<span class="sd">        :param content_type: the Content-Type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">Option</span><span class="p">()</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Content-Type&#39;</span><span class="p">]</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">content_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">etag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the ETag option of a response.</span>
+
+<span class="sd">        :return: the ETag values or [] if not specified by the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;ETag&#39;</span><span class="p">]:</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@etag.setter</span>
+    <span class="k">def</span> <span class="nf">etag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">etag</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an ETag option to the response.</span>
+
+<span class="sd">        :param etag: the etag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">Option</span><span class="p">()</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;ETag&#39;</span><span class="p">]</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">etag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+
+    <span class="nd">@etag.deleter</span>
+<div class="viewcode-block" id="Response.etag"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.etag">[docs]</a>    <span class="k">def</span> <span class="nf">etag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete an ETag from a response.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">del_option_name</span><span class="p">(</span><span class="s">&quot;ETag&quot;</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">location_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Location-Path option of a response.</span>
+
+<span class="sd">        :return: the Location-Path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Location-Path&#39;</span><span class="p">]:</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@location_path.setter</span>
+<div class="viewcode-block" id="Response.location_path"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.location_path">[docs]</a>    <span class="k">def</span> <span class="nf">location_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the Location-Path option of a response.</span>
+
+<span class="sd">        :param lp: the Location-Path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lp</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">lp</span> <span class="o">=</span> <span class="p">[</span><span class="n">lp</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">lp</span><span class="p">:</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">Option</span><span class="p">()</span>
+            <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Location-Path&#39;</span><span class="p">]</span>
+            <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">o</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+            <span class="c">#self.options.append(option)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">location_query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Location-Query option of a response.</span>
+
+<span class="sd">        :return: the Location-Query</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Location-Query&#39;</span><span class="p">]:</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@location_query.setter</span>
+<div class="viewcode-block" id="Response.location_query"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.location_query">[docs]</a>    <span class="k">def</span> <span class="nf">location_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the Location-Query option of a response.</span>
+
+<span class="sd">        :param lq: the Location-Query</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lq</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">lq</span> <span class="o">=</span> <span class="p">[</span><span class="n">lq</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">lq</span><span class="p">:</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">Option</span><span class="p">()</span>
+            <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Location-Query&#39;</span><span class="p">]</span>
+            <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">o</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_age</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Max-Age option of a response.</span>
+
+<span class="sd">        :return: the Max-Age value or 0 if not specified by the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Max-Age&#39;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@max_age.setter</span>
+<div class="viewcode-block" id="Response.max_age"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.max_age">[docs]</a>    <span class="k">def</span> <span class="nf">max_age</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_age</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the Max-Age option of a response.</span>
+
+<span class="sd">        :param max_age: the Max-Age in seconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">option</span> <span class="o">=</span> <span class="n">Option</span><span class="p">()</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Max-Age&#39;</span><span class="p">]</span>
+        <span class="n">option</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_age</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">option</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Response.observe"><a class="viewcode-back" href="../../../coapthon2.messages.html#coapthon2.messages.response.Response.observe">[docs]</a>    <span class="k">def</span> <span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the Observe option of a response.</span>
+
+<span class="sd">        :return: the Observe value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span><span class="o">.</span><span class="n">number</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">inv_options</span><span class="p">[</span><span class="s">&#39;Observe&#39;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">option</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

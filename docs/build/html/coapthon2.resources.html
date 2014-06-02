@@ -1,0 +1,389 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.resources package &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="coapthon2-resources-package">
+<h1>coapthon2.resources package<a class="headerlink" href="#coapthon2-resources-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coapthon2.resources.resource">
+<span id="coapthon2-resources-resource-module"></span><h2>coapthon2.resources.resource module<a class="headerlink" href="#module-coapthon2.resources.resource" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.resources.resource.Resource">
+<em class="property">class </em><tt class="descclassname">coapthon2.resources.resource.</tt><tt class="descname">Resource</tt><big>(</big><em>name</em>, <em>visible=True</em>, <em>observable=True</em>, <em>allow_children=True</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>The Resource class.</p>
+<dl class="method">
+<dt id="coapthon2.resources.resource.Resource.add_content_type">
+<tt class="descname">add_content_type</tt><big>(</big><em>ct</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.add_content_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.add_content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a CoRE Link Format ct attribute to the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ct</strong> &#8211; the CoRE Link Format ct attribute</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.allow_children">
+<tt class="descname">allow_children</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.allow_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.allow_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get if the resource allow children.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if allow children</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.attributes">
+<tt class="descname">attributes</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CoRE Link Format attribute of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the attribute of the resource</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.content_type">
+<tt class="descname">content_type</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.content_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CoRE Link Format ct attribute of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the CoRE Link Format ct attribute</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.etag">
+<tt class="descname">etag</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.etag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.etag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the last valid ETag of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the ETag value or None if the resource doesn&#8217;t have any ETag</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.interface_type">
+<tt class="descname">interface_type</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.interface_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.interface_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CoRE Link Format if attribute of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the CoRE Link Format if attribute</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.maximum_size_estimated">
+<tt class="descname">maximum_size_estimated</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.maximum_size_estimated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.maximum_size_estimated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CoRE Link Format sz attribute of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the CoRE Link Format sz attribute</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.observable">
+<tt class="descname">observable</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.observable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.observable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get if the resource is observable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if observable</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.observe_count">
+<tt class="descname">observe_count</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.observe_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.observe_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Observe counter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Observe counter value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.payload">
+<tt class="descname">payload</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.payload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.payload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the payload of the resource according to the content type specified by required_content_type or
+&#8220;text/plain&#8221; by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the payload.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.raw_payload">
+<tt class="descname">raw_payload</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.raw_payload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.raw_payload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the payload of the resource as a dict of all different payloads defined for the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the payload as dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.resources.resource.Resource.render_DELETE">
+<tt class="descname">render_DELETE</tt><big>(</big><em>query=None</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.render_DELETE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.render_DELETE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to be redefined to render a DELETE request on the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> &#8211; the request query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.resources.resource.Resource.render_GET">
+<tt class="descname">render_GET</tt><big>(</big><em>query=None</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.render_GET"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.render_GET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to be redefined to render a GET request on the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> &#8211; the request query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.resources.resource.Resource.render_POST">
+<tt class="descname">render_POST</tt><big>(</big><em>payload=None</em>, <em>query=None</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.render_POST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.render_POST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to be redefined to render a POST request on the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>payload</strong> &#8211; the request payload</li>
+<li><strong>query</strong> &#8211; the request query</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.resources.resource.Resource.render_PUT">
+<tt class="descname">render_PUT</tt><big>(</big><em>payload=None</em>, <em>query=None</em><big>)</big><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.render_PUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.render_PUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to be redefined to render a PUTT request on the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>payload</strong> &#8211; the request payload</li>
+<li><strong>query</strong> &#8211; the request query</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.required_content_type">
+<tt class="descname">required_content_type</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.required_content_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.required_content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the actual required Content-Type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the actual required Content-Type.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.resource_type">
+<tt class="descname">resource_type</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.resource_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.resource_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CoRE Link Format rt attribute of the resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the CoRE Link Format rt attribute</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.resources.resource.Resource.visible">
+<tt class="descname">visible</tt><a class="reference internal" href="_modules/coapthon2/resources/resource.html#Resource.visible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.resources.resource.Resource.visible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get if the resource is visible.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if visible</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">coapthon2.resources package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-coapthon2.resources.resource">coapthon2.resources.resource module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coapthon2.resources.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

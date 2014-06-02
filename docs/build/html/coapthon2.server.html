@@ -1,0 +1,509 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.server package &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="coapthon2-server-package">
+<h1>coapthon2.server package<a class="headerlink" href="#coapthon2-server-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coapthon2.server.coap_protocol">
+<span id="coapthon2-server-coap-protocol-module"></span><h2>coapthon2.server.coap_protocol module<a class="headerlink" href="#module-coapthon2.server.coap_protocol" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.server.coap_protocol.CoAP">
+<em class="property">class </em><tt class="descclassname">coapthon2.server.coap_protocol.</tt><tt class="descname">CoAP</tt><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">twisted.internet.protocol.DatagramProtocol</span></tt></p>
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.add_observing">
+<tt class="descname">add_observing</tt><big>(</big><em>resource</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.add_observing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.add_observing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an observer to a resource and sets the Observe option in the response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resource</strong> &#8211; the resource of interest</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.add_resource">
+<tt class="descname">add_resource</tt><big>(</big><em>path</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.add_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.add_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to add resources to the resource Tree during server initialization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> &#8211; path of the resource to create</li>
+<li><strong>resource</strong> &#8211; the actual resource to create</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True, if successful</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.create_resource">
+<tt class="descname">create_resource</tt><big>(</big><em>path</em>, <em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.create_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.create_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a POST request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> &#8211; the path of the request</li>
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.server.coap_protocol.CoAP.current_mid">
+<tt class="descname">current_mid</tt><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.current_mid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.current_mid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current MID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current MID used by the server.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.datagramReceived">
+<tt class="descname">datagramReceived</tt><big>(</big><em>data</em>, <em>(host</em>, <em>port)</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.datagramReceived"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.datagramReceived" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for received dUDP datagram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> &#8211; the UDP datagram</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.delete_resource">
+<tt class="descname">delete_resource</tt><big>(</big><em>request</em>, <em>response</em>, <em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.delete_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.delete_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a DELETE request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the resource</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.discover">
+<tt class="descname">discover</tt><big>(</big><em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.discover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a GET request to the .weel-know/core link.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.get_resource">
+<tt class="descname">get_resource</tt><big>(</big><em>request</em>, <em>response</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.get_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.get_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a GET request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>resource</strong> &#8211; the resource required</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.matcher_response">
+<tt class="descname">matcher_response</tt><big>(</big><em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.matcher_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.matcher_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets MID if not already set. Save the sent message for acknowledge and duplication handling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>response</strong> &#8211; the response</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.notify">
+<tt class="descname">notify</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.notify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.notify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the observers that must be notified about the update of the observed resource
+and invoke the notification procedure in different threads.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.notify_deletion">
+<tt class="descname">notify_deletion</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.notify_deletion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.notify_deletion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the observers that must be notified about the delete of the observed resource
+and invoke the notification procedure in different threads.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.prepare_notification">
+<tt class="descname">prepare_notification</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.prepare_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.prepare_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the notification message and sends it from the main Thread.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>(resource, host, port, token)</em>) &#8211; the arguments of the notification message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the notification message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.prepare_notification_deletion">
+<tt class="descname">prepare_notification_deletion</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.prepare_notification_deletion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.prepare_notification_deletion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the notification message for deleted resource and sends it from the main Thread.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>(resource, host, port, token)</em>) &#8211; the arguments of the notification message</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the notification message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.purge_mids">
+<tt class="descname">purge_mids</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.purge_mids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.purge_mids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete messages which has been stored for more than EXCHANGE_LIFETIME.
+Executed in a thread.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.reliability_response">
+<tt class="descname">reliability_response</tt><big>(</big><em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.reliability_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.reliability_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets Message type according to the request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request object</li>
+<li><strong>response</strong> &#8211; the response object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.remove_observers">
+<tt class="descname">remove_observers</tt><big>(</big><em>node</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.remove_observers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.remove_observers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all the observers of a resource and and invoke the notification procedure in different threads.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.retransmit">
+<tt class="descname">retransmit</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.retransmit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.retransmit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retransmit the message and schedule retransmission for future if MAX_RETRANSMIT limit is not already reached.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> &#8211; ((Response, Resource), host, port, future_time) or (Response, host, port, future_time)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.schedule_retrasmission">
+<tt class="descname">schedule_retrasmission</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.schedule_retrasmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.schedule_retrasmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare retrasmission message and schedule it for the future.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>t</strong> (<em>(Response, Resource) or Response</em>) &#8211; the response and the resource interested in the retrasmission procedure</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.send">
+<tt class="descname">send</tt><big>(</big><em>message</em>, <em>host</em>, <em>port</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send the message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>message</strong> &#8211; the message to send</li>
+<li><strong>host</strong> &#8211; destination host</li>
+<li><strong>port</strong> &#8211; destination port</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coapthon2.server.coap_protocol.CoAP.send_error">
+<em class="property">static </em><tt class="descname">send_error</tt><big>(</big><em>request</em>, <em>response</em>, <em>error</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.send_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.send_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send error messages as NON.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request that has generated the error</li>
+<li><strong>response</strong> &#8211; the response message to be filled with the error</li>
+<li><strong>error</strong> &#8211; the error type</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.stopProtocol">
+<tt class="descname">stopProtocol</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.stopProtocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.stopProtocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the purge MIDs task</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.update_relations">
+<tt class="descname">update_relations</tt><big>(</big><em>node</em>, <em>resource</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.update_relations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.update_relations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a relation. It is used when a resource change due a POST request, without changing its path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the deleted resource</li>
+<li><strong>resource</strong> &#8211; the new resource</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.server.coap_protocol.CoAP.update_resource">
+<tt class="descname">update_resource</tt><big>(</big><em>path</em>, <em>request</em>, <em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/server/coap_protocol.html#CoAP.update_resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.server.coap_protocol.CoAP.update_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a PUT request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; the request</li>
+<li><strong>response</strong> &#8211; the response</li>
+<li><strong>node</strong> (<a class="reference internal" href="coapthon2.html#coapthon2.utils.Tree" title="coapthon2.utils.Tree"><em>coapthon2.utils.Tree</em></a>) &#8211; the node which has the resource</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the response</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">coapthon2.server package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-coapthon2.server.coap_protocol">coapthon2.server.coap_protocol module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coapthon2.server.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

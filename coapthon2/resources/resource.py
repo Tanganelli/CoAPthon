@@ -12,10 +12,10 @@ class Resource(object):
         """
         Initialize a new Resource.
 
-        @param name: the name or a Resource object to copy from.
-        @param visible: if the resource is visible
-        @param observable: if the resource is observable
-        @param allow_children: if the resource could has children
+        :param name: the name or a Resource object to copy from.
+        :param visible: if the resource is visible
+        :param observable: if the resource is observable
+        :param allow_children: if the resource could has children
         """
         if isinstance(name, Resource):
             self._attributes = name.attributes
@@ -59,7 +59,7 @@ class Resource(object):
         """
         Get the last valid ETag of the resource.
 
-        @return: the ETag value or None if the resource doesn't have any ETag
+        :return: the ETag value or None if the resource doesn't have any ETag
         """
         if self._etag:
             return self._etag[-1]
@@ -71,7 +71,7 @@ class Resource(object):
         """
         Set the ETag of the resource.
 
-        @param etag: the ETag
+        :param etag: the ETag
         """
         self._etag.append(etag)
 
@@ -81,7 +81,7 @@ class Resource(object):
         Get the payload of the resource according to the content type specified by required_content_type or
         "text/plain" by default.
 
-        @return: the payload.
+        :return: the payload.
         """
         if self._required_content_type is not None:
             if isinstance(self._payload, dict):
@@ -104,7 +104,7 @@ class Resource(object):
         """
         Set the payload of the resource.
 
-        @param p: the new payload
+        :param p: the new payload
         """
         if isinstance(p, dict):
             self._payload = {}
@@ -119,7 +119,7 @@ class Resource(object):
         """
         Get the payload of the resource as a dict of all different payloads defined for the resource.
 
-        @return: the payload as dict
+        :return: the payload as dict
         """
         return self._payload
 
@@ -128,7 +128,7 @@ class Resource(object):
         """
         Get the CoRE Link Format attribute of the resource.
 
-        @return: the attribute of the resource
+        :return: the attribute of the resource
         """
         return self._attributes
 
@@ -138,7 +138,7 @@ class Resource(object):
         """
         Set the CoRE Link Format attribute of the resource.
 
-        @param att: the attributes
+        :param att: the attributes
         """
         self._attributes = att
 
@@ -147,7 +147,7 @@ class Resource(object):
         """
         Get if the resource is visible.
 
-        @return: True, if visible
+        :return: True, if visible
         """
         return self._visible
 
@@ -156,7 +156,7 @@ class Resource(object):
         """
         Set if the resource is visible.
 
-        @param v: the visibility (True or False)
+        :param v: the visibility (True or False)
         """
         assert isinstance(v, bool)
         self._visible = v
@@ -166,7 +166,7 @@ class Resource(object):
         """
         Get if the resource is observable.
 
-        @return: True, if observable
+        :return: True, if observable
         """
         return self._observable
 
@@ -175,7 +175,7 @@ class Resource(object):
         """
         Set if the resource is observable.
 
-        @param v: the observability (True or False)
+        :param v: the observability (True or False)
         """
         assert isinstance(v, bool)
         self._observable = v
@@ -185,7 +185,7 @@ class Resource(object):
         """
         Get if the resource allow children.
 
-        @return: True, if allow children
+        :return: True, if allow children
         """
         return self._allow_children
 
@@ -194,7 +194,7 @@ class Resource(object):
         """
         Set if the resource  allow children.
 
-        @param v: the  allow children (True or False)
+        :param v: the  allow children (True or False)
         """
         assert isinstance(v, bool)
         self._allow_children = v
@@ -204,7 +204,7 @@ class Resource(object):
         """
         Get the Observe counter.
 
-        @return: the Observe counter value
+        :return: the Observe counter value
         """
         return self._observe_count
 
@@ -213,7 +213,7 @@ class Resource(object):
         """
         Set the Observe counter.
 
-        @param v: the Observe counter value
+        :param v: the Observe counter value
         """
         assert isinstance(v, int)
         self._observe_count = v
@@ -223,7 +223,7 @@ class Resource(object):
         """
         Get the actual required Content-Type.
 
-        @return: the actual required Content-Type.
+        :return: the actual required Content-Type.
         """
         return self._required_content_type
 
@@ -232,7 +232,7 @@ class Resource(object):
         """
         Set the actual required Content-Type.
 
-        @param act: the actual required Content-Type.
+        :param act: the actual required Content-Type.
         """
         if isinstance(act, str):
             self._required_content_type = defines.inv_content_types[act]
@@ -244,7 +244,7 @@ class Resource(object):
         """
         Get the CoRE Link Format ct attribute of the resource.
 
-        @return: the CoRE Link Format ct attribute
+        :return: the CoRE Link Format ct attribute
         """
         value = ""
         lst = self._attributes.get("ct")
@@ -261,7 +261,7 @@ class Resource(object):
         """
         Set the CoRE Link Format ct attribute of the resource.
 
-        @param lst: the list of CoRE Link Format ct attribute of the resource
+        :param lst: the list of CoRE Link Format ct attribute of the resource
         """
         value = []
         if isinstance(lst, str):
@@ -278,7 +278,7 @@ class Resource(object):
         """
         Add a CoRE Link Format ct attribute to the resource.
 
-        @param ct: the CoRE Link Format ct attribute
+        :param ct: the CoRE Link Format ct attribute
         """
         lst = self._attributes.get("ct")
         if lst is None:
@@ -292,7 +292,7 @@ class Resource(object):
         """
         Get the CoRE Link Format rt attribute of the resource.
 
-        @return: the CoRE Link Format rt attribute
+        :return: the CoRE Link Format rt attribute
         """
         value = "rt="
         lst = self._attributes.get("rt")
@@ -307,7 +307,7 @@ class Resource(object):
         """
         Set the CoRE Link Format rt attribute of the resource.
 
-        @param rt: the CoRE Link Format rt attribute
+        :param rt: the CoRE Link Format rt attribute
         """
         self._attributes["rt"] = rt
 
@@ -316,7 +316,7 @@ class Resource(object):
         """
         Get the CoRE Link Format if attribute of the resource.
 
-        @return: the CoRE Link Format if attribute
+        :return: the CoRE Link Format if attribute
         """
         value = "if="
         lst = self._attributes.get("if")
@@ -331,7 +331,7 @@ class Resource(object):
         """
         Set the CoRE Link Format if attribute of the resource.
 
-        @param ift: the CoRE Link Format if attribute
+        :param ift: the CoRE Link Format if attribute
         """
         self._attributes["if"] = ift
 
@@ -340,7 +340,7 @@ class Resource(object):
         """
         Get the CoRE Link Format sz attribute of the resource.
 
-        @return: the CoRE Link Format sz attribute
+        :return: the CoRE Link Format sz attribute
         """
         value = "sz="
         lst = self._attributes.get("sz")
@@ -355,7 +355,7 @@ class Resource(object):
         """
         Set the CoRE Link Format sz attribute of the resource.
 
-        @param sz: the CoRE Link Format sz attribute
+        :param sz: the CoRE Link Format sz attribute
         """
         self._attributes["sz"] = sz
 
@@ -363,8 +363,8 @@ class Resource(object):
         """
         Method to be redefined to render a GET request on the resource.
 
-        @param query: the request query
-        @return: the response
+        :param query: the request query
+        :return: the response
         """
         return -1
 
@@ -372,9 +372,9 @@ class Resource(object):
         """
         Method to be redefined to render a PUTT request on the resource.
 
-        @param payload: the request payload
-        @param query: the request query
-        @return: the response
+        :param payload: the request payload
+        :param query: the request query
+        :return: the response
         """
         return -1
 
@@ -382,9 +382,9 @@ class Resource(object):
         """
         Method to be redefined to render a POST request on the resource.
 
-        @param payload: the request payload
-        @param query: the request query
-        @return: the response
+        :param payload: the request payload
+        :param query: the request query
+        :return: the response
         """
         return -1
 
@@ -392,7 +392,7 @@ class Resource(object):
         """
         Method to be redefined to render a DELETE request on the resource.
 
-        @param query: the request query
-        @return: the response
+        :param query: the request query
+        :return: the response
         """
         return -1

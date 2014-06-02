@@ -23,7 +23,7 @@ class Option(object):
         """
         Get the option number.
 
-        @return: the option number
+        :return: the option number
         """
         return self._number
 
@@ -32,7 +32,7 @@ class Option(object):
         """
         Set the option number.
 
-        @param number: the number
+        :param number: the number
         """
         self._number = number
 
@@ -42,7 +42,7 @@ class Option(object):
         Get the option value.
 
 
-        @return: the option value as bytes
+        :return: the option value as bytes
         """
         if type(self._value) is None:
             self._value = BitArray()
@@ -59,7 +59,7 @@ class Option(object):
         """
         Sets the option value.
 
-        @param val: the value
+        :param val: the value
         """
         if type(val) is str:
             val = BitArray(bytes=val, length=len(val) * 8)
@@ -75,7 +75,7 @@ class Option(object):
         """
         Get the option value.
 
-        @return: the option value as BitArray
+        :return: the option value as BitArray
         """
         if type(self._value) is None:
             self._value = BitArray()
@@ -86,7 +86,7 @@ class Option(object):
         """
         Get the len of the option value
 
-        @return: the len of the option value
+        :return: the len of the option value
         """
         assert(type(self._value) is BitArray)
         return len(self._value.tobytes())
@@ -95,7 +95,7 @@ class Option(object):
         """
         Return the option as a formatted string.
 
-        @return: the string representing the option
+        :return: the string representing the option
         """
         name, opt_type, repeatable, defaults = defines.options[self._number]
         if name == "ETag":

@@ -39,28 +39,15 @@ class Child(Resource):
         return True
 
 
-class Hello(Resource):
+class Separate(Resource):
 
-    def __init__(self, name="HelloResource"):
-        super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
-        self.payload = {"text/plain": "Hello, world!", "application/xml": "HELLO, XML"}
+    def __init__(self, name="Separate"):
+        super(Separate, self).__init__(name, visible=True, observable=True, allow_children=True)
+        self.payload = "Separate"
 
     def render_GET(self, query=None):
-        #return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
-        #time.sleep(5)
-        return {"Payload": self.payload, "ETag": self.etag}
+        return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
 
     def render_GET_separate(self, query=None):
         time.sleep(5)
         return {"Payload": self.payload, "ETag": self.etag}
-
-    def render_PUT(self, payload=None, query=None):
-        return {"Payload": payload, "ETag": "PLUTO"}
-
-    def render_POST(self, payload=None, query=None):
-        q = "?" + "&".join(query)
-        res = Hello()
-        return {"Payload": payload, "ETag": "PIPPO", "Location-Query": q, "Resource": res}
-
-    def render_DELETE(self, query=None):
-        return True

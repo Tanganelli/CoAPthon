@@ -19,8 +19,8 @@ class ObserveLayer(object):
         """
         Initialize a Observe Layer.
 
-        @type parent: coapserver.CoAP
-        @param parent: the CoAP server
+        :type parent: coapserver.CoAP
+        :param parent: the CoAP server
         """
         self._parent = parent
 
@@ -28,9 +28,9 @@ class ObserveLayer(object):
         """
         Finds the observers that must be notified about the cancellation of the observed resource.
 
-        @type node: coapthon2.utils.Tree
-        @param node: the node which has the deleted resource
-        @return: the list of commands that must be executed to notify clients
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the deleted resource
+        :return: the list of commands that must be executed to notify clients
         """
         assert isinstance(node, Tree)
         resource = node.value
@@ -53,9 +53,9 @@ class ObserveLayer(object):
         """
         Finds the observers that must be notified about the update of the observed resource.
 
-        @type node: coapthon2.utils.Tree
-        @param node: the node which has the deleted resource
-        @return: the list of commands that must be executed to notify clients
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the deleted resource
+        :return: the list of commands that must be executed to notify clients
         """
         assert isinstance(node, Tree)
         resource = node.value
@@ -79,9 +79,9 @@ class ObserveLayer(object):
         Create the notification message.
 
 
-        @type t: (resource, host, port, token)
-        @param t: the arguments of the notification message
-        @return: the notification message
+        :type t: (resource, host, port, token)
+        :param t: the arguments of the notification message
+        :return: the notification message
         """
         resource, host, port, token = t
         response = Response()
@@ -123,9 +123,9 @@ class ObserveLayer(object):
         Create the notification message for deleted resource.
 
 
-        @type t: (resource, host, port, token)
-        @param t: the arguments of the notification message
-        @return: the notification message
+        :type t: (resource, host, port, token)
+        :param t: the arguments of the notification message
+        :return: the notification message
         """
         resource, host, port, token = t
         response = Response()
@@ -151,7 +151,7 @@ class ObserveLayer(object):
         """
         Sends a notification message.
 
-        @param t: (the notification message, the resource)
+        :param t: (the notification message, the resource)
         """
         assert isinstance(t, tuple)
         notification_message, resource = t
@@ -165,9 +165,9 @@ class ObserveLayer(object):
         """
         Add an observer to a resource and sets the Observe option in the response.
 
-        @param resource: the resource of interest
-        @param response: the response
-        @return: response
+        :param resource: the resource of interest
+        :param response: the response
+        :return: response
         """
         host, port = response.destination
         key = hash(str(host) + str(port) + str(response.token))
@@ -198,9 +198,9 @@ class ObserveLayer(object):
         """
         Remove all the observers of a resource and notifies the delete of the resource observed.
 
-        @type node: coapthon2.utils.Tree
-        @param node: the node which has the deleted resource
-        @return: the list of commands that must be executed to notify clients
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the deleted resource
+        :return: the list of commands that must be executed to notify clients
         """
         assert isinstance(node, Tree)
         commands = []
@@ -227,9 +227,9 @@ class ObserveLayer(object):
         """
         Update a relation. It is used when a resource change due a POST request, without changing its path.
 
-        @type node: coapthon2.utils.Tree
-        @param node: the node which has the deleted resource
-        @param resource: the new resource
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the deleted resource
+        :param resource: the new resource
         """
         old_resource = node.value
         observers = self._parent.relation.get(old_resource)
@@ -241,8 +241,8 @@ class ObserveLayer(object):
         """
         Remove an observer for a certain resource.
 
-        @param response: the response message which has not been acknowledge
-        @param resource: the resource
+        :param response: the response message which has not been acknowledge
+        :param resource: the resource
         """
         log.msg("Remove observer for the resource")
         host, port = response.destination

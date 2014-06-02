@@ -3,6 +3,7 @@ from twisted.test import proto_helpers
 from twisted.trial import unittest
 from coapserver import CoAPServer
 from coapthon2 import defines
+from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
 from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
@@ -36,6 +37,36 @@ class Tests(unittest.TestCase):
         self.assertEqual(message.options, expected.options)
 
         self.tr.written = []
+
+    def _test_separate(self, message, expected):
+        serializer = Serializer()
+        datagram = serializer.serialize(message)
+        self.proto.datagramReceived(datagram, ("127.0.0.1", 5632))
+        datagram, source = self.tr.written[0]
+        host, port = source
+        message = serializer.deserialize(datagram, host, port)
+
+        self.assertEqual(message.type, defines.inv_types["ACK"])
+        self.assertEqual(message.code, None)
+        self.assertEqual(message.mid, self.current_mid)
+        self.assertEqual(message.source, source)
+
+        datagram, source = self.tr.written[1]
+        host, port = source
+        message = serializer.deserialize(datagram, host, port)
+
+        self.assertEqual(message.type, expected.type)
+        self.assertEqual(message.code, expected.code)
+        self.assertEqual(message.source, source)
+        self.assertEqual(message.token, expected.token)
+        self.assertEqual(message.payload, expected.payload)
+        self.assertEqual(message.options, expected.options)
+
+        self.tr.written = []
+
+        message = Message.new_ack(message)
+        datagram = serializer.serialize(message)
+        self.proto.datagramReceived(datagram, ("127.0.0.1", 5632))
 
     def tearDown(self):
         self.proto.stopProtocol()
@@ -140,4 +171,28 @@ class Tests(unittest.TestCase):
         expected.code = defines.responses["CONTENT"]
         expected.token = None
         expected.payload = "Created"
+
+    def test_get_separate(self):
+        args = ("/separate",)
+        kwargs = {}
+        path = args[0]
+        req = Request()
+        for key in kwargs:
+            o = Option()
+            o.number = defines.inv_options[key]
+            o.value = kwargs[key]
+            req.add_option(o)
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req.mid = self.current_mid
+
+        expected = Response()
+        expected.type = defines.inv_types["CON"]
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "Separate"
+
+        self._test_separate(req, expected)
 

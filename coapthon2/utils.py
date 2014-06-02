@@ -8,8 +8,8 @@ def bit_len(int_type):
     """
     Get the number of bits needed to encode the int passed.
 
-    @param int_type: the int to be converted
-    @return: the number of bits needed to encode the int passed.
+    :param int_type: the int to be converted
+    :return: the number of bits needed to encode the int passed.
     """
     length = 0
     while int_type:
@@ -32,7 +32,7 @@ class Tree(object):
         """
         Find the absolute path of a node
 
-        @return : path
+        :return : path
         """
         msg = self.value.path + "/" + msg
         if self.parent is not None:

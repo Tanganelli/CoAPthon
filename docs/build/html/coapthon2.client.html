@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.client package &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="coapthon2-client-package">
+<h1>coapthon2.client package<a class="headerlink" href="#coapthon2-client-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coapthon2.client.coap_protocol">
+<span id="coapthon2-client-coap-protocol-module"></span><h2>coapthon2.client.coap_protocol module<a class="headerlink" href="#module-coapthon2.client.coap_protocol" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.client.coap_protocol.CoAP">
+<em class="property">class </em><tt class="descclassname">coapthon2.client.coap_protocol.</tt><tt class="descname">CoAP</tt><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">twisted.internet.protocol.DatagramProtocol</span></tt></p>
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.datagramReceived">
+<tt class="descname">datagramReceived</tt><big>(</big><em>datagram</em>, <em>host</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.datagramReceived"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.datagramReceived" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.delete">
+<tt class="descname">delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.delete_results">
+<tt class="descname">delete_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.delete_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.delete_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.discover">
+<tt class="descname">discover</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.discover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.discover" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.discover_results">
+<tt class="descname">discover_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.discover_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.discover_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.get">
+<tt class="descname">get</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.get_operation">
+<tt class="descname">get_operation</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.get_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.get_operation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.get_results">
+<tt class="descname">get_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.get_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.get_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.handle_message">
+<tt class="descname">handle_message</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.handle_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.handle_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.handle_notification">
+<tt class="descname">handle_notification</tt><big>(</big><em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.handle_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.handle_notification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.handle_response">
+<tt class="descname">handle_response</tt><big>(</big><em>response</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.handle_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.handle_response" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.observe">
+<tt class="descname">observe</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.observe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.observe_results">
+<tt class="descname">observe_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.observe_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.observe_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.parse_core_link_format">
+<tt class="descname">parse_core_link_format</tt><big>(</big><em>link_format</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.parse_core_link_format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.parse_core_link_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.post">
+<tt class="descname">post</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.post" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.post_results">
+<tt class="descname">post_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.post_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.post_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.purge_mids">
+<tt class="descname">purge_mids</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.purge_mids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.purge_mids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.put">
+<tt class="descname">put</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.put" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.put_results">
+<tt class="descname">put_results</tt><big>(</big><em>mid</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.put_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.put_results" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.retransmit">
+<tt class="descname">retransmit</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.retransmit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.retransmit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.schedule_retrasmission">
+<tt class="descname">schedule_retrasmission</tt><big>(</big><em>request</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.schedule_retrasmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.schedule_retrasmission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.send">
+<tt class="descname">send</tt><big>(</big><em>req</em>, <em>callback</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.send" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.set_operations">
+<tt class="descname">set_operations</tt><big>(</big><em>operations</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.set_operations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.set_operations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.start">
+<tt class="descname">start</tt><big>(</big><em>host</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.startProtocol">
+<tt class="descname">startProtocol</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.startProtocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.startProtocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.start_test">
+<tt class="descname">start_test</tt><big>(</big><em>transport</em><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.start_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.start_test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.client.coap_protocol.CoAP.stopProtocol">
+<tt class="descname">stopProtocol</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/coapthon2/client/coap_protocol.html#CoAP.stopProtocol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.client.coap_protocol.CoAP.stopProtocol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">coapthon2.client package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-coapthon2.client.coap_protocol">coapthon2.client.coap_protocol module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coapthon2.client.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.messages package &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="coapthon2-messages-package">
+<h1>coapthon2.messages package<a class="headerlink" href="#coapthon2-messages-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coapthon2.messages.message">
+<span id="coapthon2-messages-message-module"></span><h2>coapthon2.messages.message module<a class="headerlink" href="#module-coapthon2.messages.message" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.messages.message.Message">
+<em class="property">class </em><tt class="descclassname">coapthon2.messages.message.</tt><tt class="descname">Message</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Manage messages.</p>
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.acknowledged">
+<tt class="descname">acknowledged</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.acknowledged"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.acknowledged" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if is this message has been acknowledged.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if is acknowledged</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.messages.message.Message.add_option">
+<tt class="descname">add_option</tt><big>(</big><em>option</em><big>)</big><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.add_option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.add_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an option to the message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>option</strong> (<a class="reference internal" href="#coapthon2.messages.option.Option" title="coapthon2.messages.option.Option"><em>coapthon2.messages.option.Option</em></a>) &#8211; the option</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises TypeError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if the option is not repeatable and such option is already present in the message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.cancelled">
+<tt class="descname">cancelled</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.cancelled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.cancelled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this message has been canceled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if is canceled</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.messages.message.Message.del_option">
+<tt class="descname">del_option</tt><big>(</big><em>option</em><big>)</big><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.del_option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.del_option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an option from the message</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>option</strong> (<a class="reference internal" href="#coapthon2.messages.option.Option" title="coapthon2.messages.option.Option"><em>coapthon2.messages.option.Option</em></a>) &#8211; the option</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coapthon2.messages.message.Message.del_option_name">
+<tt class="descname">del_option_name</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.del_option_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.del_option_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.duplicated">
+<tt class="descname">duplicated</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.duplicated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.duplicated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this message is a duplicate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if is a duplicate</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coapthon2.messages.message.Message.new_ack">
+<em class="property">static </em><tt class="descname">new_ack</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.new_ack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.new_ack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new acknowledgment for the specified message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> &#8211; the message to acknowledge</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the acknowledgment</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coapthon2.messages.message.Message.new_rst">
+<em class="property">static </em><tt class="descname">new_rst</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.new_rst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.new_rst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new reset message for the specified message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> &#8211; the message to reject</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the rst message</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.options">
+<tt class="descname">options</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property for retrieving the options of the message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the options</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.rejected">
+<tt class="descname">rejected</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.rejected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.rejected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this message has been rejected.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if is rejected</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.message.Message.timeouted">
+<tt class="descname">timeouted</tt><a class="reference internal" href="_modules/coapthon2/messages/message.html#Message.timeouted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.message.Message.timeouted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this message has timeouted. Confirmable messages in particular
+might timeout.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if has timeouted</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.messages.option">
+<span id="coapthon2-messages-option-module"></span><h2>coapthon2.messages.option module<a class="headerlink" href="#module-coapthon2.messages.option" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.messages.option.Option">
+<em class="property">class </em><tt class="descclassname">coapthon2.messages.option.</tt><tt class="descname">Option</tt><a class="reference internal" href="_modules/coapthon2/messages/option.html#Option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.option.Option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Represent a CoAP option.</p>
+<dl class="attribute">
+<dt id="coapthon2.messages.option.Option.length">
+<tt class="descname">length</tt><a class="reference internal" href="_modules/coapthon2/messages/option.html#Option.length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.option.Option.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the len of the option value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the len of the option value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.option.Option.number">
+<tt class="descname">number</tt><a class="reference internal" href="_modules/coapthon2/messages/option.html#Option.number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.option.Option.number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the option number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the option number</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.option.Option.raw_value">
+<tt class="descname">raw_value</tt><a class="reference internal" href="_modules/coapthon2/messages/option.html#Option.raw_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.option.Option.raw_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the option value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the option value as BitArray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.option.Option.value">
+<tt class="descname">value</tt><a class="reference internal" href="_modules/coapthon2/messages/option.html#Option.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.option.Option.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the option value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the option value as bytes</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.messages.request">
+<span id="coapthon2-messages-request-module"></span><h2>coapthon2.messages.request module<a class="headerlink" href="#module-coapthon2.messages.request" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.messages.request.Request">
+<em class="property">class </em><tt class="descclassname">coapthon2.messages.request.</tt><tt class="descname">Request</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#coapthon2.messages.message.Message" title="coapthon2.messages.message.Message"><tt class="xref py py-class docutils literal"><span class="pre">coapthon2.messages.message.Message</span></tt></a></p>
+<p>Represent a Request message.</p>
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.accept">
+<tt class="descname">accept</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.accept"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.accept" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Accept option of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Accept value or None if not specified by the request</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.content_type">
+<tt class="descname">content_type</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.content_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Content-Type option of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Content-Type value or None if not specified by the request</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.etag">
+<tt class="descname">etag</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.etag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.etag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the ETag option of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the ETag values or [] if not specified by the request</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.has_if_match">
+<tt class="descname">has_if_match</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.has_if_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.has_if_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the request has the If-Match option.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if the request has the If-Match option.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.has_if_none_match">
+<tt class="descname">has_if_none_match</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.has_if_none_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.has_if_none_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the request has the If-None-Match option.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True, if the request has the If-None-Match option.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.if_match">
+<tt class="descname">if_match</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.if_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.if_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the If-Match option of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the If-Match values or [] if not specified by the request</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.observe">
+<tt class="descname">observe</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the request is an observing request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">0, if the request is an observing request</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.query">
+<tt class="descname">query</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Uri-Query of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Uri-Query</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.request.Request.uri_path">
+<tt class="descname">uri_path</tt><a class="reference internal" href="_modules/coapthon2/messages/request.html#Request.uri_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.request.Request.uri_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Uri-Path of a request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Uri-Path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coapthon2.messages.response">
+<span id="coapthon2-messages-response-module"></span><h2>coapthon2.messages.response module<a class="headerlink" href="#module-coapthon2.messages.response" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coapthon2.messages.response.Response">
+<em class="property">class </em><tt class="descclassname">coapthon2.messages.response.</tt><tt class="descname">Response</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#coapthon2.messages.message.Message" title="coapthon2.messages.message.Message"><tt class="xref py py-class docutils literal"><span class="pre">coapthon2.messages.message.Message</span></tt></a></p>
+<p>Represent a Response message.</p>
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.content_type">
+<tt class="descname">content_type</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.content_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Content-Type option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Content-Type value or 0 if not specified by the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.etag">
+<tt class="descname">etag</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.etag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.etag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the ETag option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the ETag values or [] if not specified by the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.location_path">
+<tt class="descname">location_path</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.location_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.location_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Location-Path option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Location-Path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.location_query">
+<tt class="descname">location_query</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.location_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.location_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Location-Query option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Location-Query</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.max_age">
+<tt class="descname">max_age</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.max_age"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.max_age" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Max-Age option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Max-Age value or 0 if not specified by the response</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coapthon2.messages.response.Response.observe">
+<tt class="descname">observe</tt><a class="reference internal" href="_modules/coapthon2/messages/response.html#Response.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coapthon2.messages.response.Response.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Observe option of a response.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the Observe value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">coapthon2.messages package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-coapthon2.messages.message">coapthon2.messages.message module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.messages.option">coapthon2.messages.option module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.messages.request">coapthon2.messages.request module</a></li>
+<li><a class="reference internal" href="#module-coapthon2.messages.response">coapthon2.messages.response module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/coapthon2.messages.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

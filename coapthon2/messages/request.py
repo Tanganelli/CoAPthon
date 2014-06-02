@@ -22,7 +22,7 @@ class Request(Message):
         """
         Get the Uri-Path of a request.
 
-        @return: the Uri-Path
+        :return: the Uri-Path
         """
         value = ""
         for option in self.options:
@@ -36,7 +36,7 @@ class Request(Message):
         """
         Set the Uri-Path of a request.
 
-        @param path: the Uri-Path
+        :param path: the Uri-Path
         """
         path = path.strip("/")
         paths = path.split("/")
@@ -51,7 +51,7 @@ class Request(Message):
         """
         Check if the request is an observing request.
 
-        @return: 0, if the request is an observing request
+        :return: 0, if the request is an observing request
         """
         for option in self.options:
             if option.number == defines.inv_options['Observe']:
@@ -65,7 +65,7 @@ class Request(Message):
         """
         Add the Observe option.
 
-        @param ob: observe count
+        :param ob: observe count
         """
         option = Option()
         option.number = defines.inv_options['Observe']
@@ -78,7 +78,7 @@ class Request(Message):
         """
         Get the Uri-Query of a request.
 
-        @return: the Uri-Query
+        :return: the Uri-Query
         """
         value = []
         for option in self.options:
@@ -91,7 +91,7 @@ class Request(Message):
         """
         Get the Content-Type option of a request.
 
-        @return: the Content-Type value or None if not specified by the request
+        :return: the Content-Type value or None if not specified by the request
         """
         for option in self.options:
             if option.number == defines.inv_options['Content-Type']:
@@ -103,7 +103,7 @@ class Request(Message):
         """
         Get the Accept option of a request.
 
-        @return: the Accept value or None if not specified by the request
+        :return: the Accept value or None if not specified by the request
         """
         for option in self.options:
             if option.number == defines.inv_options['Accept']:
@@ -115,7 +115,7 @@ class Request(Message):
         """
         Get the ETag option of a request.
 
-        @return: the ETag values or [] if not specified by the request
+        :return: the ETag values or [] if not specified by the request
         """
         value = []
         for option in self.options:
@@ -128,7 +128,7 @@ class Request(Message):
         """
         Get the If-Match option of a request.
 
-        @return: the If-Match values or [] if not specified by the request
+        :return: the If-Match values or [] if not specified by the request
         """
         value = []
         for option in self.options:
@@ -141,7 +141,7 @@ class Request(Message):
         """
         Check if the request has the If-Match option.
 
-        @return: True, if the request has the If-Match option.
+        :return: True, if the request has the If-Match option.
         """
         for option in self.options:
             if option.number == defines.inv_options['If-Match']:
@@ -153,7 +153,7 @@ class Request(Message):
         """
         Check if the request has the If-None-Match option.
 
-        @return: True, if the request has the If-None-Match option.
+        :return: True, if the request has the If-None-Match option.
         """
         for option in self.options:
             if option.number == defines.inv_options['If-None-Match']:

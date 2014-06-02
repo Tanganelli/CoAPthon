@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coapthon2.layer.request &mdash; CoAPthon 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="CoAPthon 2.0.0 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for coapthon2.layer.request</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">twisted.python</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">coapthon2</span> <span class="kn">import</span> <span class="n">defines</span>
+<span class="kn">from</span> <span class="nn">coapthon2.messages.message</span> <span class="kn">import</span> <span class="n">Message</span>
+<span class="kn">from</span> <span class="nn">coapthon2.messages.response</span> <span class="kn">import</span> <span class="n">Response</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&#39;Giacomo Tanganelli&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;2.0&quot;</span>
+
+
+<div class="viewcode-block" id="RequestLayer"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer">[docs]</a><span class="k">class</span> <span class="nc">RequestLayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handles the Request Layer functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Request Layer.</span>
+
+<span class="sd">        :type parent: coapserver.CoAP</span>
+<span class="sd">        :param parent: the CoAP server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+<div class="viewcode-block" id="RequestLayer.handle_request"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.handle_request">[docs]</a>    <span class="k">def</span> <span class="nf">handle_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles requests.</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">host</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">mid</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">received</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">received</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+            <span class="c"># TODO Blockwise</span>
+            <span class="k">return</span> <span class="n">request</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">received</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">duplicated</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">received</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span><span class="p">,</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">sent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">Response</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">response</span>
+            <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">acknowledged</span><span class="p">:</span>
+                <span class="n">ack</span> <span class="o">=</span> <span class="n">Message</span><span class="o">.</span><span class="n">new_ack</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ack</span>
+            <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">rejected</span><span class="p">:</span>
+                <span class="n">rst</span> <span class="o">=</span> <span class="n">Message</span><span class="o">.</span><span class="n">new_rst</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">rst</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># The server has not yet decided, whether to acknowledge or</span>
+                <span class="c"># reject the request. We know for sure that the server has</span>
+                <span class="c"># received the request though and can drop this duplicate here.</span>
+                <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="RequestLayer.process"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes a request message.</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">defines</span><span class="o">.</span><span class="n">codes</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">code</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;GET&#39;</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_get</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;POST&#39;</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_post</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;PUT&#39;</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_put</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;DELETE&#39;</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_delete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">response</span>
+</div>
+<div class="viewcode-block" id="RequestLayer.handle_put"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.handle_put">[docs]</a>    <span class="k">def</span> <span class="nf">handle_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles a PUT request</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">()</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">uri_path</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_complete</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">send_error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="s">&#39;NOT_FOUND&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="c"># Update request</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">update_resource</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+</div>
+<div class="viewcode-block" id="RequestLayer.handle_post"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.handle_post">[docs]</a>    <span class="k">def</span> <span class="nf">handle_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles a POST request.</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">uri_path</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">()</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">source</span>
+        <span class="c"># Create request</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">create_resource</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span>
+</div>
+<div class="viewcode-block" id="RequestLayer.handle_delete"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.handle_delete">[docs]</a>    <span class="k">def</span> <span class="nf">handle_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles a DELETE request.</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">uri_path</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_complete</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">()</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">source</span>
+        <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Create request</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">send_error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="s">&#39;NOT_FOUND&#39;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">msg</span><span class="p">(</span><span class="s">&quot;Resource Not Found&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Delete</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">delete_resource</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+</div>
+<div class="viewcode-block" id="RequestLayer.handle_get"><a class="viewcode-back" href="../../../coapthon2.layer.html#coapthon2.layer.request.RequestLayer.handle_get">[docs]</a>    <span class="k">def</span> <span class="nf">handle_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles a GET request.</span>
+
+<span class="sd">        :param request: the request</span>
+<span class="sd">        :return: the response</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">uri_path</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">()</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">source</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="o">==</span> <span class="n">defines</span><span class="o">.</span><span class="n">DISCOVERY_URL</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">discover</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">find_complete</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># Not Found</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">send_error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="s">&#39;NOT_FOUND&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="o">.</span><span class="n">get_resource</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">resource</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">CoAPthon 2.0.0 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Giacomo Tanganelli.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
