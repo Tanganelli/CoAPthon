@@ -47,6 +47,8 @@ Resources are extended from the :class:`resource.Resource`. Simple examples can 
 
 .. code-block:: python
 
+    from coapthon2.resources.resource import Resource
+
     class Hello(Resource):
         def __init__(self, name="HelloResource"):
             super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
