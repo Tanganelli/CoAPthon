@@ -29,7 +29,7 @@ CoAP server
 -----------
 In order to implements a CoAP server the basic class must be extended. Moreover the server must add some resources.
 
-```
+```Python
 from twisted.internet import reactor
 from coapthon2.server.coap_protocol import CoAP
 from example_resources import Hello
@@ -51,26 +51,26 @@ if __name__ == '__main__':
 
 Resources are extended from the class resource.Resource. Simple examples can be found in example_resource.py.
 
-```python
-    from coapthon2.resources.resource import Resource
+```Python
+from coapthon2.resources.resource import Resource
 
-    class Hello(Resource):
-        def __init__(self, name="HelloResource"):
-            super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
-            self.payload = "Hello world!"
+class Hello(Resource):
+    def __init__(self, name="HelloResource"):
+        super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
+        self.payload = "Hello world!"
 
-        def render_GET(self, query=None):
-            return self.payload
+    def render_GET(self, query=None):
+        return self.payload
 
-        def render_PUT(self, payload=None, query=None):
-            return payload
+    def render_PUT(self, payload=None, query=None):
+        return payload
 
-        def render_POST(self, payload=None, query=None):
-            q = "?" + "&".join(query)
-            res = Hello()
-            return {"Payload": payload, "Location-Query": q, "Resource": res}
+    def render_POST(self, payload=None, query=None):
+        q = "?" + "&".join(query)
+        res = Hello()
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
 
-        def render_DELETE(self, query=None):
-            return True
+    def render_DELETE(self, query=None):
+        return True
 ```
 
