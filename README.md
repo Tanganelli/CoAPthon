@@ -29,7 +29,8 @@ CoAP server
 -----------
 In order to implements a CoAP server the basic class must be extended. Moreover the server must add some resources.
 
-    ```from twisted.internet import reactor
+    ```python
+    from twisted.internet import reactor
     from coapthon2.server.coap_protocol import CoAP
     from example_resources import Hello
 
@@ -50,7 +51,8 @@ In order to implements a CoAP server the basic class must be extended. Moreover 
 
 Resources are extended from the :class:`resource.Resource`. Simple examples can be found in :mod:`example_resource.py`.
 
-    ```from coapthon2.resources.resource import Resource
+    ```python
+    from coapthon2.resources.resource import Resource
 
     class Hello(Resource):
         def __init__(self, name="HelloResource"):
