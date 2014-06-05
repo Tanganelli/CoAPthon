@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name='CoAPthon2.0',
+    name='CoAPthon',
     version='2.0.0',
     packages=['test', 'coapthon2', 'coapthon2.layer', 'coapthon2.client', 'coapthon2.server', 'coapthon2.messages',
               'coapthon2.resources'],

@@ -1,3 +1,4 @@
+#!/bin/python
 from twisted.internet import reactor
 from coapthon2.client.coap_protocol import CoAP
 
