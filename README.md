@@ -17,8 +17,7 @@ TODO
 
 - CoAP to CoAP Forwarding proxy
 - CoAP to CoAP Reverse Proxy
-- CoAP to HTTP Forwarding Proxy
-- CoAP to HTTP Reverse Proxy
+- CoAP to HTTP Proxy
 - Blockwise feature
 - Multicast server discovery
 
@@ -103,3 +102,14 @@ class Hello(Resource):
         return True
 ```
 
+Build the documentation
+================
+The documentation is based on the Sphinx framework. In order to build the documentation issue the following:
+
+```sh
+$ pip install Sphinx
+$ cd CoAPthon/docs
+$ make html
+```
+
+The documentation will be build in CoAPthon/docs/build/html. Let's start from index.html to have an overview of the library.
