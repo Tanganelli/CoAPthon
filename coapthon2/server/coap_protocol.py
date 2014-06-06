@@ -1,9 +1,11 @@
 import random
-import sys
 import time
+from twisted.application.service import Application
 from twisted.python import log
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor, threads, task
+from twisted.python.log import ILogObserver, FileLogObserver
+from twisted.python.logfile import DailyLogFile
 from coapthon2 import defines
 from coapthon2.layer.message import MessageLayer
 from coapthon2.layer.observe import ObserveLayer
@@ -18,7 +20,14 @@ from coapthon2.utils import Tree
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
-log.startLogging(sys.stdout)
+
+from os.path import expanduser
+home = expanduser("~")
+
+logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
+# Now add an observer that logs to a file
+application = Application("CoAPthon_Server")
+application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class CoAP(DatagramProtocol):
@@ -63,6 +72,10 @@ class CoAP(DatagramProtocol):
         :param host: destination host
         :param port: destination port
         """
+        print "Message send to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
         self.transport.write(message, (host, port))
@@ -76,6 +89,10 @@ class CoAP(DatagramProtocol):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self._request_layer.handle_request(message)
@@ -229,10 +246,9 @@ class CoAP(DatagramProtocol):
         """
         Render a PUT request.
 
-        :type node: coapthon2.utils.Tree
+        :param path: the path
         :param request: the request
         :param response: the response
-        :param node: the node which has the resource
         :return: the response
         """
         return self._resource_layer.update_resource(path, request, response)

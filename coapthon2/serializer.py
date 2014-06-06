@@ -10,8 +10,6 @@ from coapthon2.messages.response import Response
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-log.startLogging(sys.stdout)
-
 
 class Serializer(object):
     """

@@ -1,20 +1,20 @@
 #!/bin/python
 from twisted.internet import reactor
-from twisted.python import log
 from coapthon2.server.coap_protocol import CoAP
 from example_resources import Storage, Separate
 
 
 class CoAPServer(CoAP):
-    def __init__(self):
+    def __init__(self, host, port):
         CoAP.__init__(self)
         self.add_resource('storage/', Storage())
         self.add_resource('separate/', Separate())
-        log.msg(self.root.dump())
+        print "CoAP Server start on " + host + ":" + str(port)
+        print(self.root.dump())
 
 
 def main():
-    reactor.listenUDP(5683, CoAPServer())
+    reactor.listenUDP(5683, CoAPServer("127.0.0.1", 5683), "127.0.0.1")
     reactor.run()
 
 

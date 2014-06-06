@@ -1,8 +1,11 @@
 import random
 import re
 import time
+from twisted.application.service import Application
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
+from twisted.python.log import ILogObserver, FileLogObserver
+from twisted.python.logfile import DailyLogFile
 from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
@@ -17,6 +20,16 @@ from twisted.internet import reactor
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
+
+from os.path import expanduser
+home = expanduser("~")
+
+# First, startLogging to capture stdout
+logfile = DailyLogFile("CoAPthon_client.log", home + "/.coapthon/")
+# Now add an observer that logs to a file
+application = Application("CoAPthon_Client")
+application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+
 
 class CoAP(DatagramProtocol):
     def __init__(self):
@@ -39,8 +52,8 @@ class CoAP(DatagramProtocol):
 
     def set_operations(self, operations):
         for op in operations:
-            function, args, kwargs = op
-            self.operations.append((function, args, kwargs))
+            function, args, kwargs, client_callback = op
+            self.operations.append((function, args, kwargs, client_callback))
 
     def startProtocol(self):
         host, port = self.server
@@ -57,11 +70,11 @@ class CoAP(DatagramProtocol):
         now = time.time()
         sent_key_to_delete = []
         for key in self.sent.keys():
-            message, timestamp, callback = self.sent.get(key)
+            message, timestamp, callback, client_callback = self.sent.get(key)
             if timestamp + defines.EXCHANGE_LIFETIME <= now:
                 sent_key_to_delete.append(key)
         for key in sent_key_to_delete:
-            message, timestamp, callback = self.sent.get(key)
+            message, timestamp, callback, client_callback = self.sent.get(key)
             key_token = hash(str(self.server[0]) + str(self.server[1]) + str(message.token))
             try:
                 del self.sent[key]
@@ -83,39 +96,46 @@ class CoAP(DatagramProtocol):
     def start(self, host):
         self.server = (host, self.server[1])
         self.transport.connect(host, self.server[1])
-        function, args, kwargs = self.get_operation()
-        function(*args, **kwargs)
+        function, args, kwargs, client_callback = self.get_operation()
+        function(client_callback, *args, **kwargs)
 
     def start_test(self, transport):
         self.transport = transport
-        function, args, kwargs = self.get_operation()
-        function(*args, **kwargs)
+        function, args, kwargs, client_callback = self.get_operation()
+        function(client_callback, *args, **kwargs)
 
     def get_operation(self):
         try:
             to_exec = self.operations.pop(0)
             args = []
             kwargs = {}
-            if len(to_exec) == 3:
-                function, args, kwargs = to_exec
+            if len(to_exec) == 4:
+                function, args, kwargs, client_callback = to_exec
+            elif len(to_exec) == 3:
+                function, args, client_callback = to_exec
             elif len(to_exec) == 2:
-                function, args = to_exec
+                function, client_callback = to_exec[0]
             else:
-                function = to_exec[0]
-            return function, args, kwargs
+                return None, None, None, None
+            return function, args, kwargs, client_callback
         except IndexError:
-            return None, None, None
+            return None, None, None, None
 
-    def send(self, req, callback):
+    def send(self, req, callback, client_callback):
         self._currentMID += 1
         req.mid = self._currentMID
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
-        self.sent[key] = (req, time.time(), callback)
-        self.sent_token[key_token] = (req, time.time(), callback)
+        self.sent[key] = (req, time.time(), callback, client_callback)
+        self.sent_token[key_token] = (req, time.time(), callback, client_callback)
         self.schedule_retrasmission(req)
         serializer = Serializer()
+        req.destination = self.server
+        host, port = req.destination
+        print "Message sent to " + host + ":" + str(port)
+        print "----------------------------------------"
         print req
+        print "----------------------------------------"
         datagram = serializer.serialize(req)
         log.msg("Send datagram")
         self.transport.write(datagram)
@@ -124,6 +144,10 @@ class CoAP(DatagramProtocol):
         serializer = Serializer()
         host, port = host
         message = serializer.deserialize(datagram, host, port)
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         if isinstance(message, Response):
             self.handle_response(message)
         elif isinstance(message, Request):
@@ -137,14 +161,14 @@ class CoAP(DatagramProtocol):
             #Separate Response
             print "Separate Response"
         else:
-            function, args, kwargs = self.get_operation()
+            function, args, kwargs, client_callback = self.get_operation()
             key = hash(str(host) + str(port) + str(message.token))
             if function is None and len(self.relation) == 0:
                 reactor.stop()
             elif key in self.relation:
                 self.handle_notification(message)
             else:
-                function(*args, **kwargs)
+                function(client_callback, *args, **kwargs)
 
     def handle_message(self, message):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
@@ -156,8 +180,8 @@ class CoAP(DatagramProtocol):
             if message.type == defines.inv_types["RST"]:
                 print message
             else:
-                req, timestamp, callback = self.sent[key]
-                callback(message.mid)
+                req, timestamp, callback, client_callback = self.sent[key]
+                callback(message.mid, client_callback)
 
     def handle_response(self, response):
         if response.type == defines.inv_types["CON"]:
@@ -169,19 +193,19 @@ class CoAP(DatagramProtocol):
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
-            req, timestamp, callback = self.sent_token[key_token]
+            req, timestamp, callback, client_callback = self.sent_token[key_token]
             key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
             self.received[key] = response
-            callback(req.mid)
+            callback(req.mid, client_callback)
 
-    def discover(self, *args, **kwargs):
+    def discover(self, client_callback, *args, **kwargs):
         req = Request()
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
-        self.send(req, self.discover_results)
+        self.send(req, self.discover_results, client_callback)
 
-    def discover_results(self, mid):
+    def discover_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -193,8 +217,8 @@ class CoAP(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
-            print response
-            self.parse_core_link_format(response.payload)
+            #self.parse_core_link_format(response.payload)
+            client_callback(response)
 
     def parse_core_link_format(self, link_format):
         while len(link_format) > 0:
@@ -228,7 +252,7 @@ class CoAP(DatagramProtocol):
                     break
         log.msg(self.root.dump())
 
-    def get(self, *args, **kwargs):
+    def get(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
         for key in kwargs:
@@ -240,9 +264,9 @@ class CoAP(DatagramProtocol):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        self.send(req, self.get_results)
+        self.send(req, self.get_results, client_callback)
 
-    def get_results(self, mid):
+    def get_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -254,9 +278,10 @@ class CoAP(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
-            print response
+            client_callback(response)
+            #print response
 
-    def observe(self, *args, **kwargs):
+    def observe(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
         for key in kwargs:
@@ -270,9 +295,9 @@ class CoAP(DatagramProtocol):
         req.observe = 0
         req.token = "ciao"
         req.type = defines.inv_types["CON"]
-        self.send(req, self.observe_results)
+        self.send(req, self.observe_results, client_callback)
 
-    def observe_results(self, mid):
+    def observe_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -289,7 +314,7 @@ class CoAP(DatagramProtocol):
                 host, port = response.source
                 key = hash(str(host) + str(port) + str(response.token))
                 self.relation[key] = (response, time.time())
-            print response
+            client_callback(response)
 
     def handle_notification(self, response):
         host, port = response.source
@@ -303,7 +328,7 @@ class CoAP(DatagramProtocol):
             self.transport.write(datagram)
         print response
 
-    def post(self, *args, **kwargs):
+    def post(self, client_callback, *args, **kwargs):
         path, payload = args
         req = Request()
         for key in kwargs:
@@ -315,9 +340,9 @@ class CoAP(DatagramProtocol):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req.payload = payload
-        self.send(req, self.post_results)
+        self.send(req, self.post_results, client_callback)
 
-    def post_results(self, mid):
+    def post_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -329,9 +354,9 @@ class CoAP(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
-            print response
+            client_callback(response)
 
-    def put(self, *args, **kwargs):
+    def put(self, client_callback, *args, **kwargs):
         path, payload = args
         req = Request()
         for key in kwargs:
@@ -343,9 +368,9 @@ class CoAP(DatagramProtocol):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req.payload = payload
-        self.send(req, self.put_results)
+        self.send(req, self.put_results, client_callback)
 
-    def put_results(self, mid):
+    def put_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -357,9 +382,9 @@ class CoAP(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
-            print response
+            client_callback(response)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
         for key in kwargs:
@@ -370,9 +395,9 @@ class CoAP(DatagramProtocol):
         req.code = defines.inv_codes['DELETE']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        self.send(req, self.delete_results)
+        self.send(req, self.delete_results, client_callback)
 
-    def delete_results(self, mid):
+    def delete_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
         response = self.received.get(key)
         if key in self.call_id.keys():
@@ -384,7 +409,7 @@ class CoAP(DatagramProtocol):
                 except AlreadyCancelled:
                     pass
         if response is not None:
-            print response
+            client_callback(response)
 
     def schedule_retrasmission(self, request):
         host, port = self.server
@@ -417,3 +442,13 @@ class CoAP(DatagramProtocol):
             request.timeouted = True
             log.err("Request timeouted")
             del self.call_id[key]
+
+
+class HelperClient(object):
+    def __init__(self):
+        self.protocol = CoAP()
+
+    def start(self, operations):
+        self.protocol.set_operations(operations)
+        t = reactor.listenUDP(0, self.protocol)
+        reactor.run()
