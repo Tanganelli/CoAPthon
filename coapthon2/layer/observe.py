@@ -158,6 +158,10 @@ class ObserveLayer(object):
         host, port = notification_message.destination
         serializer = Serializer()
         self._parent.schedule_retrasmission(t)
+        print "Notification Message send to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print notification_message
+        print "----------------------------------------"
         notification_message = serializer.serialize(notification_message)
         self._parent.transport.write(notification_message, (host, port))
 
@@ -248,6 +252,6 @@ class ObserveLayer(object):
         host, port = response.destination
         key = hash(str(host) + str(port) + str(response.token))
         observers = self._parent.relation.get(resource)
-        if key in observers.keys():
+        if observers is not None and key in observers.keys():
             del observers[key]
             self._parent.relation[resource] = observers

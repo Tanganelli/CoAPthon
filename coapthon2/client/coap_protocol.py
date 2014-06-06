@@ -166,7 +166,8 @@ class CoAP(DatagramProtocol):
             if function is None and len(self.relation) == 0:
                 reactor.stop()
             elif key in self.relation:
-                self.handle_notification(message)
+                response, timestamp, client_callback = self.relation.get(key)
+                self.handle_notification(message, client_callback)
             else:
                 function(client_callback, *args, **kwargs)
 
@@ -313,20 +314,38 @@ class CoAP(DatagramProtocol):
                 #TODO add observing results
                 host, port = response.source
                 key = hash(str(host) + str(port) + str(response.token))
-                self.relation[key] = (response, time.time())
+                self.relation[key] = (response, time.time(), client_callback)
             client_callback(response)
 
-    def handle_notification(self, response):
+    def handle_notification(self, response, client_callback):
         host, port = response.source
         key = hash(str(host) + str(port) + str(response.token))
-        self.relation[key] = (response, time.time())
+        self.relation[key] = (response, time.time(), client_callback)
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
+            print "ACK sent to " + host + ":" + str(port)
+            print "----------------------------------------"
+            print ack
+            print "----------------------------------------"
             serializer = Serializer()
             datagram = serializer.serialize(ack)
             log.msg("Send datagram")
             self.transport.write(datagram)
-        print response
+
+    def cancel_observing(self, response, send_rst):
+        host, port = response.source
+        key = hash(str(host) + str(port) + str(response.token))
+        del self.relation[key]
+        if send_rst:
+            rst = Message.new_rst(response)
+            print "RST sent to " + host + ":" + str(port)
+            print "----------------------------------------"
+            print rst
+            print "----------------------------------------"
+            serializer = Serializer()
+            datagram = serializer.serialize(rst)
+            log.msg("Send datagram")
+            self.transport.write(datagram)
 
     def post(self, client_callback, *args, **kwargs):
         path, payload = args
@@ -426,8 +445,8 @@ class CoAP(DatagramProtocol):
         call_id, retransmit_count = self.call_id[key]
         if retransmit_count < defines.MAX_RETRANSMIT and (not request.acknowledged and not request.rejected):
             retransmit_count += 1
-            req, timestamp, callback = self.sent[key]
-            self.sent[key] = (request, time.time(), callback)
+            req, timestamp, callback, client_callback = self.sent[key]
+            self.sent[key] = (request, time.time(), callback, client_callback)
             serializer = Serializer()
             datagram = serializer.serialize(request)
             self.transport.write(datagram, (host, port))

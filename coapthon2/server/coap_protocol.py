@@ -85,6 +85,8 @@ class CoAP(DatagramProtocol):
         Handler for received dUDP datagram.
 
         :param data: the UDP datagram
+        :param host: source host
+        :param port: source port
         """
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
@@ -386,13 +388,19 @@ class CoAP(DatagramProtocol):
         if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             retransmit_count += 1
             self.sent[key] = (response, time.time())
+            print "Retrasmission: Message send to " + host + ":" + str(port)
+            print "----------------------------------------"
+            print response
+            print "----------------------------------------"
             serializer = Serializer()
             datagram = serializer.serialize(response)
             self.transport.write(datagram, (host, port))
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (notification, host, port, future_time)), retransmit_count)
-
+        elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
+            print "Give up on Message " + str(response.mid)
+            print "----------------------------------------"
         elif response.acknowledged or response.rejected:
             response.timeouted = False
             del self.call_id[key]
