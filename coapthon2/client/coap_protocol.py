@@ -1,6 +1,7 @@
 import random
 import re
 import time
+import twisted
 from twisted.application.service import Application
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
@@ -32,7 +33,8 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class CoAP(DatagramProtocol):
-    def __init__(self):
+    def __init__(self, server, forward):
+        self._forward = forward
         self.received = {}
         self.sent = {}
         self.sent_token = {}
@@ -43,12 +45,13 @@ class CoAP(DatagramProtocol):
         #defer = reactor.resolve('coap.me')
         #defer.addCallback(self.start)
         #self.server = (None, 5683)
-        self.server = ("127.0.0.1", 5683)
+        self.server = server
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
         self.operations = []
         self.l = None
+        self.transport = None
 
     def set_operations(self, operations):
         for op in operations:
@@ -56,6 +59,9 @@ class CoAP(DatagramProtocol):
             self.operations.append((function, args, kwargs, client_callback))
 
     def startProtocol(self):
+        if self.server is None:
+            log.err("Server address for the client is not initialized")
+            exit()
         host, port = self.server
         if host is not None:
             self.start(host)
@@ -94,7 +100,7 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
-        self.server = (host, self.server[1])
+        #self.server = (host, self.server[1])
         self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
@@ -121,7 +127,19 @@ class CoAP(DatagramProtocol):
         except IndexError:
             return None, None, None, None
 
-    def send(self, req, callback, client_callback):
+    def send(self, message):
+        serializer = Serializer()
+        message.destination = self.server
+        host, port = message.destination
+        print "Message sent to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
+        datagram = serializer.serialize(message)
+        log.msg("Send datagram")
+        self.transport.write(datagram)
+
+    def send_callback(self, req, callback, client_callback):
         self._currentMID += 1
         req.mid = self._currentMID
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
@@ -129,16 +147,7 @@ class CoAP(DatagramProtocol):
         self.sent[key] = (req, time.time(), callback, client_callback)
         self.sent_token[key_token] = (req, time.time(), callback, client_callback)
         self.schedule_retrasmission(req)
-        serializer = Serializer()
-        req.destination = self.server
-        host, port = req.destination
-        print "Message sent to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print req
-        print "----------------------------------------"
-        datagram = serializer.serialize(req)
-        log.msg("Send datagram")
-        self.transport.write(datagram)
+        self.send(req)
 
     def datagramReceived(self, datagram, host):
         serializer = Serializer()
@@ -164,7 +173,8 @@ class CoAP(DatagramProtocol):
             function, args, kwargs, client_callback = self.get_operation()
             key = hash(str(host) + str(port) + str(message.token))
             if function is None and len(self.relation) == 0:
-                reactor.stop()
+                if not self._forward:
+                    reactor.stop()
             elif key in self.relation:
                 response, timestamp, client_callback = self.relation.get(key)
                 self.handle_notification(message, client_callback)
@@ -187,10 +197,7 @@ class CoAP(DatagramProtocol):
     def handle_response(self, response):
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
-            serializer = Serializer()
-            datagram = serializer.serialize(ack)
-            log.msg("Send ACK")
-            self.transport.write(datagram)
+            self.send(ack)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
@@ -201,10 +208,12 @@ class CoAP(DatagramProtocol):
 
     def discover(self, client_callback, *args, **kwargs):
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token =  kwargs.get("Token")
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
-        self.send(req, self.discover_results, client_callback)
+        self.send_callback(req, self.discover_results, client_callback)
 
     def discover_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -256,6 +265,9 @@ class CoAP(DatagramProtocol):
     def get(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token = kwargs.get("Token")
+            del kwargs["Token"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -265,7 +277,7 @@ class CoAP(DatagramProtocol):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        self.send(req, self.get_results, client_callback)
+        self.send_callback(req, self.get_results, client_callback)
 
     def get_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -285,6 +297,9 @@ class CoAP(DatagramProtocol):
     def observe(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token = kwargs.get("Token")
+            del kwargs["Token"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -296,7 +311,7 @@ class CoAP(DatagramProtocol):
         req.observe = 0
         req.token = "ciao"
         req.type = defines.inv_types["CON"]
-        self.send(req, self.observe_results, client_callback)
+        self.send_callback(req, self.observe_results, client_callback)
 
     def observe_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -323,14 +338,7 @@ class CoAP(DatagramProtocol):
         self.relation[key] = (response, time.time(), client_callback)
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
-            print "ACK sent to " + host + ":" + str(port)
-            print "----------------------------------------"
-            print ack
-            print "----------------------------------------"
-            serializer = Serializer()
-            datagram = serializer.serialize(ack)
-            log.msg("Send datagram")
-            self.transport.write(datagram)
+            self.send(ack)
 
     def cancel_observing(self, response, send_rst):
         host, port = response.source
@@ -338,18 +346,14 @@ class CoAP(DatagramProtocol):
         del self.relation[key]
         if send_rst:
             rst = Message.new_rst(response)
-            print "RST sent to " + host + ":" + str(port)
-            print "----------------------------------------"
-            print rst
-            print "----------------------------------------"
-            serializer = Serializer()
-            datagram = serializer.serialize(rst)
-            log.msg("Send datagram")
-            self.transport.write(datagram)
+            self.send(rst)
 
     def post(self, client_callback, *args, **kwargs):
         path, payload = args
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token = kwargs.get("Token")
+            del kwargs["Token"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -359,7 +363,7 @@ class CoAP(DatagramProtocol):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req.payload = payload
-        self.send(req, self.post_results, client_callback)
+        self.send_callback(req, self.post_results, client_callback)
 
     def post_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -378,6 +382,9 @@ class CoAP(DatagramProtocol):
     def put(self, client_callback, *args, **kwargs):
         path, payload = args
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token = kwargs.get("Token")
+            del kwargs["Token"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -387,7 +394,7 @@ class CoAP(DatagramProtocol):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req.payload = payload
-        self.send(req, self.put_results, client_callback)
+        self.send_callback(req, self.put_results, client_callback)
 
     def put_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -406,6 +413,9 @@ class CoAP(DatagramProtocol):
     def delete(self, client_callback, *args, **kwargs):
         path = args[0]
         req = Request()
+        if "Token" in kwargs.keys():
+            req.token = kwargs.get("Token")
+            del kwargs["Token"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -414,7 +424,7 @@ class CoAP(DatagramProtocol):
         req.code = defines.inv_codes['DELETE']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        self.send(req, self.delete_results, client_callback)
+        self.send_callback(req, self.delete_results, client_callback)
 
     def delete_results(self, mid, client_callback):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(mid))
@@ -447,9 +457,7 @@ class CoAP(DatagramProtocol):
             retransmit_count += 1
             req, timestamp, callback, client_callback = self.sent[key]
             self.sent[key] = (request, time.time(), callback, client_callback)
-            serializer = Serializer()
-            datagram = serializer.serialize(request)
-            self.transport.write(datagram, (host, port))
+            self.send(request)
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (request, host, port, future_time)), retransmit_count)
@@ -464,10 +472,21 @@ class CoAP(DatagramProtocol):
 
 
 class HelperClient(object):
-    def __init__(self):
-        self.protocol = CoAP()
+    def __init__(self, server=("127.0.0.1", 5683), forward=False):
+        self.protocol = CoAP(server, forward)
+
+    @property
+    def starting_mid(self):
+        return self.protocol._currentMID
+
+    @starting_mid.setter
+    def starting_mid(self, mid):
+        self.protocol._currentMID = mid
 
     def start(self, operations):
         self.protocol.set_operations(operations)
-        t = reactor.listenUDP(0, self.protocol)
-        reactor.run()
+        reactor.listenUDP(0, self.protocol)
+        try:
+            reactor.run()
+        except twisted.internet.error.ReactorAlreadyRunning:
+            pass

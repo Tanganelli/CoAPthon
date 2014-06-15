@@ -388,13 +388,7 @@ class CoAP(DatagramProtocol):
         if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             retransmit_count += 1
             self.sent[key] = (response, time.time())
-            print "Retrasmission: Message send to " + host + ":" + str(port)
-            print "----------------------------------------"
-            print response
-            print "----------------------------------------"
-            serializer = Serializer()
-            datagram = serializer.serialize(response)
-            self.transport.write(datagram, (host, port))
+            self.send(response, host, port)
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
                                                    (notification, host, port, future_time)), retransmit_count)

@@ -64,9 +64,9 @@ class Serializer(object):
                 if next_byte != int(defines.PAYLOAD_MARKER):
                     # the first 4 bits of the byte represent the option delta
                     delta = self._reader.read(4).uint
-                    current_option += self.read_option_value_from_nibble(delta)
                     # the second 4 bits represent the option length
                     length = self._reader.read(4).uint
+                    current_option += self.read_option_value_from_nibble(delta)
                     option_length = self.read_option_value_from_nibble(length)
 
                     # read option

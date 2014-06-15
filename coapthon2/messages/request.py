@@ -159,3 +159,16 @@ class Request(Message):
             if option.number == defines.inv_options['If-None-Match']:
                 return True
         return False
+
+    @property
+    def proxy_uri(self):
+        """
+        Get the Proxy-Uri option of a request.
+
+        :return: the Proxy-Uri values or None if not specified by the request
+        """
+        value = None
+        for option in self.options:
+            if option.number == defines.inv_options['Proxy-Uri']:
+                value = option.value
+        return value
