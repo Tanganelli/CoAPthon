@@ -45,6 +45,7 @@ $ coapserver.py
 ```
 
 To uninstall:
+-------------
 
 ```sh
 $ sudo pip uninstall CoAPthon
