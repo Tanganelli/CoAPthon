@@ -91,6 +91,20 @@ class Option(object):
         assert(type(self._value) is BitArray)
         return len(self._value.tobytes())
 
+    @property
+    def safe(self):
+        if self._number == defines.inv_options["Uri-Host"] or self._number == defines.inv_options["Uri-Port"] \
+                or self._number == defines.inv_options["Uri-Path"] or self._number == defines.inv_options["Max-Age"] \
+                or self._number == defines.inv_options["Uri-Query"] \
+                or self._number == defines.inv_options["Proxy-Uri"] \
+                or self._number == defines.inv_options["Proxy-Scheme"]:
+            return False
+        return True
+
+    @property
+    def name(self):
+        return defines.options[self._number][0]
+
     def __str__(self):
         """
         Return the option as a formatted string.

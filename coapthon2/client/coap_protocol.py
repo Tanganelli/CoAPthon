@@ -146,7 +146,11 @@ class CoAP(DatagramProtocol):
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
         self.sent[key] = (req, time.time(), callback, client_callback)
         self.sent_token[key_token] = (req, time.time(), callback, client_callback)
-        self.schedule_retrasmission(req)
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        else:
+            err_callback = None
+        self.schedule_retrasmission(req, err_callback)
         self.send(req)
 
     def datagramReceived(self, datagram, host):
@@ -209,7 +213,7 @@ class CoAP(DatagramProtocol):
     def discover(self, client_callback, *args, **kwargs):
         req = Request()
         if "Token" in kwargs.keys():
-            req.token =  kwargs.get("Token")
+            req.token = kwargs.get("Token")
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
@@ -226,9 +230,16 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
             #self.parse_core_link_format(response.payload)
             client_callback(response)
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
     def parse_core_link_format(self, link_format):
         while len(link_format) > 0:
@@ -290,9 +301,17 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
+            #self.parse_core_link_format(response.payload)
             client_callback(response)
-            #print response
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
     def observe(self, client_callback, *args, **kwargs):
         path = args[0]
@@ -324,6 +343,12 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
             if response.observe != 0:
                 #TODO add observing results
@@ -331,6 +356,8 @@ class CoAP(DatagramProtocol):
                 key = hash(str(host) + str(port) + str(response.token))
                 self.relation[key] = (response, time.time(), client_callback)
             client_callback(response)
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
     def handle_notification(self, response, client_callback):
         host, port = response.source
@@ -376,8 +403,16 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
+            #self.parse_core_link_format(response.payload)
             client_callback(response)
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
     def put(self, client_callback, *args, **kwargs):
         path, payload = args
@@ -407,8 +442,16 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
+            #self.parse_core_link_format(response.payload)
             client_callback(response)
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
     def delete(self, client_callback, *args, **kwargs):
         path = args[0]
@@ -437,20 +480,28 @@ class CoAP(DatagramProtocol):
                     handler.cancel()
                 except AlreadyCancelled:
                     pass
+        err_callback = None
+        if isinstance(client_callback, tuple) and len(client_callback) > 1:
+            client_callback, err_callback = client_callback
+        elif isinstance(client_callback, tuple):
+            client_callback = client_callback[0]
         if response is not None:
+            #self.parse_core_link_format(response.payload)
             client_callback(response)
+        elif err_callback is not None:
+            err_callback(mid, self.server[0], self.server[1])
 
-    def schedule_retrasmission(self, request):
+    def schedule_retrasmission(self, request, err_callback):
         host, port = self.server
         if request.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(request.mid))
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (request, host, port, future_time)), 0)
+                                                   (request, host, port, future_time, err_callback)), 0)
 
     def retransmit(self, t):
         log.msg("Retransmit")
-        request, host, port, future_time = t
+        request, host, port, future_time, err_callback = t
         key = hash(str(host) + str(port) + str(request.mid))
         call_id, retransmit_count = self.call_id[key]
         if retransmit_count < defines.MAX_RETRANSMIT and (not request.acknowledged and not request.rejected):
@@ -460,7 +511,7 @@ class CoAP(DatagramProtocol):
             self.send(request)
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (request, host, port, future_time)), retransmit_count)
+                                                   (request, host, port, future_time, err_callback)), retransmit_count)
 
         elif request.acknowledged or request.rejected:
             request.timeouted = False
@@ -469,6 +520,8 @@ class CoAP(DatagramProtocol):
             request.timeouted = True
             log.err("Request timeouted")
             del self.call_id[key]
+            if err_callback is not None:
+                err_callback(request.mid, host, port)
 
 
 class HelperClient(object):

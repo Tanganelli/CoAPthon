@@ -9,13 +9,13 @@ What is implemented
 
 - CoAP server
 - CoAP client
+- CoAP to CoAP Forwarding proxy
 - Observe feature
 - CoRE Link Format parsing
 
 TODO
 ====
 
-- CoAP to CoAP Forwarding proxy
 - CoAP to CoAP Reverse Proxy
 - CoAP to HTTP Proxy
 - Blockwise feature
