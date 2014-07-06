@@ -169,17 +169,25 @@ class ProxyCoAP(CoAP):
         ack = Message.new_ack(request)
         self.send(ack, host, port)
 
-    def result_forward(self, response):
+    def result_forward(self, response, request=None):
         """
         Forward results to the client.
 
         :param response: the response sent by the server.
         """
-        host, port = response.source
-        key = hash(str(host) + str(port) + str(response.token))
-        request = self._forward.get(key)
+        skip_delete = False
+        key = None
+        if request is None:
+            host, port = response.source
+            key = hash(str(host) + str(port) + str(response.token))
+            request = self._forward.get(key)
+        else:
+            skip_delete = True
         if self.timer is not None:
             self.timer.cancel()
+            response.type = defines.inv_types["ACK"]
+            response.mid = request.mid
+        elif skip_delete:
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
@@ -191,15 +199,17 @@ class ProxyCoAP(CoAP):
         if request is not None:
             response.destination = request.source
             response.token = request.token
-            del self._forward[key]
-            host, port = response.source
-            key = hash(str(host) + str(port) + str(response.mid))
-            try:
-                del self._forward_mid[key]
-            except KeyError:
-                log.err("MID has not been deleted")
+            if not skip_delete:
+                del self._forward[key]
+                host, port = response.source
+                key = hash(str(host) + str(port) + str(response.mid))
+                try:
+                    del self._forward_mid[key]
+                except KeyError:
+                    log.err("MID has not been deleted")
             host, port = request.source
-            response.mid = self._currentMID
+            if response.mid is None:
+                response.mid = self._currentMID
             self.send(response, host, port)
 
     def generate_token(self):

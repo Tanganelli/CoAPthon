@@ -172,3 +172,10 @@ class Request(Message):
             if option.number == defines.inv_options['Proxy-Uri']:
                 value = option.value
         return value
+
+    @proxy_uri.setter
+    def proxy_uri(self, uri):
+        option = Option()
+        option.number = defines.inv_options['Proxy-Uri']
+        option.value = str(uri)
+        self.add_option(option)
