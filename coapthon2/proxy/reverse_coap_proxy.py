@@ -1,5 +1,4 @@
 import re
-from twisted.internet import task
 from coapthon2.messages.message import Message
 from coapthon2.messages.response import Response
 from coapthon2.serializer import Serializer

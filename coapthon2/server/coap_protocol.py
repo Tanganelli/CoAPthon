@@ -57,6 +57,15 @@ class CoAP(DatagramProtocol):
         self.l = task.LoopingCall(self.purge_mids)
         self.l.start(defines.EXCHANGE_LIFETIME)
 
+    def startProtocol(self):
+        """
+        Called after protocol has started listening.
+        """
+        # Set the TTL>1 so multicast will cross router hops:
+        #self.transport.setTTL(5)
+        # Join a specific multicast group:
+        self.transport.joinGroup(defines.ALL_COAP_NODES)
+
     def stopProtocol(self):
         """
         Stop the purge MIDs task

@@ -37,6 +37,15 @@ class ProxyCoAP(CoAP):
         self._token = random.randint(1, 1000)
         self.timer = None
 
+    def startProtocol(self):
+        """
+        Called after protocol has started listening.
+        """
+        # Set the TTL>1 so multicast will cross router hops:
+        #self.transport.setTTL(5)
+        # Join a specific multicast group:
+        self.transport.joinGroup(defines.ALL_COAP_NODES)
+
     def datagramReceived(self, data, (host, port)):
         """
         Handler for received dUDP datagram.
@@ -95,7 +104,7 @@ class ProxyCoAP(CoAP):
         schema = uri.split("://")
         try:
             path = schema[1]
-            schema = schema[0]
+            #schema = schema[0]
             host_pos = path.index("/")
             destination = path[:host_pos]
             destination = destination.split(":")

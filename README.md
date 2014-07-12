@@ -13,13 +13,13 @@ What is implemented
 - CoAP to CoAP Reverse Proxy
 - Observe feature
 - CoRE Link Format parsing
+- Multicast server discovery
 
 TODO
 ====
 
 - CoAP to HTTP Proxy
 - Blockwise feature
-- Multicast server discovery
 
 Install instructions
 =============

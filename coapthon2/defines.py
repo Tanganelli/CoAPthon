@@ -30,6 +30,8 @@ NON_LIFETIME = MAX_TRANSMIT_SPAN + MAX_LATENCY
 
 DISCOVERY_URL = ".well-known/core"
 
+ALL_COAP_NODES = "224.0.1.187"
+
 ################### Message Format ###################
 
 ## number of bits used for the encoding of the CoAP version field.

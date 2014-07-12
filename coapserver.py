@@ -14,7 +14,9 @@ class CoAPServer(CoAP):
 
 
 def main():
-    reactor.listenUDP(5683, CoAPServer("127.0.0.1", 5683), "127.0.0.1")
+    server = CoAPServer("127.0.0.1", 5683)
+    reactor.listenMulticast(5683, server, listenMultiple=True)
+    #reactor.listenUDP(5683, server, "127.0.0.1")
     reactor.run()
 
 
