@@ -10,10 +10,10 @@ class Storage(Resource):
         super(Storage, self).__init__(name, visible=True, observable=True, allow_children=True)
         self.payload = "Storage Resource for PUT, POST and DELETE"
 
-    def render_GET(self, query=None):
+    def render_GET(self, request, query=None):
         return self.payload
 
-    def render_POST(self, payload=None, query=None):
+    def render_POST(self, request, payload=None, query=None):
         q = "?" + "&".join(query)
         res = Child()
         return {"Payload": payload, "Location-Query": q, "Resource": res}
@@ -24,18 +24,18 @@ class Child(Resource):
         super(Child, self).__init__(name, visible=True, observable=True, allow_children=True)
         self.payload = ""
 
-    def render_GET(self, query=None):
+    def render_GET(self, request, query=None):
         return self.payload
 
-    def render_PUT(self, payload=None, query=None):
+    def render_PUT(self, request, payload=None, query=None):
         return payload
 
-    def render_POST(self, payload=None, query=None):
+    def render_POST(self, request, payload=None, query=None):
         q = "?" + "&".join(query)
         res = Child()
         return {"Payload": payload, "Location-Query": q, "Resource": res}
 
-    def render_DELETE(self, query=None):
+    def render_DELETE(self, request, query=None):
         return True
 
 
@@ -45,9 +45,9 @@ class Separate(Resource):
         super(Separate, self).__init__(name, visible=True, observable=True, allow_children=True)
         self.payload = "Separate"
 
-    def render_GET(self, query=None):
+    def render_GET(self, request, query=None):
         return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
 
-    def render_GET_separate(self, query=None):
+    def render_GET_separate(self, request, query=None):
         time.sleep(5)
         return {"Payload": self.payload, "ETag": self.etag}
