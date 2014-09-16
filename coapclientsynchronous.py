@@ -1,6 +1,7 @@
 #!/bin/python
 import getopt
 import sys
+import threading
 from coapthon2.client.coap_synchronous import HelperClientSynchronous
 
 client = HelperClientSynchronous()
@@ -86,10 +87,11 @@ def main():
             print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        function = client.protocol.observe
-        args = (path,)
-        kwargs = {}
-        callback = client_callback_observe
+        kwargs = {"path": path}
+        client.observe(**kwargs)
+        while True:
+            response = client.notification(**kwargs)
+            print response
     elif op == "DELETE":
         if path is None:
             print "Path cannot be empty for a DELETE request"

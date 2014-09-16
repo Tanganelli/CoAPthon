@@ -30,14 +30,15 @@ class HelperClientSynchronous(object):
         self._receiver_thread = None
 
     def send(self, request, endpoint, resend=False):
-        assert(isinstance(request, Request))
+
         self._endpoint = endpoint
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._receiver_thread = threading.Thread(target=self.datagram_received)
         self._receiver_thread.start()
         if not resend:
-            request.mid = self._currentMID
-            self._currentMID += 1
+            if request.mid is None:
+                request.mid = self._currentMID
+                self._currentMID += 1
             key = hash(str(self._endpoint[0]) + str(self._endpoint[1]) + str(request.mid))
             key_token = hash(str(self._endpoint[0]) + str(self._endpoint[1]) + str(request.token))
             self.sent[key] = (request, time.time())
@@ -110,25 +111,24 @@ class HelperClientSynchronous(object):
                 # Separate Response
                 # handle separate
                 print "Separate Response"
+                self._response = message
+                self.condition.acquire()
+                self.condition.notify()
+                self.condition.release()
             else:
                 # TODO handle notification
                 self._response = message
                 self.condition.acquire()
                 self.condition.notify()
                 self.condition.release()
-                self._receiver_thread = None
-                stop = True
-                '''key = hash(str(host) + str(port) + str(message.token))
-                if key in self.relation:
-                    response, timestamp = self.relation.get(key)
-                    self.handle_notification(message, client_callback)
-                else:
-                    function(client_callback, *args, **kwargs)'''
+                if message.observe == 0:
+                    self._receiver_thread = None
+                    stop = True
 
     def handle_response(self, response):
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
-            self.send(ack)
+            self.send(ack, response.source)
         key_token = hash(str(self._endpoint[0]) + str(self._endpoint[1]) + str(response.token))
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
@@ -163,9 +163,15 @@ class HelperClientSynchronous(object):
         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
-            ip = m.group(2)
-            port = 5683
-            path = m.group(3)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
+                ip = m.group(2)
+                port = 5683
+                path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
         else:
             ip = m.group(2)
             port = int(m.group(3))
@@ -174,6 +180,40 @@ class HelperClientSynchronous(object):
         return ip, port, path
 
     def get(self, *args, **kwargs):
+        """
+
+        :param args: request object
+        :param kwargs: dictionary with parameters
+        """
+        if len(args) > 0:
+            request = args[0]
+            assert(isinstance(request, Request))
+            endpoint = request.destination
+            ip, port = endpoint
+        else:
+            request = Request()
+            path = kwargs['path']
+            assert(isinstance(path, str))
+            ip, port, path = self.parse_path(path)
+            request.destination = (ip, port)
+            request.uri_path = path
+            endpoint = (ip, port)
+        request.code = defines.inv_codes["GET"]
+        self.send(request, endpoint)
+        self.condition.acquire()
+        self.condition.wait()
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
+
+    def observe(self, *args, **kwargs):
         """
 
         :param args: request object
@@ -192,10 +232,33 @@ class HelperClientSynchronous(object):
             request.uri_path = path
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
+        request.observe = 0
         self.send(request, endpoint)
+
+    def notification(self,  *args, **kwargs):
+        if len(args) > 0:
+            request = args[0]
+            assert(isinstance(request, Request))
+            endpoint = request.destination
+            ip, port = endpoint
+        else:
+            request = Request()
+            path = kwargs['path']
+            assert(isinstance(path, str))
+            ip, port, path = self.parse_path(path)
+            endpoint = (ip, port)
         self.condition.acquire()
         self.condition.wait()
-        return self._response
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
 
     def delete(self, *args, **kwargs):
         """
@@ -219,7 +282,16 @@ class HelperClientSynchronous(object):
         self.send(request, endpoint)
         self.condition.acquire()
         self.condition.wait()
-        return self._response
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
 
     def post(self, *args, **kwargs):
         """
@@ -246,7 +318,16 @@ class HelperClientSynchronous(object):
         self.send(request, endpoint)
         self.condition.acquire()
         self.condition.wait()
-        return self._response
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
 
     def put(self, *args, **kwargs):
         """
@@ -273,7 +354,16 @@ class HelperClientSynchronous(object):
         self.send(request, endpoint)
         self.condition.acquire()
         self.condition.wait()
-        return self._response
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
 
     def discover(self, *args, **kwargs):
         """
@@ -299,4 +389,13 @@ class HelperClientSynchronous(object):
         self.send(request, endpoint)
         self.condition.acquire()
         self.condition.wait()
-        return self._response
+        message = self._response
+        key = hash(str(ip) + str(port) + str(message.mid))
+        if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
+                and key in self.sent.keys():
+            # Separate Response
+            self.send(request, endpoint)
+            self.condition.acquire()
+            self.condition.wait()
+            message = self._response
+        return message
