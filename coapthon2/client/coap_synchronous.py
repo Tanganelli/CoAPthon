@@ -128,7 +128,7 @@ class HelperClientSynchronous(object):
     def handle_response(self, response):
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
-            self.send(ack, response.source)
+            self.send(ack, self._endpoint)
         key_token = hash(str(self._endpoint[0]) + str(self._endpoint[1]) + str(response.token))
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
