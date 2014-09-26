@@ -16,7 +16,7 @@ __author__ = 'giacomo'
 
 class HelperClientSynchronous(object):
     def __init__(self):
-        self._currentMID = 1
+        self._currentMID = 100
         self.relation = {}
         self.received = {}
         self.sent = {}
@@ -28,6 +28,7 @@ class HelperClientSynchronous(object):
         self._endpoint = None
         self._socket = None
         self._receiver_thread = None
+        self.stop = False
 
     def send(self, request, endpoint, resend=False):
 
@@ -89,9 +90,31 @@ class HelperClientSynchronous(object):
             self.condition.release()
 
     def datagram_received(self):
-        stop = False
-        while not stop:
-            datagram, addr = self._socket.recvfrom(1152)
+        # TODO mutex
+        self.stop = False
+        while not self.stop:
+            self._socket.settimeout(2 * defines.ACK_TIMEOUT)
+            try:
+                datagram, addr = self._socket.recvfrom(1152)
+            except socket.timeout, e:
+                err = e.args[0]
+                # this next if/else is a bit redundant, but illustrates how the
+                # timeout exception is setup
+                if err == 'timed out':
+                    print 'recv timed out, retry later'
+                    continue
+                else:
+                    print e
+                    return
+            except socket.error, e:
+                # Something else happened, handle error, exit, etc.
+                print e
+                return
+            else:
+                if len(datagram) == 0:
+                    print 'orderly shutdown on server end'
+                    return
+
             serializer = Serializer()
             host, port = addr
             message = serializer.deserialize(datagram, host, port)
@@ -123,7 +146,7 @@ class HelperClientSynchronous(object):
                 self.condition.release()
                 if message.observe == 0:
                     self._receiver_thread = None
-                    stop = True
+                    self.stop = True
 
     def handle_response(self, response):
         if response.type == defines.inv_types["CON"]:
@@ -200,17 +223,33 @@ class HelperClientSynchronous(object):
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
         self.send(request, endpoint)
+        future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+        retransmit_count = 0
         self.condition.acquire()
-        self.condition.wait()
+        while True:
+            self.condition.wait(timeout=future_time)
+            if self._response is not None:
+                break
+            if request.type == defines.inv_types['CON']:
+                if retransmit_count < defines.MAX_RETRANSMIT and (not request.acknowledged and not request.rejected):
+                    print("retransmit")
+                    retransmit_count += 1
+                    future_time *= 2
+                    self.send(request, endpoint)
+                else:
+                    print("Give up on message: " + str(request.mid))
+                    self.stop = True
+                    break
         message = self._response
+        self._response = None
         key = hash(str(ip) + str(port) + str(message.mid))
         if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
                 and key in self.sent.keys():
             # Separate Response
-            self.send(request, endpoint)
             self.condition.acquire()
             self.condition.wait()
             message = self._response
+            self._response = None
         return message
 
     def observe(self, *args, **kwargs):

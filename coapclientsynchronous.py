@@ -81,7 +81,7 @@ def main():
         kwargs = {"path": path}
         response = client.get(**kwargs)
         print response
-
+        return
     elif op == "OBSERVE":
         if path is None:
             print "Path cannot be empty for a GET request"
