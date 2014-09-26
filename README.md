@@ -68,10 +68,10 @@ Log through ssh to the Yun and issue the following:
 # cd Twisted-14.0.2
 ```
 
-Then you need to modify the setup.py and comment the line conditionalExtensions=getExtensions(). Then :
+Then you need to modify the setup.py and comment the line <em>conditionalExtensions=getExtensions()</em>. Then :
 
 ```sh
-# # python setup.py build_py build_scripts install --skip-build
+# python setup.py build_py build_scripts install --skip-build
 ```
 
 User Guide
