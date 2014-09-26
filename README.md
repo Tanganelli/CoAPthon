@@ -60,7 +60,6 @@ Log through ssh to the Yun and issue the following:
 # opkg install distribute #it contains the easy_install command line tool
 # opkg install python-openssl #adds ssl support to python
 # easy_install pip #installs pip
-# pip install sphinx
 # pip install bitstring
 # pip install futures
 # wget https://pypi.python.org/packages/source/T/Twisted/Twisted-14.0.2.tar.bz2 .
