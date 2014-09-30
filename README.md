@@ -8,7 +8,7 @@ What is implemented
 ===================
 
 - CoAP server
-- CoAP client
+- CoAP client asynchronous/synchronous
 - CoAP to CoAP Forwarding proxy
 - CoAP to CoAP Reverse Proxy
 - Observe feature
@@ -49,6 +49,28 @@ To uninstall:
 
 ```sh
 $ sudo pip uninstall CoAPthon
+```
+
+Install instructions on Arduino Yun
+======
+
+Log through ssh to the Yun and issue the following:
+```sh
+# opkg update #updates the available packages list
+# opkg install distribute #it contains the easy_install command line tool
+# opkg install python-openssl #adds ssl support to python
+# easy_install pip #installs pip
+# pip install bitstring
+# pip install futures
+# wget https://pypi.python.org/packages/source/T/Twisted/Twisted-14.0.2.tar.bz2 .
+# tar -jxvf Twisted-14.0.2.tar.bz2
+# cd Twisted-14.0.2
+```
+
+Then you need to modify the setup.py and comment the line <strong>conditionalExtensions=getExtensions()</strong>. Then :
+
+```sh
+# python setup.py build_py build_scripts install --skip-build
 ```
 
 User Guide

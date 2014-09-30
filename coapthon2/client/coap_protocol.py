@@ -541,4 +541,6 @@ class HelperClient(object):
         try:
             reactor.run()
         except twisted.internet.error.ReactorAlreadyRunning:
-           log.msg("Reactor already started")
+            log.msg("Reactor already started")
+
+
