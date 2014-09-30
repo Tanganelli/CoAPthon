@@ -359,7 +359,7 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
-    def render_GET(self, query=None):
+    def render_GET(self, request, query=None):
         """
         Method to be redefined to render a GET request on the resource.
 
@@ -368,7 +368,7 @@ class Resource(object):
         """
         return -1
 
-    def render_PUT(self, payload=None, query=None):
+    def render_PUT(self, request, payload=None, query=None):
         """
         Method to be redefined to render a PUTT request on the resource.
 
@@ -378,7 +378,7 @@ class Resource(object):
         """
         return -1
 
-    def render_POST(self, payload=None, query=None):
+    def render_POST(self, request, payload=None, query=None):
         """
         Method to be redefined to render a POST request on the resource.
 
@@ -388,7 +388,7 @@ class Resource(object):
         """
         return -1
 
-    def render_DELETE(self, query=None):
+    def render_DELETE(self, request, query=None):
         """
         Method to be redefined to render a DELETE request on the resource.
 

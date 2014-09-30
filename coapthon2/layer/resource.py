@@ -37,7 +37,7 @@ class ResourceLayer(object):
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
             t.start()
-            new_payload = method(payload=request.payload, query=request.query)
+            new_payload = method(request=request, payload=request.payload, query=request.query)
             t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
@@ -61,7 +61,7 @@ class ResourceLayer(object):
                 host, port = request.source
                 self._parent.send(ack, host, port)
                 request.acknowledged = True
-                new_payload = callback(payload=request.payload, query=request.query)
+                new_payload = callback(request=request, payload=request.payload, query=request.query)
                 if isinstance(new_payload, dict):
                     etag = new_payload.get("ETag")
                     location_query = new_payload.get("Location-Query")
@@ -140,7 +140,7 @@ class ResourceLayer(object):
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
             t.start()
-            new_payload = method(payload=request.payload, query=request.query)
+            new_payload = method(request=request, payload=request.payload, query=request.query)
             t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
@@ -164,7 +164,7 @@ class ResourceLayer(object):
                 host, port = request.source
                 self._parent.send(ack, host, port)
                 request.acknowledged = True
-                new_payload = callback(payload=request.payload, query=request.query)
+                new_payload = callback(request=request, payload=request.payload, query=request.query)
                 if isinstance(new_payload, dict):
                     etag = new_payload.get("ETag")
                     location_query = new_payload.get("Location-Query")
@@ -267,7 +267,7 @@ class ResourceLayer(object):
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
             t.start()
-            new_payload = method(payload=request.payload, query=request.query)
+            new_payload = method(request=request, payload=request.payload, query=request.query)
             t.cancel()
             if isinstance(new_payload, dict):
                 etag = new_payload.get("ETag")
@@ -286,7 +286,7 @@ class ResourceLayer(object):
                 host, port = request.source
                 self._parent.send(ack, host, port)
                 request.acknowledged = True
-                new_payload = callback(payload=request.payload, query=request.query)
+                new_payload = callback(request=request, payload=request.payload, query=request.query)
                 if isinstance(new_payload, dict):
                     etag = new_payload.get("ETag")
                     new_payload = new_payload.get("Payload")
@@ -340,7 +340,7 @@ class ResourceLayer(object):
         if hasattr(method, '__call__'):
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
             t.start()
-            ret = method(query=request.query)
+            ret = method(request=request, query=request.query)
             t.cancel()
             if ret != -1:
                 parent = node.parent
@@ -387,7 +387,7 @@ class ResourceLayer(object):
             # Render_GET
             t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
             t.start()
-            ret = method(query=request.query)
+            ret = method(request=request, query=request.query)
             t.cancel()
             if isinstance(ret, dict):
                 etag = ret.get("ETag")
@@ -403,7 +403,7 @@ class ResourceLayer(object):
             if separate is not None:
                 # Handle separate
                 self.send_ack(request)
-                ret = callback(query=request.query)
+                ret = callback(request=request, query=request.query)
                 if isinstance(ret, dict):
                     etag = ret.get("ETag")
                     max_age = ret.get("Max-Age")
