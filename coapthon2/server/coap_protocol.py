@@ -31,7 +31,7 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class CoAP(DatagramProtocol):
-    def __init__(self):
+    def __init__(self, multicast = False):
         """
         Initialize the CoAP protocol
 
@@ -57,14 +57,17 @@ class CoAP(DatagramProtocol):
         self.l = task.LoopingCall(self.purge_mids)
         self.l.start(defines.EXCHANGE_LIFETIME)
 
+        self.multicast = multicast
+
     def startProtocol(self):
         """
         Called after protocol has started listening.
         """
         # Set the TTL>1 so multicast will cross router hops:
         #self.transport.setTTL(5)
-        # Join a specific multicast group:
-        self.transport.joinGroup(defines.ALL_COAP_NODES)
+        if self.multicast:
+            # Join a specific multicast group:
+            self.transport.joinGroup(defines.ALL_COAP_NODES)
 
     def stopProtocol(self):
         """
