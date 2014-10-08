@@ -77,7 +77,7 @@ class ResourceLayer(object):
                     origin = node.value
                     assert isinstance(origin, Resource)
                     origin_class = origin.__class__
-                    resource = origin_class(self._parent)
+                    resource = origin_class(origin)
                 elif not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
@@ -180,7 +180,7 @@ class ResourceLayer(object):
                     origin = old.value
                     assert isinstance(origin, Resource)
                     origin_class = origin.__class__
-                    resource = origin_class(self._parent)
+                    resource = origin_class(origin)
                 elif not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
