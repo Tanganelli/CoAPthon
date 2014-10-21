@@ -5,6 +5,27 @@ __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
 
+class BasicResource(Resource):
+    def __init__(self, name="BasicResource"):
+        super(BasicResource, self).__init__(name, visible=True,
+                                            observable=True, allow_children=True)
+        self.payload = "Basic Resource"
+
+    def render_GET(self, request, query=None):
+        return self.payload
+
+    def render_PUT(self, request, payload=None, query=None):
+        return payload
+
+    def render_POST(self, request, payload=None, query=None):
+        q = "?" + "&".join(query)
+        res = BasicResource()
+        return {"Payload": payload, "Location-Query": q, "Resource": res}
+
+    def render_DELETE(self, request, query=None):
+        return True
+
+
 class Storage(Resource):
     def __init__(self, name="StorageResource"):
         super(Storage, self).__init__(name, visible=True, observable=True, allow_children=True)

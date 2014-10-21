@@ -2,7 +2,7 @@
 from twisted.internet import reactor
 from coapthon2 import defines
 from coapthon2.server.coap_protocol import CoAP
-from example_resources import Storage, Separate
+from example_resources import Storage, Separate, BasicResource
 
 
 class CoAPServer(CoAP):
