@@ -59,6 +59,7 @@ class CoAP(DatagramProtocol):
             self.operations.append((function, args, kwargs, client_callback))
 
     def startProtocol(self):
+
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
@@ -100,8 +101,7 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
-        #self.server = (host, self.server[1])
-        self.transport.connect(host, self.server[1])
+        #self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
 
@@ -137,7 +137,7 @@ class CoAP(DatagramProtocol):
         print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
-        self.transport.write(datagram)
+        self.transport.write(datagram, self.server)
 
     def send_callback(self, req, callback, client_callback):
         self._currentMID += 1
