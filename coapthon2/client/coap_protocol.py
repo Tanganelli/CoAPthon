@@ -42,10 +42,20 @@ class CoAP(DatagramProtocol):
         self.call_id = {}
         self.relation = {}
         self._currentMID = 1
+        import socket
+        try:
+            socket.inet_aton(server[0])
+            self.server = server
+            # legal
+        except socket.error:
+            # Not legal
+            data = socket.gethostbyname(server[0])
+            self.server = (data, server[1])
+
         #defer = reactor.resolve('coap.me')
         #defer.addCallback(self.start)
         #self.server = (None, 5683)
-        self.server = server
+
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)

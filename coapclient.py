@@ -3,7 +3,7 @@ import getopt
 import sys
 from coapthon2.client.coap_protocol import HelperClient
 
-client = HelperClient(server=("224.0.1.187", 5683))
+client = HelperClient(server=("coap.me", 5683))
 
 
 def usage():
