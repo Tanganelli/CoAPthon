@@ -65,7 +65,7 @@ VERSION = 1
 REQUEST_CODE_LOWER_BOUND = 1
 
 ## The highest value of a request code.
-REQUEST_CODE_UPPER_BOUNT = 31
+REQUEST_CODE_UPPER_BOUND = 31
 
 ## The lowest value of a response code.
 RESPONSE_CODE_LOWER_BOUND = 64
