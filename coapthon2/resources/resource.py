@@ -8,7 +8,7 @@ class Resource(object):
     """
     The Resource class.
     """
-    def __init__(self, name, visible=True, observable=True, allow_children=True):
+    def __init__(self, name, coap_server=None, visible=True, observable=True, allow_children=True):
         """
         Initialize a new Resource.
 
@@ -28,6 +28,7 @@ class Resource(object):
             self.observe_count = name.observe_count
             self._payload = name.payload
             self._etag = name.etag
+            self._coap_server = name._coap_server
         else:
             ## The attributes of this resource.
             self._attributes = {}
@@ -53,6 +54,8 @@ class Resource(object):
             self._required_content_type = None
 
             self._etag = []
+
+            self._coap_server = coap_server
 
     @property
     def etag(self):
@@ -359,7 +362,7 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
-    def render_GET(self, request, query=None):
+    def render_GET(self, request=None, query=None):
         """
         Method to be redefined to render a GET request on the resource.
 
@@ -368,7 +371,7 @@ class Resource(object):
         """
         return -1
 
-    def render_PUT(self, request, payload=None, query=None):
+    def render_PUT(self, request=None, payload=None, query=None):
         """
         Method to be redefined to render a PUTT request on the resource.
 
@@ -378,7 +381,7 @@ class Resource(object):
         """
         return -1
 
-    def render_POST(self, request, payload=None, query=None):
+    def render_POST(self, request=None, payload=None, query=None):
         """
         Method to be redefined to render a POST request on the resource.
 
@@ -388,7 +391,7 @@ class Resource(object):
         """
         return -1
 
-    def render_DELETE(self, request, query=None):
+    def render_DELETE(self, request=None, query=None):
         """
         Method to be redefined to render a DELETE request on the resource.
 
@@ -396,3 +399,8 @@ class Resource(object):
         :return: the response
         """
         return -1
+
+    def notify_clients(self):
+        node = self._coap_server.root.find_complete(self.path)
+        if node is not None:
+            self._coap_server.notify(node)

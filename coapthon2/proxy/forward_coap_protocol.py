@@ -44,7 +44,7 @@ class ProxyCoAP(CoAP):
         # Set the TTL>1 so multicast will cross router hops:
         #self.transport.setTTL(5)
         # Join a specific multicast group:
-        self.transport.joinGroup(defines.ALL_COAP_NODES)
+        #self.transport.joinGroup(defines.ALL_COAP_NODES)
 
     def datagramReceived(self, data, (host, port)):
         """

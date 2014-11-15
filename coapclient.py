@@ -3,11 +3,11 @@ import getopt
 import sys
 from coapthon2.client.coap_protocol import HelperClient
 
-client = HelperClient(server=("224.0.1.187", 5683))
+client = None
 
 
 def usage():
-    print "Command:\tcoapclient.py -o[-p[-P]]"
+    print "Command:\tcoapclient.py -o -p [-P]"
     print "Options:"
     print "\t-o, --operation=\tGET|PUT|POST|DELETE|DISCOVER|OBSERVE"
     print "\t-p, --path=\t\t\tPath of the request"
@@ -42,7 +42,25 @@ def client_callback_observe(response):
             break
 
 
+def parse_uri(uri):
+    t = uri.split("://")
+    tmp = t[1]
+    t = tmp.split("/", 1)
+    tmp = t[0]
+    path = t[1]
+    t = tmp.split(":", 1)
+    try:
+        host = t[0]
+        port = int(t[1])
+    except IndexError:
+        host = tmp
+        port = 5683
+
+    return host, port, path
+
+
 def main():
+    global client
     op = None
     path = None
     payload = None
@@ -72,6 +90,18 @@ def main():
         usage()
         sys.exit(2)
 
+    if path is None:
+        print "Path must be specified"
+        usage()
+        sys.exit(2)
+
+    if not path.startswith("coap://"):
+        print "Path must be conform to coap://host[:port]/path"
+        usage()
+        sys.exit(2)
+
+    host, port, path = parse_uri(path)
+    client = HelperClient(server=(host, port))
     if op == "GET":
         if path is None:
             print "Path cannot be empty for a GET request"

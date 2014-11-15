@@ -43,7 +43,7 @@ class CoAP(DatagramProtocol):
         self._currentMID = random.randint(1, 1000)
 
         ## Create the resource Tree
-        root = Resource('root', visible=False, observable=False, allow_children=True)
+        root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
 
@@ -258,7 +258,7 @@ class CoAP(DatagramProtocol):
         """
         return self._resource_layer.create_resource(path, request, response)
 
-    def update_resource(self, path, request, response):
+    def update_resource(self, request, response, node):
         """
         Render a PUT request.
 
@@ -267,7 +267,7 @@ class CoAP(DatagramProtocol):
         :param response: the response
         :return: the response
         """
-        return self._resource_layer.update_resource(path, request, response)
+        return self._resource_layer.update_resource(request, response, node)
 
     def delete_resource(self, request, response, node):
         """
@@ -340,7 +340,6 @@ class CoAP(DatagramProtocol):
     def prepare_notification(self, t):
         """
         Create the notification message and sends it from the main Thread.
-
 
         :type t: (resource, host, port, token)
         :param t: the arguments of the notification message

@@ -96,7 +96,10 @@ class ObserveLayer(object):
         if hasattr(method, '__call__'):
             # Render_GET
             response.code = defines.responses['CONTENT']
-            response.payload = method()
+            try:
+                response.payload = method(notification=True)
+            except TypeError:
+                response.payload = method()
             #TODO Blockwise
             #Reliability
             request = Request()
