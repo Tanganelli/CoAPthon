@@ -6,7 +6,7 @@ setup(
     packages=['test', 'coapthon2', 'coapthon2.layer', 'coapthon2.client', 'coapthon2.server', 'coapthon2.messages',
               'coapthon2.resources'],
     url='https://github.com/Tanganelli/CoAPthon',
-    license='GPL',
+    license='MIT License',
     author='Giacomo Tanganelli',
     author_email='giacomo.tanganelli@for.unipi.it',
     description='CoAPthon is a python library to the CoAP protocol aligned with 18th version of the draft. '
