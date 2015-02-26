@@ -69,7 +69,6 @@ class CoAP(DatagramProtocol):
             self.operations.append((function, args, kwargs, client_callback))
 
     def startProtocol(self):
-
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()

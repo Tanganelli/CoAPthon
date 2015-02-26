@@ -31,9 +31,7 @@ class Storage(Resource):
         super(Storage, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
         self.payload = "Storage Resource for PUT, POST and DELETE"
 
-    def render_GET(self, request=None, query=None, notification=False):
-        if not notification:
-            self.notify_clients()
+    def render_GET(self, request=None, query=None):
         return self.payload
 
     def render_POST(self, request=None, payload=None, query=None):

@@ -31,9 +31,15 @@ class RequestLayer(object):
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.mid))
         if key not in self._parent.received:
-            self._parent.received[key] = (request, time.time())
-            # TODO Blockwise
-            return request
+            if request.blockwise:
+                # Blockwise
+                last, request = self._parent.blockwise_transfer(request)
+                if last:
+                    self._parent.received[key] = (request, time.time())
+                    return request
+            else:
+                self._parent.received[key] = (request, time.time())
+                return request
         else:
             request, timestamp = self._parent.received.get(key)
             request.duplicated = True

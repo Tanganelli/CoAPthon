@@ -7,6 +7,7 @@ from twisted.internet import reactor, threads, task
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
 from coapthon2 import defines
+from coapthon2.layer.blockwise import BlockwiseLayer
 from coapthon2.layer.message import MessageLayer
 from coapthon2.layer.observe import ObserveLayer
 from coapthon2.layer.request import RequestLayer
@@ -22,6 +23,7 @@ __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
 from os.path import expanduser
+
 home = expanduser("~")
 
 logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
@@ -31,7 +33,7 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class CoAP(DatagramProtocol):
-    def __init__(self, multicast = False):
+    def __init__(self, multicast=False):
         """
         Initialize the CoAP protocol
 
@@ -40,20 +42,22 @@ class CoAP(DatagramProtocol):
         self.sent = {}
         self.call_id = {}
         self.relation = {}
+        self.blockwise = {}
         self._currentMID = random.randint(1, 1000)
 
-        ## Create the resource Tree
+        # Create the resource Tree
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
 
-        ## Initialize layers
+        # Initialize layers
         self._request_layer = RequestLayer(self)
+        self._blockwise_layer = BlockwiseLayer(self)
         self._resource_layer = ResourceLayer(self)
         self._message_layer = MessageLayer(self)
         self._observe_layer = ObserveLayer(self)
 
-        ## Start a task for purge MIDs
+        # Start a task for purge MIDs
         self.l = task.LoopingCall(self.purge_mids)
         self.l.start(defines.EXCHANGE_LIFETIME)
 
@@ -207,6 +211,9 @@ class CoAP(DatagramProtocol):
         :param mid: the MID value
         """
         self._currentMID = int(mid)
+
+    def blockwise_transfer(self, request):
+        return self._blockwise_layer.handle_request(request)
 
     def add_observing(self, resource, response):
         """

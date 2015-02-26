@@ -106,7 +106,7 @@ class Serializer(object):
 
         :return: True, if is request
         """
-        return defines.REQUEST_CODE_LOWER_BOUND <= code <= defines.REQUEST_CODE_UPPER_BOUNT
+        return defines.REQUEST_CODE_LOWER_BOUND <= code <= defines.REQUEST_CODE_UPPER_BOUND
 
     @staticmethod
     def is_response(code):

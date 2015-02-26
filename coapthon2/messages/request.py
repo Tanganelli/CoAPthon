@@ -74,6 +74,18 @@ class Request(Message):
         self.add_option(option)
 
     @property
+    def blockwise(self):
+        """
+        Check if the request is a blockwise request.
+
+        :return: 1, if the request is an blockwise request
+        """
+        for option in self.options:
+            if option.number == defines.inv_options['Block1'] or option.number == defines.inv_options['Block2']:
+                return 1
+        return 0
+
+    @property
     def query(self):
         """
         Get the Uri-Query of a request.
