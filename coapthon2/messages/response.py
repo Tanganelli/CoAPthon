@@ -1,3 +1,4 @@
+from bitstring import Bits, BitArray
 from coapthon2 import defines
 from coapthon2.messages.message import Message
 from coapthon2.messages.option import Option
@@ -169,3 +170,59 @@ class Response(Message):
             if option.number == defines.inv_options['Observe']:
                 value = int(option.value)
         return value
+
+    @property
+    def block2(self):
+        value = 0
+        for option in self.options:
+            if option.number == defines.inv_options['Block2']:
+                value = option.raw_value
+        return value
+
+    @block2.setter
+    def block2(self, value):
+        option = Option()
+        option.number = defines.inv_options['Block2']
+        num, m, size = value
+        m = Bits(uint=m, length=1)
+        size = Bits(uint=size, length=3)
+        if num <= 15:
+            num = Bits(uint=num, length=4)
+        elif num <= pow(2, 12) - 1:
+            num = Bits(uint=num, length=12)
+        else:
+            num = Bits(uint=num, length=20)
+        value = BitArray()
+        value.append(num)
+        value.append(m)
+        value.append(size)
+        option.value = value.tobytes()
+        self.add_option(option)
+
+    @property
+    def block1(self):
+        value = 0
+        for option in self.options:
+            if option.number == defines.inv_options['Block1']:
+                value = option.raw_value
+        return value
+
+    @block1.setter
+    def block1(self, value):
+        option = Option()
+        option.number = defines.inv_options['Block1']
+        num, m, size = value
+        m = Bits(uint=m, length=1)
+        size = Bits(uint=size, length=3)
+        if num <= 15:
+            num = Bits(uint=num, length=4)
+        elif num <= pow(2, 12) - 1:
+            num = Bits(uint=num, length=12)
+        else:
+            num = Bits(uint=num, length=20)
+        value = BitArray()
+        value.append(num)
+        value.append(m)
+        value.append(size)
+        option.value = value.tobytes()
+        self.add_option(option)

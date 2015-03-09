@@ -81,6 +81,16 @@ class ResourceLayer(object):
                 elif not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
+                response.code = defines.responses['CREATED']
+
+                # Blockwise
+                host, port = request.source
+                key = hash(str(host) + str(port) + str(request.token))
+                if key in self._parent.blockwise:
+                    # Handle Blockwise transfer
+                    new_payload = node.value.payload + new_payload
+                    response = self._parent._blockwise_layer.handle_response(key, response, None)
+
                 if request.content_type is not None and request.content_type in defines.content_types:
                     resource.raw_payload[request.content_type] = new_payload
                 else:
@@ -91,7 +101,6 @@ class ResourceLayer(object):
                 # Observe
                 self._parent.update_relations(node, resource)
                 node.value = resource
-                # Observe
                 self._parent.notify(node)
                 if etag is not None:
                     resource.etag = etag
@@ -106,15 +115,13 @@ class ResourceLayer(object):
                         lq = location_query
                     response.location_query = lq
 
-                response.code = defines.responses['CREATED']
 
                 response.payload = None
                 # Token
                 response.token = request.token
-                #TODO Blockwise
-                #Reliability
+                # Reliability
                 response = self._parent.reliability_response(request, response)
-                #Matcher
+                # Matcher
                 response = self._parent.matcher_response(response)
                 return response
             elif new_payload == -1:
@@ -211,10 +218,16 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
-                #TODO Blockwise
-                #Reliability
+                # Blockwise
+                host, port = request.source
+                key = hash(str(host) + str(port) + str(request.token))
+                if key in self._parent.blockwise:
+                    # Handle Blockwise transfer
+                    response = self._parent._blockwise_layer.handle_response(key, response, None)
+
+                # Reliability
                 response = self._parent.reliability_response(request, response)
-                #Matcher
+                # Matcher
                 response = self._parent.matcher_response(response)
                 return response
             elif new_payload == -1:
@@ -420,7 +433,14 @@ class ResourceLayer(object):
                     response.code = defines.responses['VALID']
                 else:
                     response.code = defines.responses['CONTENT']
-                    response.payload = ret
+                    # Blockwise
+                    host, port = request.source
+                    key = hash(str(host) + str(port) + str(request.token))
+                    if key in self._parent.blockwise:
+                        # Handle Blockwise transfer
+                        response = self._parent._blockwise_layer.handle_response(key, response, ret)
+                    else:
+                        response.payload = ret
                 response.token = request.token
                 if etag is not None:
                     response.etag = etag
@@ -430,7 +450,7 @@ class ResourceLayer(object):
                 # Observe
                 if request.observe == 0 and resource.observable:
                     response = self._parent.add_observing(resource, response)
-                #TODO Blockwise
+
                 response = self._parent.reliability_response(request, response)
                 response = self._parent.matcher_response(response)
             else:
