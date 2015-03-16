@@ -317,7 +317,7 @@ class CoAP(DatagramProtocol):
         :type node: coapthon2.utils.Tree
         :param node: the node which has the deleted resource
         """
-        commands = self._observe_layer.notify(node)
+        commands = self._observe_layer.notify_by_resource(node)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
