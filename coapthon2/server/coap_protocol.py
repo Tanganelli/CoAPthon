@@ -186,9 +186,12 @@ class CoAP(DatagramProtocol):
                 if len(paths) != i:
                     return False
                 resource.path = p
-                resource.content_type = "text/plain"
-                resource.resource_type = "prova"
-                resource.maximum_size_estimated = 10
+                if not resource.content_type:
+                    resource.content_type = "text/plain"
+                if not resource.resource_type:
+                    resource.resource_type = "prova"
+                if not resource.maximum_size_estimated:
+                    resource.maximum_size_estimated = 10
                 old = old.add_child(resource)
             else:
                 old = res
