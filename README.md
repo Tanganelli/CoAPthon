@@ -14,12 +14,12 @@ What is implemented
 - Observe feature
 - CoRE Link Format parsing
 - Multicast server discovery
+- Blockwise feature
 
 TODO
 ====
 
 - CoAP to HTTP Proxy
-- Blockwise feature
 
 Install instructions
 =============
