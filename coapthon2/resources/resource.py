@@ -401,6 +401,5 @@ class Resource(object):
         return -1
 
     def notify_clients(self):
-        node = self._coap_server.root.find_complete(self.path)
-        if node is not None:
-            self._coap_server.notify(node)
+        self._coap_server.notify(self)
+

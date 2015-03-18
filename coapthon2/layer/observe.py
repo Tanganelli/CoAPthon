@@ -6,6 +6,7 @@ from coapthon2.messages.request import Request
 from coapthon2.messages.response import Response
 from coapthon2.serializer import Serializer
 from coapthon2.utils import Tree
+from coapthon2.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -49,16 +50,15 @@ class ObserveLayer(object):
         self._parent.relation[resource] = observers
         return commands
 
-    def notify(self, node):
+    def notify_by_resource(self, resource):
         """
         Finds the observers that must be notified about the update of the observed resource.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :type resource: coapthon2.resources.resource.Resource
+        :param resource: the resource which should be updated
         :return: the list of commands that must be executed to notify clients
         """
-        assert isinstance(node, Tree)
-        resource = node.value
+        assert isinstance(resource, Resource)
         observers = self._parent.relation.get(resource)
         if observers is None:
             resource.observe_count += 1
@@ -73,6 +73,18 @@ class ObserveLayer(object):
         resource.observe_count += 1
         self._parent.relation[resource] = observers
         return commands
+
+    def notify(self, node):
+        """
+        Finds the observers that must be notified about the update of the observed resource.
+
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the resource to update
+        :return: the list of commands that must be executed to notify clients
+        """
+        assert isinstance(node, Tree)
+        resource = node.value
+        return self.notify_by_resource(resource)
 
     def prepare_notification(self, t):
         """
