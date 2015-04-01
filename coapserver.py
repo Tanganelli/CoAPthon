@@ -8,6 +8,7 @@ from example_resources import Storage, Separate, BasicResource
 class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, multicast)
+        self.add_resource('basic/', BasicResource())
         self.add_resource('storage/', Storage())
         self.add_resource('separate/', Separate())
         print "CoAP Server start on " + host + ":" + str(port)

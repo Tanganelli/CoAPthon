@@ -11,18 +11,18 @@ class BasicResource(Resource):
                                             observable=True, allow_children=True)
         self.payload = "Basic Resource"
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request, response):
         return self.payload
 
-    def render_PUT(self, request=None, payload=None, query=None):
-        return payload
+    def render_PUT(self, request, response):
+        return request.payload
 
-    def render_POST(self, request=None, payload=None, query=None):
-        q = "?" + "&".join(query)
+    def render_POST(self, request, response):
+        q = "?" + "&".join(request.query)
         res = BasicResource()
-        return {"Payload": payload, "Location-Query": q, "Resource": res}
+        return {"Payload": request.payload, "Location-Query": q, "Resource": res}
 
-    def render_DELETE(self, request=None, query=None):
+    def render_DELETE(self, request, response):
         return True
 
 
@@ -31,13 +31,13 @@ class Storage(Resource):
         super(Storage, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
         self.payload = "Storage Resource for PUT, POST and DELETE"
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request, response):
         return self.payload
 
-    def render_POST(self, request=None, payload=None, query=None):
-        q = "?" + "&".join(query)
+    def render_POST(self, request, response):
+        q = "?" + "&".join(request.query)
         res = Child()
-        return {"Payload": payload, "Location-Query": q, "Resource": res}
+        return {"Payload": request.payload, "Location-Query": q, "Resource": res}
 
 
 class Child(Resource):
@@ -45,19 +45,19 @@ class Child(Resource):
         super(Child, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
         self.payload = ""
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request, response):
         return self.payload
 
-    def render_PUT(self, request=None, payload=None, query=None):
-        self.payload = payload
-        return payload
+    def render_PUT(self, request, response):
+        self.payload = request.payload
+        return self.payload
 
-    def render_POST(self, request=None, payload=None, query=None):
-        q = "?" + "&".join(query)
+    def render_POST(self, request, response):
+        q = "?" + "&".join(request.query)
         res = Child()
-        return {"Payload": payload, "Location-Query": q, "Resource": res}
+        return {"Payload": request.payload, "Location-Query": q, "Resource": res}
 
-    def render_DELETE(self, request=None, query=None):
+    def render_DELETE(self, request, response):
         return True
 
 
@@ -67,9 +67,9 @@ class Separate(Resource):
         super(Separate, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
         self.payload = "Separate"
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request, response):
         return {"Payload": self.payload, "ETag": self.etag, "Separate": True, "Callback": self.render_GET_separate}
 
-    def render_GET_separate(self, request=None, query=None):
+    def render_GET_separate(self, request, response):
         time.sleep(5)
         return {"Payload": self.payload, "ETag": self.etag}

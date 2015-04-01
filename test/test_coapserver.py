@@ -16,7 +16,7 @@ __version__ = "2.0"
 class Tests(unittest.TestCase):
 
     def setUp(self):
-        self.proto = CoAPServer()
+        self.proto = CoAPServer("127.0.0.1", 5683)
         self.tr = proto_helpers.FakeDatagramTransport()
         self.proto.makeConnection(self.tr)
         self.current_mid = random.randint(1, 1000)
@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
     def _test(self, message, expected):
         serializer = Serializer()
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5632))
+        self.proto.datagramReceived(datagram, ("127.0.0.1", 5683))
         datagram, source = self.tr.written[-1]
         host, port = source
         message = serializer.deserialize(datagram, host, port)
@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
     def _test_separate(self, message, expected):
         serializer = Serializer()
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5632))
+        self.proto.datagramReceived(datagram, ("127.0.0.1", 5683))
         datagram, source = self.tr.written[0]
         host, port = source
         message = serializer.deserialize(datagram, host, port)
@@ -66,7 +66,7 @@ class Tests(unittest.TestCase):
 
         message = Message.new_ack(message)
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5632))
+        self.proto.datagramReceived(datagram, ("127.0.0.1", 5683))
 
     def tearDown(self):
         self.proto.stopProtocol()
@@ -195,4 +195,47 @@ class Tests(unittest.TestCase):
         expected.payload = "Separate"
 
         self._test_separate(req, expected)
+
+    def test_observing(self):
+        args = ("/basic",)
+        path = args[0]
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req.mid = self.current_mid + 1
+        o = Option()
+        o.number = defines.inv_options["Observe"]
+        o.value = 0
+        req.add_option(o)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected.mid = self.current_mid + 1
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "Basic Resource"
+        option = Option()
+        option.number = defines.inv_options["Observe"]
+        option.value = 1
+        expected.add_option(option)
+
+        self._test(req, expected)
+
+        req = Request()
+        req.code = defines.inv_codes['PUT']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req.mid = self.current_mid
+        req.payload = "Edited"
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected.mid = self.current_mid
+        expected.code = defines.responses["CHANGED"]
+        expected.token = None
+        expected.payload = None
+
+        self._test(req, expected)
 

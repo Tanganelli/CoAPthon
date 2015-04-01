@@ -362,41 +362,38 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request, response):
         """
         Method to be redefined to render a GET request on the resource.
 
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_PUT(self, request=None, payload=None, query=None):
+    def render_PUT(self, request, response):
         """
         Method to be redefined to render a PUTT request on the resource.
 
-        :param payload: the request payload
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_POST(self, request=None, payload=None, query=None):
+    def render_POST(self, request, response):
         """
         Method to be redefined to render a POST request on the resource.
 
-        :param payload: the request payload
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_DELETE(self, request=None, query=None):
+    def render_DELETE(self, request, response):
         """
         Method to be redefined to render a DELETE request on the resource.
 
-        :param query: the request query
-        :return: the response
+        :param request: the request
         """
         return -1
 

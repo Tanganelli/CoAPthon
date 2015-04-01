@@ -2,6 +2,8 @@ import time
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
+from threading import Timer
+from coapthon2.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -112,3 +114,33 @@ class MessageLayer(object):
         except TypeError:
             pass
         self._parent.sent[key] = (response, time.time())
+
+    def start_separate_timer(self, request):
+        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        t.start()
+        return t
+
+    @staticmethod
+    def stop_separate_timer(timer):
+        if not timer.finished:
+            timer.cancel()
+            return True
+        return False
+
+    def send_separate(self, request):
+        if request.type == defines.inv_types["CON"]:
+            self.send_ack([request])
+        request.acknowledged = True
+
+    def send_ack(self, *args):
+        # Handle separate
+        """
+        Sends an ACK message for the request.
+
+        :param args: [request]
+        """
+        request = args[0]
+        ack = Message.new_ack(request)
+        host, port = request.source
+        self._parent.send(ack, host, port)
+        request.acknowledged = True

@@ -100,7 +100,7 @@ class CoAP(DatagramProtocol):
 
     def datagramReceived(self, data, (host, port)):
         """
-        Handler for received dUDP datagram.
+        Handler for received UDP datagram.
 
         :param data: the UDP datagram
         :param host: source host
@@ -329,7 +329,7 @@ class CoAP(DatagramProtocol):
         :type node: coapthon2.utils.Tree
         :param node: the node which has the deleted resource
         """
-        commands = self._observe_layer.notify_by_resource(node)
+        commands = self._observe_layer.notify_by_resource(node.value)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
