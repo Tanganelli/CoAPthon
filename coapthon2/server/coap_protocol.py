@@ -218,6 +218,15 @@ class CoAP(DatagramProtocol):
     def blockwise_transfer(self, request):
         return self._blockwise_layer.handle_request(request)
 
+    def blockwise_response(self, request, response, payload, oldpayload):
+        host, port = request.source
+        key = hash(str(host) + str(port) + str(request.token))
+        if key in self.blockwise:
+            # Handle Blockwise transfer
+            payload = oldpayload + payload
+            return self._blockwise_layer.handle_response(key, response, None), payload
+        return response, payload
+
     def add_observing(self, resource, response):
         """
         Add an observer to a resource and sets the Observe option in the response.

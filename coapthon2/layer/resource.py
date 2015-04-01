@@ -84,12 +84,8 @@ class ResourceLayer(object):
                 response.code = defines.responses['CREATED']
 
                 # Blockwise
-                host, port = request.source
-                key = hash(str(host) + str(port) + str(request.token))
-                if key in self._parent.blockwise:
-                    # Handle Blockwise transfer
-                    new_payload = node.value.payload + new_payload
-                    response = self._parent._blockwise_layer.handle_response(key, response, None)
+                response, new_payload = self._parent.blockwise_response(request, response, new_payload,
+                                                                        node.value.payload)
 
                 if request.content_type is not None and request.content_type in defines.content_types:
                     resource.raw_payload[request.content_type] = new_payload
@@ -115,7 +111,6 @@ class ResourceLayer(object):
                         lq = location_query
                     response.location_query = lq
 
-
                 response.payload = None
                 # Token
                 response.token = request.token
@@ -133,7 +128,7 @@ class ResourceLayer(object):
 
     def add_resorce(self, request, response, old, lp, p):
         """
-        Render a POST on aa new resource.
+        Render a POST on a new resource.
 
         :type old: coapthon2.utils.Tree
         :param request: the request
@@ -218,12 +213,9 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
+
                 # Blockwise
-                host, port = request.source
-                key = hash(str(host) + str(port) + str(request.token))
-                if key in self._parent.blockwise:
-                    # Handle Blockwise transfer
-                    response = self._parent._blockwise_layer.handle_response(key, response, None)
+                response, p = self._parent.blockwise_response(request, response, None, None)
 
                 # Reliability
                 response = self._parent.reliability_response(request, response)
@@ -325,7 +317,9 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
-                #TODO Blockwise
+                # Blockwise
+                response, p = self._parent.blockwise_response(request, response, None, None)
+                #TODO check PUT Blockwise
                 #Reliability
                 response = self._parent.reliability_response(request, response)
                 #Matcher
@@ -434,13 +428,9 @@ class ResourceLayer(object):
                 else:
                     response.code = defines.responses['CONTENT']
                     # Blockwise
-                    host, port = request.source
-                    key = hash(str(host) + str(port) + str(request.token))
-                    if key in self._parent.blockwise:
-                        # Handle Blockwise transfer
-                        response = self._parent._blockwise_layer.handle_response(key, response, ret)
-                    else:
-                        response.payload = ret
+                    response, p = self._parent.blockwise_response(request, response, ret, None)
+                    response.payload = p
+
                 response.token = request.token
                 if etag is not None:
                     response.etag = etag
@@ -473,7 +463,8 @@ class ResourceLayer(object):
         response.payload = node.corelinkformat()
         response.content_type = defines.inv_content_types["application/link-format"]
         response.token = request.token
-        #TODO Blockwise
+        # Blockwise
+        response, p = self._parent.blockwise_response(request, response, response.payload, None)
         response = self._parent.reliability_response(request, response)
         response = self._parent.matcher_response(response)
         return response
