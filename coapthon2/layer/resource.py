@@ -361,7 +361,6 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
-                #TODO Blockwise
                 #Reliability
                 response = self._parent.reliability_response(request, response)
                 #Matcher
