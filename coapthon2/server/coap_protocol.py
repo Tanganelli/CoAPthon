@@ -120,7 +120,7 @@ class CoAP(DatagramProtocol):
                 response = self._request_layer.process(ret)
             else:
                 response = ret
-            self.schedule_retrasmission(response)
+            self.schedule_retrasmission(message, response, None)
             log.msg("Send Response")
             self.send(response, host, port)
         elif isinstance(message, Response):
@@ -218,16 +218,19 @@ class CoAP(DatagramProtocol):
     def blockwise_transfer(self, request):
         return self._blockwise_layer.handle_request(request)
 
-    def blockwise_response(self, request, response, payload, oldpayload):
+    def blockwise_response(self, request, response, resource):
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.token))
         if key in self.blockwise:
             # Handle Blockwise transfer
-            payload = oldpayload + payload
-            return self._blockwise_layer.handle_response(key, response, None), payload
-        return response, payload
+            if resource is not None:
+                resource.payload += response.payload
+                return self._blockwise_layer.handle_response(key, response, None), resource
+            else:
+                return self._blockwise_layer.handle_response(key, response, response.payload), resource
+        return response, resource
 
-    def add_observing(self, resource, response):
+    def add_observing(self, resource, request, response):
         """
         Add an observer to a resource and sets the Observe option in the response.
 
@@ -235,7 +238,7 @@ class CoAP(DatagramProtocol):
         :param response: the response
         :return: response
         """
-        return self._observe_layer.add_observing(resource, response)
+        return self._observe_layer.add_observing(resource, request, response)
 
     def update_relations(self, node, resource):
         """
@@ -321,7 +324,7 @@ class CoAP(DatagramProtocol):
         """
         return self._resource_layer.discover(request, response)
 
-    def notify(self, node):
+    def notify(self, resource):
         """
         Finds the observers that must be notified about the update of the observed resource
         and invoke the notification procedure in different threads.
@@ -329,11 +332,11 @@ class CoAP(DatagramProtocol):
         :type node: coapthon2.utils.Tree
         :param node: the node which has the deleted resource
         """
-        commands = self._observe_layer.notify_by_resource(node.value)
+        commands = self._observe_layer.notify(resource)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
-    def notify_deletion(self, node):
+    def notify_deletion(self, resource):
         """
         Finds the observers that must be notified about the delete of the observed resource
         and invoke the notification procedure in different threads.
@@ -341,7 +344,7 @@ class CoAP(DatagramProtocol):
         :type node: coapthon2.utils.Tree
         :param node: the node which has the deleted resource
         """
-        commands = self._observe_layer.notify(node)
+        commands = self._observe_layer.notify_deletion(resource)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
@@ -360,13 +363,13 @@ class CoAP(DatagramProtocol):
         """
         Create the notification message and sends it from the main Thread.
 
-        :type t: (resource, host, port, token)
+        :type t: (resource, request, response)
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        notification, resource = self._observe_layer.prepare_notification(t)
+        resource, request, notification = self._observe_layer.prepare_notification(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (notification, resource))
+            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
 
     def prepare_notification_deletion(self, t):
         """
@@ -377,27 +380,23 @@ class CoAP(DatagramProtocol):
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        notification, resource = self._observe_layer.prepare_notification_deletion(t)
+        resource, request, notification = self._observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (notification, resource))
+            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
 
-    def schedule_retrasmission(self, t):
+    def schedule_retrasmission(self, request, response, resource):
         """
         Prepare retrasmission message and schedule it for the future.
 
         :type t: (Response, Resource) or Response
         :param t: the response and the resource interested in the retrasmission procedure
         """
-        if isinstance(t, tuple):
-            response, resource = t
-        else:
-            response = t
         host, port = response.destination
         if response.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (t, host, port, future_time)), 1)
+                                                   (request, response, resource, future_time)), 1)
 
     def retransmit(self, t):
         """
@@ -406,12 +405,9 @@ class CoAP(DatagramProtocol):
         :param t: ((Response, Resource), host, port, future_time) or (Response, host, port, future_time)
         """
         log.msg("Retransmit")
-        notification, host, port, future_time = t
-        if isinstance(notification, tuple):
-            response, resource = notification
-        else:
-            response = notification
-            resource = None
+        request, response, resource, future_time = t
+        host, port = response.destination
+
         key = hash(str(host) + str(port) + str(response.mid))
         t = self.call_id.get(key)
         if t is None:
@@ -423,17 +419,17 @@ class CoAP(DatagramProtocol):
             self.send(response, host, port)
             future_time *= 2
             self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (notification, host, port, future_time)), retransmit_count)
+                                                   (request, response, resource, future_time)), retransmit_count)
         elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             print "Give up on Message " + str(response.mid)
             print "----------------------------------------"
-        elif response.acknowledged or response.rejected:
+        elif response.acknowledged:
             response.timeouted = False
             del self.call_id[key]
         else:
             response.timeouted = True
             if resource is not None:
-                self._observe_layer.remove_observer(response, resource)
+                self._observe_layer.remove_observer(resource, request, response)
             del self.call_id[key]
 
     @staticmethod

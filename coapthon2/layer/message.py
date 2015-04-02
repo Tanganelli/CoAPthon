@@ -73,7 +73,6 @@ class MessageLayer(object):
 
         :param message: the message received
         """
-        # Matcher
         try:
             host, port = message.source
         except AttributeError:
@@ -90,7 +89,7 @@ class MessageLayer(object):
             response.acknowledged = True
         elif message.type == defines.inv_types['RST']:
             response.rejected = True
-            # TODO Blockwise
+
         # Observing
         if message.type == defines.inv_types['RST']:
             for resource in self._parent.relation.keys():

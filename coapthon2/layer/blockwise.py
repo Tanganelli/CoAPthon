@@ -41,7 +41,7 @@ class BlockwiseLayer(object):
                 self._parent.blockwise[key] = (1, 0, num, m, size)
         return True, request
 
-    def handle_response(self, key, response, payload):
+    def handle_response(self, key, response, payload=None):
         block, byte, num, m, size = self._parent.blockwise[key]
         if block == 2:
             ret = payload[byte:byte+(pow(2, (size + 4)))]

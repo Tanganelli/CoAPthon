@@ -1,6 +1,4 @@
-from threading import Timer
 from coapthon2 import defines
-from coapthon2.messages.message import Message
 from coapthon2.resources.resource import Resource
 from coapthon2.utils import Tree
 
@@ -36,78 +34,49 @@ class ResourceLayer(object):
         method = getattr(node.value, "render_POST", None)
         if hasattr(method, '__call__'):
             timer = self._parent._message_layer.start_separate_timer(request)
-            response = method(request=request, response=response)
+            resource = method(request=request)
             stopped = self._parent._message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
-            resource = None
-            if isinstance(response, Message):
+            if isinstance(resource, Resource):
                 pass
-            elif isinstance(response, tuple) and len(response) == 2:
-                if isinstance(response[1], Resource):
-                    response, resource = response
-                else:
-                    response, callback = response
-                    separate = True
-            elif isinstance(response, int):
-                # Handle error
+            elif isinstance(resource, int):
                 return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            elif isinstance(resource, tuple) and len(resource) == 2:
+                resource, callback = resource
+                separate = True
             else:
                 # Handle error
                 return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
-            if separate is not None:
+            if separate:
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
 
-                response = callback(request=request, response=response)
-                if isinstance(response, Message):
-                    pass
-                elif isinstance(response, tuple) and len(response) == 2:
-                    if isinstance(response[1], Resource):
-                        response, resource = response
-                    else:
-                        # Handle error
-                        return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-
-            if not isinstance(resource, Resource):
-                # Handle error
-                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-
-            if resource is None:
-                origin = node.value
-                assert isinstance(origin, Resource)
-                origin_class = origin.__class__
-                resource = origin_class(origin)
-
-            response.code = defines.responses['CREATED']
-            # Blockwise
-            response, payload = self._parent.blockwise_response(request, response, response.payload, node.value.payload)
-            response.payload = payload
-
-            if request.content_type is not None and request.content_type in defines.content_types:
-                resource.raw_payload[request.content_type] = payload
-            else:
-                resource.raw_payload[defines.inv_content_types["text/plain"]] = payload
+                resource = callback(request=request)
+                if not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
             resource.path = p
             resource.observe_count = node.value.observe_count
-            # Observe
-            #TODO maybe not necessary here
-            self._parent.update_relations(node, resource)
-            node.value = resource
-            self._parent.notify(node)
-            if response.etag is not None:
-                resource.etag = response.etag
-                response.location_path = lp
 
-            if response.location_query is not None and len(response.location_query) > 0 \
-                    and response.location_query != "?":
-                if isinstance(response.location_query, str):
-                    location_query = response.location_query.strip("?")
-                    lq = location_query.split("&")
-                    response.location_query = lq
+            response.code = defines.responses['CREATED']
+            # Blockwise
+            response, resource = self._parent.blockwise_response(request, response, resource)
+
+            # Observe
+            self._parent.update_relations(node, resource)
+
+            self._parent.notify(node)
+
+            if resource.etag is not None:
+                response.etag = resource.etag
+
+            response.location_path = lp
+
+            if resource.location_query is not None and len(resource.location_query) > 0:
+                response.location_query = resource.location_query
 
             response.payload = None
             # Token
@@ -116,6 +85,9 @@ class ResourceLayer(object):
             response = self._parent.reliability_response(request, response)
             # Matcher
             response = self._parent.matcher_response(response)
+
+            node.value = resource
+
             return response
         else:
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
@@ -135,85 +107,55 @@ class ResourceLayer(object):
         method = getattr(old.value, "render_POST", None)
         if hasattr(method, '__call__'):
             timer = self._parent._message_layer.start_separate_timer(request)
-            response = method(request=request, response=response)
+            resource = method(request=request)
             stopped = self._parent._message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
-            resource = None
-            if isinstance(response, Message):
+            if isinstance(resource, Resource):
                 pass
-            elif isinstance(response, tuple) and len(response) == 2:
-                if isinstance(response[1], Resource):
-                    response, resource = response
-                else:
-                    response, callback = response
-                    separate = True
-            elif isinstance(response, int):
-                # Handle error
+            elif isinstance(resource, int):
                 return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            elif isinstance(resource, tuple) and len(resource) == 2:
+                resource, callback = resource
+                separate = True
             else:
                 # Handle error
                 return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
-            if separate is not None:
+            if separate:
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
-
-                response = callback(request=request, response=response)
-                if isinstance(response, Message):
-                    pass
-                elif isinstance(response, tuple) and len(response) == 2:
-                    if isinstance(response[1], Resource):
-                        response, resource = response
-                    else:
-                        # Handle error
-                        return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-
-            if not isinstance(resource, Resource):
-                # Handle error
-                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
-
-            if resource is None:
-                origin = old.value
-                assert isinstance(origin, Resource)
-                origin_class = origin.__class__
-                resource = origin_class(origin)
-
-            if request.content_type is not None and request.content_type in defines.content_types:
-                resource.raw_payload[request.content_type] = response.payload
-            else:
-                resource.raw_payload[defines.inv_content_types["text/plain"]] = response.payload
+                resource = callback(request=request)
+                if not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
             resource.path = p
-            node = old.add_child(resource)
-            # Observe
-            self._parent.notify(node)
-            if response.etag is not None:
-                resource.etag = response.etag
+
+            if resource.etag is not None:
+                response.etag = resource.etag
 
             response.location_path = lp
 
-            if response.location_query is not None and len(response.location_query) > 0 \
-                    and response.location_query != "?":
-                if isinstance(response.location_query, str):
-                    location_query = response.location_query.strip("?")
-                    lq = location_query.split("&")
-                    response.location_query = lq
+            if resource.location_query is not None and len(resource.location_query) > 0:
+                response.location_query = resource.location_query
 
             response.code = defines.responses['CREATED']
-
             response.payload = None
+
             # Token
             response.token = request.token
 
             # Blockwise
-            response, p = self._parent.blockwise_response(request, response, None, None)
+            response, resource = self._parent.blockwise_response(request, response, resource)
 
             # Reliability
             response = self._parent.reliability_response(request, response)
             # Matcher
             response = self._parent.matcher_response(response)
+
+            old.value = resource
+
             return response
 
         else:
@@ -261,59 +203,48 @@ class ResourceLayer(object):
         method = getattr(resource, "render_PUT", None)
         if hasattr(method, '__call__'):
             timer = self._parent._message_layer.start_separate_timer(request)
-            new_payload = method(request=request)
+            resource = method(request=request)
             stopped = self._parent._message_layer.stop_separate_timer(timer)
-            if isinstance(new_payload, dict):
-                etag = new_payload.get("ETag")
-                separate = new_payload.get("Separate")
-                callback = new_payload.get("Callback")
-                new_payload = new_payload.get("Payload")
+            separate = False
+            callback = None
+            if isinstance(resource, Resource):
+                pass
+            elif isinstance(resource, int):
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            elif isinstance(resource, tuple) and len(resource) == 2:
+                resource, callback = resource
+                separate = True
             else:
-                etag = None
-                separate = None
-                callback = None
-            if separate is not None:
+                # Handle error
+                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+            if separate:
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
-                new_payload = callback(request=request, payload=request.payload, query=request.query)
-                if isinstance(new_payload, dict):
-                    etag = new_payload.get("ETag")
-                    new_payload = new_payload.get("Payload")
-                else:
-                    etag = None
+                resource = callback(request=request)
+                if not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
-            if new_payload is not None and new_payload != -1:
-                if etag is not None:
-                    resource.etag = etag
+            if resource.etag is not None:
                     response.etag = resource.etag
-                if isinstance(node.value.raw_payload, dict):
-                    if request.content_type is not None and request.content_type in defines.content_types:
-                        node.value.raw_payload[request.content_type] = new_payload
-                    else:
-                        node.value.raw_payload[defines.inv_content_types["text/plain"]] = new_payload
-                else:
-                    node.value.payload = new_payload
 
-                # Observe
-                self._parent.notify(node)
+            response.code = defines.responses['CHANGED']
+            response.payload = None
+            # Token
+            response.token = request.token
+            # Blockwise
+            response, resource = self._parent.blockwise_response(request, response, resource)
+            #TODO check PUT Blockwise
+            # Observe
+            self._parent.notify(resource)
 
-                response.code = defines.responses['CHANGED']
-                response.payload = None
-                # Token
-                response.token = request.token
-                # Blockwise
-                response, p = self._parent.blockwise_response(request, response, None, None)
-                #TODO check PUT Blockwise
-                #Reliability
-                response = self._parent.reliability_response(request, response)
-                #Matcher
-                response = self._parent.matcher_response(response)
-                return response
-            elif new_payload == -1:
-                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
-            else:
-                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+            #Reliability
+            response = self._parent.reliability_response(request, response)
+            #Matcher
+            response = self._parent.matcher_response(response)
+
+            node.value = resource
+            return response
         else:
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
@@ -337,7 +268,8 @@ class ResourceLayer(object):
                 parent = node.parent
                 assert isinstance(parent, Tree)
                 # Observe
-                self._parent.notify_deletion(node)
+                resource = node.value
+                self._parent.notify_deletion(resource)
                 self._parent.remove_observers(node)
 
                 parent.del_child(node)
@@ -377,61 +309,53 @@ class ResourceLayer(object):
                     response.content_type = resource.required_content_type
             # Render_GET
             timer = self._parent._message_layer.start_separate_timer(request)
-            ret = method(request=request)
+            resource = method(request=request)
             stopped = self._parent._message_layer.stop_separate_timer(timer)
-            if isinstance(ret, dict):
-                etag = ret.get("ETag")
-                max_age = ret.get("Max-Age")
-                separate = ret.get("Separate")
-                callback = ret.get("Callback")
-                ret = ret.get("Payload")
+            separate = False
+            callback = None
+            if isinstance(resource, Resource):
+                pass
+            elif isinstance(resource, int):
+                return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+            elif isinstance(resource, tuple) and len(resource) == 2:
+                resource, callback = resource
+                separate = True
             else:
-                etag = None
-                max_age = None
-                separate = None
-                callback = None
-            if separate is not None:
+                # Handle error
+                return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
+            if separate:
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
-                ret = callback(request=request)
-                if isinstance(ret, dict):
-                    etag = ret.get("ETag")
-                    max_age = ret.get("Max-Age")
-                    ret = ret.get("Payload")
-                else:
-                    etag = None
-                    max_age = None
-            if ret != -1:
-                if ret == -2:
-                    response = self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
-                    return response
-                # handle ETAG
-                if etag in request.etag:
-                    response.code = defines.responses['VALID']
-                else:
-                    response.code = defines.responses['CONTENT']
-                    # Blockwise
-                    response, p = self._parent.blockwise_response(request, response, ret, None)
-                    response.payload = p
+                resource = callback(request=request)
+                if not isinstance(resource, Resource):
+                    return self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
 
-                response.token = request.token
-                if etag is not None:
-                    response.etag = etag
-                if max_age is not None:
-                    response.max_age = max_age
-
-                # Observe
-                if request.observe == 0 and resource.observable:
-                    response = self._parent.add_observing(resource, response)
-
-                response = self._parent.reliability_response(request, response)
-                response = self._parent.matcher_response(response)
+            if resource.etag in request.etag:
+                response.code = defines.responses['VALID']
             else:
-                response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
+                response.code = defines.responses['CONTENT']
+
+            # Blockwise
+            response, resource = self._parent.blockwise_response(request, response, resource)
+            response.payload = resource.payload
+
+            response.token = request.token
+            if resource.etag is not None:
+                response.etag = resource.etag
+            if resource.max_age is not None:
+                response.max_age = resource.max_age
+
+            # Observe
+            if request.observe == 0 and resource.observable:
+                response = self._parent.add_observing(resource, request, response)
+
+            response = self._parent.reliability_response(request, response)
+            response = self._parent.matcher_response(response)
+
+            return response
         else:
-            response = self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
-        return response
+            return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def discover(self, request, response):
         """
@@ -448,7 +372,7 @@ class ResourceLayer(object):
         response.content_type = defines.inv_content_types["application/link-format"]
         response.token = request.token
         # Blockwise
-        response, p = self._parent.blockwise_response(request, response, response.payload, None)
+        response, resource = self._parent.blockwise_response(request, response, None)
         response = self._parent.reliability_response(request, response)
         response = self._parent.matcher_response(response)
         return response
