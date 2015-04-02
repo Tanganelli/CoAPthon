@@ -129,7 +129,6 @@ class MessageLayer(object):
     def send_separate(self, request):
         if request.type == defines.inv_types["CON"]:
             self.send_ack([request])
-        request.acknowledged = True
 
     def send_ack(self, *args):
         # Handle separate

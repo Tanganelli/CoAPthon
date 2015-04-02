@@ -53,7 +53,7 @@ class ResourceLayer(object):
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
-
+                    request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
@@ -126,6 +126,7 @@ class ResourceLayer(object):
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
+                    request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
@@ -221,6 +222,7 @@ class ResourceLayer(object):
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
+                    request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
@@ -327,6 +329,7 @@ class ResourceLayer(object):
                 # Handle separate
                 if stopped:
                     self._parent._message_layer.send_separate(request)
+                    request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'NOT_ACCEPTABLE')

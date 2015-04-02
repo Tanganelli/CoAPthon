@@ -388,7 +388,7 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
-    def render_GET(self, request, notification=False):
+    def render_GET(self, request):
         """
         Method to be redefined to render a GET request on the resource.
 

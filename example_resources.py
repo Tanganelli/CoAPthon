@@ -74,3 +74,15 @@ class Separate(Resource):
     def render_GET_separate(self, request):
         time.sleep(5)
         return self
+
+
+class Long(Resource):
+
+    def __init__(self, name="Separate", coap_server=None):
+        super(Long, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
+        self.payload = "Separate"
+
+    def render_GET(self, request):
+        time.sleep(10)
+        return self
+

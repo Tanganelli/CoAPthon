@@ -164,7 +164,7 @@ class ObserveLayer(object):
         :return: response
         """
         host, port = response.destination
-        key = hash(str(request))
+        key = str(host) + str(port) + str(response.token)
         observers = self._parent.relation.get(resource)
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
@@ -237,7 +237,8 @@ class ObserveLayer(object):
         :param resource: the resource
         """
         log.msg("Remove observer for the resource")
-        key = hash(str(request))
+        host, port = response.destination
+        key = str(host) + str(port) + str(response.token)
         observers = self._parent.relation.get(resource)
         if observers is not None and key in observers.keys():
             del observers[key]
