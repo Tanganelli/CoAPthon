@@ -7,6 +7,7 @@ from example_resources import Storage, Separate, BasicResource, Long, Big
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
 
+
 class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, multicast)

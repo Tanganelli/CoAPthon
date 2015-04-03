@@ -1,3 +1,4 @@
+import os
 import random
 import re
 import time
@@ -22,8 +23,10 @@ from twisted.internet import reactor
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-from os.path import expanduser
-home = expanduser("~")
+
+home = os.path.expanduser("~")
+if not os.path.exists(home):
+    os.makedirs(home)
 
 # First, startLogging to capture stdout
 logfile = DailyLogFile("CoAPthon_client.log", home + "/.coapthon/")
@@ -180,7 +183,7 @@ class CoAP(DatagramProtocol):
         key = hash(str(host) + str(port) + str(message.mid))
         if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
            and key in self.sent.keys():
-            #Separate Response
+            # Separate Response
             print "Separate Response"
         else:
             function, args, kwargs, client_callback = self.get_operation()

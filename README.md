@@ -111,7 +111,7 @@ class Hello(Resource):
         self.payload = "Hello world!"
 
     def render_GET(self, query=None):
-        return self.payload
+        return self
 
     def render_PUT(self, payload=None, query=None):
         return payload

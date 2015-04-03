@@ -15,33 +15,33 @@ class Message(object):
         Initialize a CoAP Message.
 
         """
-        ## The type. One of {CON, NON, ACK or RST}.
+        # The type. One of {CON, NON, ACK or RST}.
         self.type = None
-        ## The 16-bit Message Identification.
+        # The 16-bit Message Identification.
         self.mid = None
-        ## The token, a 0-8 byte array.
+        # The token, a 0-8 byte array.
         self.token = None
-        ## The set of options of this message.
+        # The set of options of this message.
         self._options = []
-        ## The payload of this message.
+        # The payload of this message.
         self.payload = None
-        ## The destination address of this message.
+        # The destination address of this message.
         self.destination = None
-        ## The source address of this message.
+        # The source address of this message.
         self.source = None
-        ## Indicates if the message has been acknowledged.
+        # Indicates if the message has been acknowledged.
         self._acknowledged = False
-        ## Indicates if the message has been rejected.
+        # Indicates if the message has been rejected.
         self._rejected = False
-        ## Indicates if the message has timeouted.
+        # Indicates if the message has timeouted.
         self._timeouted = False
-        ## Indicates if the message has been canceled.
+        # Indicates if the message has been canceled.
         self._canceled = False
-        ## Indicates if the message is a duplicate.
+        # Indicates if the message is a duplicate.
         self._duplicate = False
-        ## The timestamp
+        # The timestamp
         self._timestamp = None
-        ## The code
+        # The code
         self.code = None
 
     @property

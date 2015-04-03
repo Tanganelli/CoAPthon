@@ -32,19 +32,19 @@ class Resource(object):
             self._max_age = name.max_age
             self._coap_server = name._coap_server
         else:
-            ## The attributes of this resource.
+            # The attributes of this resource.
             self._attributes = {}
 
-            ## The resource name.
+            # The resource name.
             self.name = name
 
-            ## The resource path.
+            # The resource path.
             self.path = None
 
-            ## Indicates whether this resource is visible to clients.
+            # Indicates whether this resource is visible to clients.
             self._visible = visible
 
-            ## Indicates whether this resource is observable by clients.
+            # Indicates whether this resource is observable by clients.
             self._observable = observable
 
             self._allow_children = allow_children

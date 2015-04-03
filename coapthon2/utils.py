@@ -80,12 +80,12 @@ class Tree(object):
         return new
 
     def dump(self, msg="", tab=""):
-        msg += tab + "[" + self.value.path + " Name: " + self.value.name + "]\n\t"
+        msg += tab + "[" + self.value.path + " Name: " + self.value.name + "]\n"
         for i in self.children:
             v = self.children.get(i, None)
             if v is not None:
                 assert isinstance(v, Tree)
-                tab += "\t"
+                tab = "\t"
                 msg += v.dump("", tab)
         return msg
 

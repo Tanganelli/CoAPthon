@@ -1,3 +1,4 @@
+import os
 import random
 import time
 from twisted.application.service import Application
@@ -22,9 +23,9 @@ from coapthon2.utils import Tree
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-from os.path import expanduser
-
-home = expanduser("~")
+home = os.path.expanduser("~")
+if not os.path.exists(home):
+    os.makedirs(home)
 
 logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
 # Now add an observer that logs to a file
