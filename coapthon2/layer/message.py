@@ -126,16 +126,17 @@ class MessageLayer(object):
 
     def send_separate(self, request):
         if request.type == defines.inv_types["CON"]:
-            self.send_ack([request])
+            self.send_ack(request)
 
-    def send_ack(self, *args):
+    def send_ack(self, request):
         # Handle separate
         """
         Sends an ACK message for the request.
 
         :param args: [request]
         """
-        request = args[0]
+        if isinstance(request, list):
+            request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source
         self._parent.send(ack, host, port)
