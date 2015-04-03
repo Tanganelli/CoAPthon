@@ -324,61 +324,41 @@ class Tests(unittest.TestCase):
 
         self._test_separate(req, expected)
 
-    # def _test_notification(self, message, expected, req_put, expected_put, notification):
+    # def _test_notification(self, lst):
     #     serializer = Serializer()
-    #     datagram = serializer.serialize(message)
-    #     self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
-    #     print self.tr.written
-    #     datagram, source = self.tr.written[0]
-    #     self.tr.written = []
-    #     host, port = source
-    #     message = serializer.deserialize(datagram, host, port)
-    #     self.assertEqual(message.type, expected.type)
-    #     self.assertEqual(message.mid, expected.mid)
-    #     self.assertEqual(message.code, expected.code)
-    #     self.assertEqual(message.source, source)
-    #     self.assertEqual(message.token, expected.token)
-    #     self.assertEqual(message.payload, expected.payload)
-    #     self.assertEqual(message.options, expected.options)
+    #     for t in lst:
+    #         message, expected = t
+    #         send_ack = False
+    #         if message is not None:
+    #             datagram = serializer.serialize(message)
+    #             if message.source is not None:
+    #                 host, port = message.source
+    #             else:
+    #                 host, port = ("127.0.0.1", 5600)
     #
-    #     datagram = serializer.serialize(req_put)
-    #     self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
-    #     print self.tr.written
-    #     datagram, source = self.tr.written[0]
-    #     self.tr.written = []
-    #
-    #     host, port = source
-    #     message = serializer.deserialize(datagram, host, port)
-    #     self.assertEqual(message.type, expected_put.type)
-    #     self.assertEqual(message.mid, expected_put.mid)
-    #     self.assertEqual(message.code, expected_put.code)
-    #     self.assertEqual(message.source, source)
-    #     self.assertEqual(message.token, expected_put.token)
-    #     self.assertEqual(message.payload, expected_put.payload)
-    #     self.assertEqual(message.options, expected_put.options)
-    #     while True:
-    #         try:
-    #             datagram, source = self.tr.written[0]
-    #             print message
-    #             break
-    #         except:
-    #             continue
-    #     while True:
-    #         try:
-    #             datagram, source = self.tr.written[1]
-    #             print message
-    #             break
-    #         except:
-    #             continue
-    #     host, port = source
-    #     message = serializer.deserialize(datagram, host, port)
-    #
-    #     self.assertEqual(message.type, notification.type)
-    #     self.assertEqual(message.code, notification.code)
-    #     self.assertEqual(message.source, source)
-    #     self.assertEqual(message.token, notification.token)
-    #     self.assertEqual(message.payload, notification.payload)
-    #     self.assertEqual(message.options, notification.options)
+    #             self.proto.datagramReceived(datagram, (host, port))
+    #         else:
+    #             send_ack = True
+    #         while True:
+    #             try:
+    #                 datagram, source = self.tr.written.pop(0)
+    #                 break
+    #             except IndexError:
+    #                 continue
+    #         host, port = source
+    #         message = serializer.deserialize(datagram, host, port)
+    #         self.assertEqual(message.type, expected.type)
+    #         if not send_ack:
+    #             self.assertEqual(message.mid, expected.mid)
+    #         self.assertEqual(message.code, expected.code)
+    #         self.assertEqual(message.source, source)
+    #         self.assertEqual(message.token, expected.token)
+    #         self.assertEqual(message.payload, expected.payload)
+    #         self.assertEqual(message.options, expected.options)
+    #         if send_ack:
+    #             message = Message.new_ack(message)
+    #             datagram = serializer.serialize(message)
+    #             self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
     #
     #     self.tr.written = []
     #
@@ -387,12 +367,13 @@ class Tests(unittest.TestCase):
     #     self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
     #
     #     self.tr.written = []
-
+    #
     # def test_observing(self):
     #     args = ("/basic",)
     #     path = args[0]
     #
     #     req = Request()
+    #     req.source = ("127.0.0.1", 5600)
     #     req.code = defines.inv_codes['GET']
     #     req.uri_path = path
     #     req.type = defines.inv_types["CON"]
@@ -414,6 +395,7 @@ class Tests(unittest.TestCase):
     #     expected.add_option(option)
     #
     #     req_put = Request()
+    #     req_put.source = ("127.0.0.1", 5601)
     #     req_put.code = defines.inv_codes['PUT']
     #     req_put.uri_path = path
     #     req_put.type = defines.inv_types["CON"]
@@ -437,5 +419,5 @@ class Tests(unittest.TestCase):
     #     option.value = 2
     #     notification.add_option(option)
     #
-    #     self._test_modular([(req, expected), (req_put, expected_put), (None, notification)])
-
+    #     self._test_notification([(req, expected), (req_put, expected_put), (None, notification)])
+    #
