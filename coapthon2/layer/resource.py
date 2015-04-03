@@ -68,7 +68,7 @@ class ResourceLayer(object):
             # Observe
             self._parent.update_relations(node, resource)
 
-            self._parent.notify(node)
+            self._parent.notify(resource)
 
             if resource.etag is not None:
                 response.etag = resource.etag
@@ -339,9 +339,10 @@ class ResourceLayer(object):
             else:
                 response.code = defines.responses['CONTENT']
 
+            response.payload = resource.payload
+
             # Blockwise
             response, resource = self._parent.blockwise_response(request, response, resource)
-            response.payload = resource.payload
 
             response.token = request.token
             if resource.etag is not None:

@@ -223,11 +223,11 @@ class CoAP(DatagramProtocol):
         key = hash(str(host) + str(port) + str(request.token))
         if key in self.blockwise:
             # Handle Blockwise transfer
-            if resource is not None:
-                resource.payload += response.payload
-                return self._blockwise_layer.handle_response(key, response, None), resource
-            else:
-                return self._blockwise_layer.handle_response(key, response, response.payload), resource
+            return self._blockwise_layer.handle_response(key, response, resource), resource
+        if resource is not None and len(resource.payload) > defines.MAX_PAYLOAD \
+                and request.code == defines.inv_codes["GET"]:
+            self._blockwise_layer.start_block2(request)
+            return self._blockwise_layer.handle_response(key, response, resource), resource
         return response, resource
 
     def add_observing(self, resource, request, response):

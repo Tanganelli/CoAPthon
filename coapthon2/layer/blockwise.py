@@ -9,6 +9,7 @@ class BlockwiseLayer(object):
     """
     Handles the Blockwise feature.
     """
+
     def __init__(self, parent):
         """
         Initialize a Blockwise Layer.
@@ -41,10 +42,16 @@ class BlockwiseLayer(object):
                 self._parent.blockwise[key] = (1, 0, num, m, size)
         return True, request
 
-    def handle_response(self, key, response, payload=None):
+    def start_block2(self, request):
+        host, port = request.source
+        key = hash(str(host) + str(port) + str(request.token))
+        self._parent.blockwise[key] = (2, 0, 0, 1, 6)  # 6 == 2^10 = 1024
+
+    def handle_response(self, key, response, resource):
         block, byte, num, m, size = self._parent.blockwise[key]
+        payload = resource.payload
         if block == 2:
-            ret = payload[byte:byte+(pow(2, (size + 4)))]
+            ret = payload[byte:byte + (pow(2, (size + 4)))]
 
             if len(ret) == pow(2, (size + 4)):
                 m = 1
@@ -52,7 +59,7 @@ class BlockwiseLayer(object):
                 m = 0
             response.block2 = (num, m, size)
             response.payload = ret
-            byte += (pow(2, (size + 4))) - 1
+            byte += (pow(2, (size + 4)))
             num += 1
             if m == 0:
                 del self._parent.blockwise[key]

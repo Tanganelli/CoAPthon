@@ -121,10 +121,8 @@ class MessageLayer(object):
 
     @staticmethod
     def stop_separate_timer(timer):
-        if not timer.finished:
-            timer.cancel()
-            return True
-        return False
+        timer.cancel()
+        return True
 
     def send_separate(self, request):
         if request.type == defines.inv_types["CON"]:

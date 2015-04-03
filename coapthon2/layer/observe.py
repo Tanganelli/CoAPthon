@@ -66,7 +66,7 @@ class ObserveLayer(object):
         commands = []
         for item in observers.keys():
             old, request, response = observers[item]
-            #send notification
+            # send notification
             commands.append((self._parent.prepare_notification, [(resource, request, response)], {}))
             observers[item] = (now, request, response)
         resource.observe_count += 1
@@ -97,20 +97,30 @@ class ObserveLayer(object):
             response.code = defines.responses['CONTENT']
             resource = method(request)
             response.payload = resource.payload
-            #TODO Blockwise
-            #Reliability
+            # Blockwise
+            response, resource = self._parent.blockwise_response(request, response, resource)
+            host, port = request.source
+            key = hash(str(host) + str(port) + str(request.token))
+            if key in self._parent.blockwise:
+                del self._parent.blockwise[key]
+            # Reliability
             request.acknowledged = True
             response = self._parent.reliability_response(request, response)
-            #Matcher
+            # Matcher
             response = self._parent.matcher_response(response)
             return resource, request, response
         else:
             response.code = defines.responses['METHOD_NOT_ALLOWED']
-            #TODO Blockwise
-            #Reliability
+            # Blockwise
+            response, resource = self._parent.blockwise_response(request, response, resource)
+            host, port = request.source
+            key = hash(str(host) + str(port) + str(request.token))
+            if key in self._parent.blockwise:
+                del self._parent.blockwise[key]
+            # Reliability
             request.acknowledged = True
             response = self._parent.reliability_response(request, response)
-            #Matcher
+            # Matcher
             response = self._parent.matcher_response(response)
             return resource, request, response
 
@@ -129,11 +139,16 @@ class ObserveLayer(object):
         response.token = old_response.token
         response.code = defines.responses['NOT_FOUND']
         response.payload = None
-        #TODO Blockwise
-        #Reliability
+        # Blockwise
+        response, resource = self._parent.blockwise_response(request, response, resource)
+        host, port = request.source
+        key = hash(str(host) + str(port) + str(request.token))
+        if key in self._parent.blockwise:
+            del self._parent.blockwise[key]
+        # Reliability
         request.acknowledged = True
         response = self._parent.reliability_response(request, response)
-        #Matcher
+        # Matcher
         response = self._parent.matcher_response(response)
         return resource, request, response
 
@@ -209,7 +224,7 @@ class ObserveLayer(object):
             if observers is not None:
                 for item in observers.keys():
                     old, request, response = observers[item]
-                    #send notification
+                    # send notification
                     commands.append((self._parent.prepare_notification_deletion, [(resource, request, response)], {}))
                     del observers[item]
             del self._parent.relation[resource]
