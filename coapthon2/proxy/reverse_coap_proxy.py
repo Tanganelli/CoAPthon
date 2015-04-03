@@ -1,3 +1,4 @@
+import os
 import re
 from coapthon2.messages.message import Message
 from coapthon2.messages.response import Response
@@ -17,9 +18,9 @@ from coapthon2.resources.resource import Resource
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-from os.path import expanduser
-
-home = expanduser("~")
+home = os.path.expanduser("~")
+if not os.path.exists(home):
+    os.makedirs(home)
 
 logfile = DailyLogFile("CoAPthon_reverse_proxy.log", home + "/.coapthon/")
 # Now add an observer that logs to a file

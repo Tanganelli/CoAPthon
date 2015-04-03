@@ -1,4 +1,5 @@
 import hashlib
+import os
 import random
 from threading import Timer
 from twisted.application.service import Application
@@ -16,8 +17,10 @@ from coapthon2.server.coap_protocol import CoAP
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-from os.path import expanduser
-home = expanduser("~")
+
+home = os.path.expanduser("~")
+if not os.path.exists(home):
+    os.makedirs(home)
 
 logfile = DailyLogFile("CoAPthon_forward_proxy.log", home + "/.coapthon/")
 # Now add an observer that logs to a file

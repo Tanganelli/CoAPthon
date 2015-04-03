@@ -1,3 +1,4 @@
+import os
 from coapthon2 import defines
 from coapthon2.client.coap_protocol import HelperClient
 from coapthon2.messages.request import Request
@@ -13,8 +14,9 @@ from twisted.web import proxy, http
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-from os.path import expanduser
-home = expanduser("~")
+home = os.path.expanduser("~")
+if not os.path.exists(home):
+    os.makedirs(home)
 
 logfile = DailyLogFile("CoAPthon_http_forward_proxy.log", home + "/.coapthon/")
 # Now add an observer that logs to a file

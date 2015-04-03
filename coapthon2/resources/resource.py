@@ -28,21 +28,23 @@ class Resource(object):
             self.observe_count = name.observe_count
             self._payload = name.payload
             self._etag = name.etag
+            self._location_query = name.location_query
+            self._max_age = name.max_age
             self._coap_server = name._coap_server
         else:
-            ## The attributes of this resource.
+            # The attributes of this resource.
             self._attributes = {}
 
-            ## The resource name.
+            # The resource name.
             self.name = name
 
-            ## The resource path.
+            # The resource path.
             self.path = None
 
-            ## Indicates whether this resource is visible to clients.
+            # Indicates whether this resource is visible to clients.
             self._visible = visible
 
-            ## Indicates whether this resource is observable by clients.
+            # Indicates whether this resource is observable by clients.
             self._observable = observable
 
             self._allow_children = allow_children
@@ -54,6 +56,10 @@ class Resource(object):
             self._required_content_type = None
 
             self._etag = []
+
+            self._location_query = []
+
+            self._max_age = None
 
             self._coap_server = coap_server
 
@@ -77,6 +83,26 @@ class Resource(object):
         :param etag: the ETag
         """
         self._etag.append(etag)
+
+    @property
+    def location_query(self):
+        return self._location_query
+
+    @location_query.setter
+    def location_query(self, lq):
+        self._location_query = lq
+
+    @location_query.deleter
+    def location_query(self):
+        self.location_query = []
+
+    @property
+    def max_age(self):
+        return self._max_age
+
+    @max_age.setter
+    def max_age(self, ma):
+        self._max_age = ma
 
     @property
     def payload(self):
@@ -362,41 +388,38 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
-    def render_GET(self, request=None, query=None):
+    def render_GET(self, request):
         """
         Method to be redefined to render a GET request on the resource.
 
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_PUT(self, request=None, payload=None, query=None):
+    def render_PUT(self, request):
         """
         Method to be redefined to render a PUTT request on the resource.
 
-        :param payload: the request payload
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_POST(self, request=None, payload=None, query=None):
+    def render_POST(self, request):
         """
         Method to be redefined to render a POST request on the resource.
 
-        :param payload: the request payload
-        :param query: the request query
+        :param request: the request
         :return: the response
         """
         return -1
 
-    def render_DELETE(self, request=None, query=None):
+    def render_DELETE(self, request):
         """
         Method to be redefined to render a DELETE request on the resource.
 
-        :param query: the request query
-        :return: the response
+        :param request: the request
         """
         return -1
 

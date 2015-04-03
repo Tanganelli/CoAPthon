@@ -2,6 +2,8 @@ import time
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon2 import defines
+from threading import Timer
+from coapthon2.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -71,7 +73,6 @@ class MessageLayer(object):
 
         :param message: the message received
         """
-        # Matcher
         try:
             host, port = message.source
         except AttributeError:
@@ -88,7 +89,7 @@ class MessageLayer(object):
             response.acknowledged = True
         elif message.type == defines.inv_types['RST']:
             response.rejected = True
-            # TODO Blockwise
+
         # Observing
         if message.type == defines.inv_types['RST']:
             for resource in self._parent.relation.keys():
@@ -112,3 +113,31 @@ class MessageLayer(object):
         except TypeError:
             pass
         self._parent.sent[key] = (response, time.time())
+
+    def start_separate_timer(self, request):
+        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        t.start()
+        return t
+
+    @staticmethod
+    def stop_separate_timer(timer):
+        timer.cancel()
+        return True
+
+    def send_separate(self, request):
+        if request.type == defines.inv_types["CON"]:
+            self.send_ack(request)
+
+    def send_ack(self, request):
+        # Handle separate
+        """
+        Sends an ACK message for the request.
+
+        :param args: [request]
+        """
+        if isinstance(request, list):
+            request = request[0]
+        ack = Message.new_ack(request)
+        host, port = request.source
+        self._parent.send(ack, host, port)
+        request.acknowledged = True

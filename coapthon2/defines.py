@@ -1,7 +1,8 @@
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
-################### CoAP Parameters ###################
+''' CoAP Parameters '''
+
 ACK_TIMEOUT = 2
 
 SEPARATE_TIMEOUT = ACK_TIMEOUT / 2
@@ -9,12 +10,6 @@ SEPARATE_TIMEOUT = ACK_TIMEOUT / 2
 ACK_RANDOM_FACTOR = 1.5
 
 MAX_RETRANSMIT = 4
-
-NSTART = 1
-
-DEFAULT_LEISURE = 5
-
-PROBING_RATE = 1
 
 MAX_TRANSMIT_SPAN = ACK_TIMEOUT * (pow(2, (MAX_RETRANSMIT + 1)) - 1) * ACK_RANDOM_FACTOR
 
@@ -26,65 +21,65 @@ MAX_RTT = (2 * MAX_LATENCY) + PROCESSING_DELAY
 
 EXCHANGE_LIFETIME = MAX_TRANSMIT_SPAN + (2 * MAX_LATENCY) + PROCESSING_DELAY
 
-NON_LIFETIME = MAX_TRANSMIT_SPAN + MAX_LATENCY
-
 DISCOVERY_URL = ".well-known/core"
 
 ALL_COAP_NODES = "224.0.1.187"
 
-################### Message Format ###################
+MAX_PAYLOAD = 1024
 
-## number of bits used for the encoding of the CoAP version field.
+'''  Message Format '''
+
+# number of bits used for the encoding of the CoAP version field.
 VERSION_BITS = 2
 
-## number of bits used for the encoding of the message type field.
+# number of bits used for the encoding of the message type field.
 TYPE_BITS = 2
 
-## number of bits used for the encoding of the token length field.
+# number of bits used for the encoding of the token length field.
 TOKEN_LENGTH_BITS = 4
 
-## number of bits used for the encoding of the request method/response code field.
+# number of bits used for the encoding of the request method/response code field.
 CODE_BITS = 8
 
-## number of bits used for the encoding of the message ID.
+# number of bits used for the encoding of the message ID.
 MESSAGE_ID_BITS = 16
 
-## number of bits used for the encoding of the option delta field.
+# number of bits used for the encoding of the option delta field.
 OPTION_DELTA_BITS = 4
 
-## number of bits used for the encoding of the option delta field.
+# number of bits used for the encoding of the option delta field.
 OPTION_LENGTH_BITS = 4
 
-## One byte which indicates indicates the end of options and the start of the payload.
+# One byte which indicates indicates the end of options and the start of the payload.
 PAYLOAD_MARKER = 0xFF
 
-## CoAP version supported by this Californium version.
+# CoAP version supported by this Californium version.
 VERSION = 1
 
-## The lowest value of a request code.
+# The lowest value of a request code.
 REQUEST_CODE_LOWER_BOUND = 1
 
-## The highest value of a request code.
+# The highest value of a request code.
 REQUEST_CODE_UPPER_BOUND = 31
 
-## The lowest value of a response code.
+# The lowest value of a response code.
 RESPONSE_CODE_LOWER_BOUND = 64
 
-## The highest value of a response code.
+# The highest value of a response code.
 RESPONSE_CODE_UPPER_BOUND = 191
 
-################### Option ###################
+''' Option '''
 
-## The integer.
+# The integer.
 INTEGER = 0
-## The string.
+# The string.
 STRING = 1
-## The opaque.
+# The opaque.
 OPAQUE = 2
-## The unknown.
+# The unknown.
 UNKNOWN = 3
 
-#(NAME, VALUE_TYPE, REPEATABLE)
+# (NAME, VALUE_TYPE, REPEATABLE)
 options = {
     0: ('Reserved', UNKNOWN, True, None),
     1: ('If-Match', OPAQUE, True, None),
@@ -109,7 +104,7 @@ options = {
 
 inv_options = {v[0]: k for k, v in options.iteritems()}
 
-################### CoAP Code ###################
+################## CoAP Code ###################
 codes = {
     0: 'EMPTY',
     1: 'GET',
@@ -119,7 +114,7 @@ codes = {
 }
 
 inv_codes = {v: k for k, v in codes.iteritems()}
-################### CoAP Type ###################
+################## CoAP Type ###################
 types = {
     0: 'CON',
     1: 'NON',
@@ -128,7 +123,7 @@ types = {
 }
 
 inv_types = {v: k for k, v in types.iteritems()}
-################### CoAP Response ###################
+################## CoAP Response ###################
 responses = {
     "CREATED": 65,
     "DELETED": 66,
@@ -156,7 +151,7 @@ responses = {
 }
 
 inv_responses = {v: k for k, v in responses.iteritems()}
-################### CoAP Content-Type ###################
+################## CoAP Content-Type ###################
 content_types = {
     0: "text/plain",
     40: "application/link-format",
@@ -167,7 +162,6 @@ content_types = {
 }
 
 inv_content_types = {v: k for k, v in content_types.iteritems()}
-
 
 corelinkformat = {
     "ct": "content_type",
