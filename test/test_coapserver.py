@@ -119,11 +119,11 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid
+        req._mid = self.current_mid
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected.mid = self.current_mid
+        expected._mid = self.current_mid
         expected.code = defines.responses["CONTENT"]
         expected.token = None
         expected.payload = "Storage Resource for PUT, POST and DELETE"
@@ -144,11 +144,11 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid + 1
+        req._mid = self.current_mid + 1
 
         expected = Response()
         expected.type = defines.inv_types["NON"]
-        expected.mid = self.current_mid + 1
+        expected._mid = self.current_mid + 1
         expected.code = defines.responses["NOT_FOUND"]
         expected.token = None
         expected.payload = None
@@ -169,12 +169,12 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['POST']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid + 2
+        req._mid = self.current_mid + 2
         req.payload = "Created"
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected.mid = self.current_mid + 2
+        expected._mid = self.current_mid + 2
         expected.code = defines.responses["CREATED"]
         expected.token = None
         expected.payload = None
@@ -195,11 +195,11 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid + 3
+        req._mid = self.current_mid + 3
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected.mid = self.current_mid + 3
+        expected._mid = self.current_mid + 3
         expected.code = defines.responses["CONTENT"]
         expected.token = None
         expected.payload = "Created"
@@ -218,11 +218,11 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid
+        req._mid = self.current_mid
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected.mid = self.current_mid
+        expected._mid = self.current_mid
         expected.code = None
         expected.token = None
         expected.payload = None
@@ -243,11 +243,11 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid
+        req._mid = self.current_mid
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected.mid = self.current_mid
+        expected._mid = self.current_mid
         expected.code = defines.responses["CONTENT"]
         expected.token = None
         expected.payload = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras sollicitudin fermentum ornare." \
@@ -271,7 +271,7 @@ class Tests(unittest.TestCase):
         req2.code = defines.inv_codes['GET']
         req2.uri_path = path
         req2.type = defines.inv_types["CON"]
-        req2.mid = self.current_mid + 1
+        req2._mid = self.current_mid + 1
         option = Option()
         option.number = defines.inv_options["Block2"]
         option.value = 22
@@ -280,7 +280,7 @@ class Tests(unittest.TestCase):
         expected2 = Response()
         expected2.type = defines.inv_types["ACK"]
         expected2.code = defines.responses["CONTENT"]
-        expected2.mid = self.current_mid + 1
+        expected2._mid = self.current_mid + 1
         expected2.token = None
         expected2.payload = "cies lorem fermentum at. Vivamus sit amet ornare neque, a imperdiet nisl. Quisque a " \
                             "iaculis libero, id tempus lacus. Aenean convallis est non justo consectetur, a hendrerit " \
@@ -314,7 +314,7 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.mid = self.current_mid + 4
+        req._mid = self.current_mid + 4
 
         expected = Response()
         expected.type = defines.inv_types["CON"]

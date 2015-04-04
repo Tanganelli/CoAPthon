@@ -99,18 +99,6 @@ class Request(Message):
         return value
 
     @property
-    def content_type(self):
-        """
-        Get the Content-Type option of a request.
-
-        :return: the Content-Type value or None if not specified by the request
-        """
-        for option in self.options:
-            if option.number == defines.inv_options['Content-Type']:
-                return option.value
-        return None
-
-    @property
     def accept(self):
         """
         Get the Accept option of a request.
@@ -121,19 +109,6 @@ class Request(Message):
             if option.number == defines.inv_options['Accept']:
                 return option.value
         return None
-
-    @property
-    def etag(self):
-        """
-        Get the ETag option of a request.
-
-        :return: the ETag values or [] if not specified by the request
-        """
-        value = []
-        for option in self.options:
-            if option.number == defines.inv_options['ETag']:
-                value.append(option.value)
-        return value
 
     @property
     def if_match(self):
@@ -187,6 +162,11 @@ class Request(Message):
 
     @proxy_uri.setter
     def proxy_uri(self, uri):
+        """
+        Set the Proxy-Uri option of a request.
+
+        :param uri: the Proxy-Uri values
+        """
         option = Option()
         option.number = defines.inv_options['Proxy-Uri']
         option.value = str(uri)

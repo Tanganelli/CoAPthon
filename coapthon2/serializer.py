@@ -1,4 +1,3 @@
-import sys
 from bitstring import BitStream, ReadError, pack, BitArray
 from twisted.python import log
 from coapthon2 import defines
@@ -50,7 +49,7 @@ class Serializer(object):
         message.destination = None
         message.version = version
         message.type = message_type
-        message.mid = mid
+        message._mid = mid
 
         if token_length > 0:
             message.token = self._reader.read(token_length * 8).bytes
@@ -127,9 +126,7 @@ class Serializer(object):
         if nibble <= 12:
             return nibble
         elif nibble == 13:
-            #self._reader.pos += 4
             tmp = self._reader.read(8).uint + 13
-            #self._reader.pos -= 12
             return tmp
         elif nibble == 14:
             return self._reader.read(16).uint + 269
@@ -247,63 +244,13 @@ class Serializer(object):
         else:
             raise ValueError("Unsupported option delta " + optionvalue)
 
-    def as_sorted_list(self, options):
+    @staticmethod
+    def as_sorted_list(options):
         """
         Returns all options in a list sorted according to their option numbers.
 
         :return: the sorted list
         """
-        '''
-        if self._if_match_list:
-            for value in self._if_match_list:
-                options.append(Option(OptionNumberRegistry.IF_MATCH, value))
-        if self.uri_host is not None:
-            options.append(Option(OptionNumberRegistry.URI_HOST, self.uri_host))
-        if self._etag_list:
-            for value in self._etag_list:
-                options.append(Option(OptionNumberRegistry.ETAG, value))
-        if self.if_none_match is not False:
-            options.append(Option(OptionNumberRegistry.IF_NONE_MATCH))
-        if self.uri_port is not None:
-            options.append(Option(OptionNumberRegistry.URI_PORT, self.uri_port))
-        if self._location_path_list:
-            for s in self._location_path_list:
-                options.append(Option(OptionNumberRegistry.LOCATION_PATH, s))
-        if self._uri_path_list:
-            for s in self._uri_path_list:
-                options.append(Option(OptionNumberRegistry.URI_PATH, s))
-        if self.content_format is not None:
-            options.append(Option(OptionNumberRegistry.CONTENT_TYPE, val=self.content_format))
-        if self.max_age is not None and self.max_age != Default.DEFAULT_MAX_AGE:
-            options.append(Option(OptionNumberRegistry.MAX_AGE, self.max_age))
-        if self._uri_query_list:
-            for s in self._uri_query_list:
-                options.append(Option(OptionNumberRegistry.URI_QUERY, s))
-        if self.accept is not None:
-            options.append(Option(OptionNumberRegistry.ACCEPT, self.accept))
-        if self._location_query_list:
-            for s in self._location_query_list:
-                options.append(Option(OptionNumberRegistry.LOCATION_QUERY, s))
-        if self.proxy_uri is not None:
-            options.append(Option(OptionNumberRegistry.PROXY_URI, self.proxy_uri))
-        if self.proxy_scheme is not None:
-            options.append(Option(OptionNumberRegistry.PROXY_SCHEME, self.proxy_scheme))
-        if self.size1 is not None:
-            options.append(Option(OptionNumberRegistry.SIZE1, self.size1))
-
-        if self.block_1 is not None:
-            options.append(Option(OptionNumberRegistry.BLOCK1, self.block_1.value))
-        if self.block_2 is not None:
-            options.append(Option(OptionNumberRegistry.BLOCK2, self.block_2.value))
-
-        if self.observe is not None:
-            options.append(Option(OptionNumberRegistry.OBSERVE, self.observe))
-
-        if self._others:
-            for s in self._others:
-                options.append(s)'''
-
-        ## TODO check sorting
         if len(options) > 0:
             options.sort(None, key=lambda o: o.number)
         return options

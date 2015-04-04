@@ -93,6 +93,11 @@ class Option(object):
 
     @property
     def safe(self):
+        """
+        Check if option is safe.
+
+        :return: True if safe, False otherwise
+        """
         if self._number == defines.inv_options["Uri-Host"] or self._number == defines.inv_options["Uri-Port"] \
                 or self._number == defines.inv_options["Uri-Path"] or self._number == defines.inv_options["Max-Age"] \
                 or self._number == defines.inv_options["Uri-Query"] \
@@ -103,6 +108,11 @@ class Option(object):
 
     @property
     def name(self):
+        """
+        Gets option name.
+
+        :return: the name of the oprion
+        """
         return defines.options[self._number][0]
 
     def __str__(self):
@@ -118,4 +128,10 @@ class Option(object):
             return name + ": " + str(self.value) + "\n"
 
     def __eq__(self, other):
+        """
+        Compare options.
+
+        :param other: the option to compare
+        :return: True if equal
+        """
         return self.__dict__ == other.__dict__

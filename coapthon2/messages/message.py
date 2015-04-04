@@ -16,9 +16,9 @@ class Message(object):
 
         """
         # The type. One of {CON, NON, ACK or RST}.
-        self.type = None
+        self._type = None
         # The 16-bit Message Identification.
-        self.mid = None
+        self._mid = None
         # The token, a 0-8 byte array.
         self.token = None
         # The set of options of this message.
@@ -87,10 +87,57 @@ class Message(object):
             pass
 
     def del_option_name(self, name):
+        """
+        Delete an option from the message by name
+
+        :param name: option name
+        """
         for o in self._options:
             assert isinstance(o, Option)
             if o.number == defines.inv_options[name]:
                 self._options.remove(o)
+
+    @property
+    def mid(self):
+        """
+        Return the mid of the message.
+
+        :return: the MID
+        """
+        return self._mid
+
+    @mid.setter
+    def mid(self, m):
+        """
+        Sets the MID of the message.
+
+        :param m: the MID
+        :raise AttributeError: if m is not int or cannot be represented on 16 bits.
+        """
+        if not isinstance(m, int) or m > 65536:
+            raise AttributeError
+        self._mid = m
+
+    @property
+    def type(self):
+        """
+        Return the type of the message.
+
+        :return: the type
+        """
+        return self._type
+
+    @type.setter
+    def type(self, t):
+        """
+        Sets the type of the message.
+
+        :param t: the type
+        :raise AttributeError: if t is not a valid type
+        """
+        if not isinstance(t, int) or t not in defines.types:
+            raise AttributeError
+        self._type = t
 
     @property
     def duplicated(self):
@@ -200,7 +247,7 @@ class Message(object):
         ack = Message()
         types = {v: k for k, v in defines.types.iteritems()}
         ack.type = types['ACK']
-        ack.mid = message.mid
+        ack._mid = message.mid
         ack.code = 0
         ack.token = None
         ack.destination = message.source
@@ -217,7 +264,7 @@ class Message(object):
         rst = Message()
         types = {v: k for k, v in defines.types.iteritems()}
         rst.type = types['RST']
-        rst.mid = message.mid
+        rst._mid = message.mid
         rst.token = None
         rst.code = 0
         rst.destination = message.source
@@ -232,7 +279,7 @@ class Message(object):
         msg = "Source: " + str(self.source) + "\n"
         msg += "Destination: " + str(self.destination) + "\n"
         msg += "Type: " + str(defines.types[self.type]) + "\n"
-        msg += "MID: " + str(self.mid) + "\n"
+        msg += "MID: " + str(self._mid) + "\n"
         if self.code is None:
             self.code = 0
         try:
@@ -245,3 +292,62 @@ class Message(object):
         msg += "Payload: " + "\n"
         msg += str(self.payload) + "\n"
         return msg
+
+    @property
+    def etag(self):
+        """
+        Get the ETag option of the message.
+
+        :return: the ETag values or [] if not specified by the request
+        """
+        value = []
+        for option in self.options:
+            if option.number == defines.inv_options['ETag']:
+                value.append(option.value)
+        return value
+
+    @etag.setter
+    def etag(self, etag):
+        """
+        Add an ETag option to the message.
+
+        :param etag: the etag
+        """
+        option = Option()
+        option.number = defines.inv_options['ETag']
+        option.value = etag
+        self.add_option(option)
+
+    @etag.deleter
+    def etag(self):
+        """
+        Delete an ETag from a message.
+
+        """
+        self.del_option_name("ETag")
+
+    @property
+    def content_type(self):
+        """
+        Get the Content-Type option of a response.
+
+        :return: the Content-Type value or 0 if not specified by the response
+        """
+        value = 0
+        for option in self.options:
+            if option.number == defines.inv_options['Content-Type']:
+                value = int(option.value)
+        return value
+
+    @content_type.setter
+    def content_type(self, content_type):
+        """
+        Set the Content-Type option of a response.
+
+        :type content_type: int
+        :param content_type: the Content-Type
+        """
+        option = Option()
+        option.number = defines.inv_options['Content-Type']
+        option.value = int(content_type)
+        self.add_option(option)

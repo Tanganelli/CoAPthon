@@ -72,7 +72,7 @@ class HelperClientSynchronous(object):
         if retransmit_count < defines.MAX_RETRANSMIT and (not request.acknowledged and not request.rejected):
             retransmit_count += 1
             self.sent[key] = (request, time.time())
-            self.send(request)
+            self.send(request, request.destination)
             future_time *= 2
             self.call_id[key] = (threading.Timer(future_time, self.retransmit,
                                                  (request, host, port, future_time)), retransmit_count)
@@ -181,6 +181,7 @@ class HelperClientSynchronous(object):
             self.condition.acquire()
             self.condition.notify()
             self.condition.release()
+
     @staticmethod
     def parse_path(path):
         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
@@ -309,6 +310,7 @@ class HelperClientSynchronous(object):
             request = args[0]
             assert(isinstance(request, Request))
             endpoint = request.destination
+            ip, port = endpoint
         else:
             request = Request()
             path = kwargs['path']
@@ -343,6 +345,7 @@ class HelperClientSynchronous(object):
             assert(isinstance(request, Request))
             endpoint = request.destination
             payload = request.payload
+            ip, port = endpoint
         else:
             request = Request()
             path = kwargs['path']
@@ -378,6 +381,7 @@ class HelperClientSynchronous(object):
             request = args[0]
             assert(isinstance(request, Request))
             endpoint = request.destination
+            ip, port = endpoint
             payload = request.payload
         else:
             request = Request()
@@ -414,6 +418,7 @@ class HelperClientSynchronous(object):
             request = args[0]
             assert(isinstance(request, Request))
             endpoint = request.destination
+            ip, port = endpoint
         else:
             request = Request()
             path = kwargs['path']

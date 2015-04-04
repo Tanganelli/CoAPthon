@@ -1,4 +1,3 @@
-from bitstring import Bits
 from coapthon2 import defines
 
 __author__ = 'Giacomo Tanganelli'
@@ -20,6 +19,12 @@ class BlockwiseLayer(object):
         self._parent = parent
 
     def handle_request(self, request):
+        """
+        Store Blockwise parameter required by clients
+
+        :param request: the request message
+        :return: M bit, request
+        """
         for option in request.options:
             if option.number == defines.inv_options["Block2"]:
                 host, port = request.source
@@ -43,11 +48,24 @@ class BlockwiseLayer(object):
         return True, request
 
     def start_block2(self, request):
+        """
+        Initialize a blockwise response. Used if payload > 1024
+
+        :param request: the request message
+        """
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.token))
         self._parent.blockwise[key] = (2, 0, 0, 1, 6)  # 6 == 2^10 = 1024
 
     def handle_response(self, key, response, resource):
+        """
+        Handle Blockwise in responses.
+
+        :param key: key parameter to search inside the disctionary
+        :param response: the response message
+        :param resource: the request message
+        :return: the new response
+        """
         block, byte, num, m, size = self._parent.blockwise[key]
         payload = resource.payload
         if block == 2:
@@ -74,6 +92,12 @@ class BlockwiseLayer(object):
 
     @staticmethod
     def parse_blockwise(value):
+        """
+        Parse Blockwise option.
+
+        :param value: option value
+        :return: num, m, size
+        """
         length = value.length - 4
         num, m, size = value.unpack("uint:" + str(length) + ", bin:1, uint:3")
         return num, int(m), size

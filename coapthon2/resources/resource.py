@@ -163,7 +163,7 @@ class Resource(object):
 
     @attributes.setter
     def attributes(self, att):
-        #TODO assert
+        # TODO assert
         """
         Set the CoRE Link Format attribute of the resource.
 

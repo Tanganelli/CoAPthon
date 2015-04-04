@@ -18,65 +18,6 @@ class Response(Message):
         super(Response, self).__init__()
 
     @property
-    def content_type(self):
-        """
-        Get the Content-Type option of a response.
-
-        :return: the Content-Type value or 0 if not specified by the response
-        """
-        value = 0
-        for option in self.options:
-            if option.number == defines.inv_options['Content-Type']:
-                value = int(option.value)
-        return value
-
-    @content_type.setter
-    def content_type(self, content_type):
-        """
-        Set the Content-Type option of a response.
-
-        :type content_type: int
-        :param content_type: the Content-Type
-        """
-        option = Option()
-        option.number = defines.inv_options['Content-Type']
-        option.value = int(content_type)
-        self.add_option(option)
-
-    @property
-    def etag(self):
-        """
-        Get the ETag option of a response.
-
-        :return: the ETag values or [] if not specified by the response
-        """
-        value = []
-        for option in self.options:
-            if option.number == defines.inv_options['ETag']:
-                value.append(option.value)
-        return value
-
-    @etag.setter
-    def etag(self, etag):
-        """
-        Add an ETag option to the response.
-
-        :param etag: the etag
-        """
-        option = Option()
-        option.number = defines.inv_options['ETag']
-        option.value = etag
-        self.add_option(option)
-
-    @etag.deleter
-    def etag(self):
-        """
-        Delete an ETag from a response.
-
-        """
-        self.del_option_name("ETag")
-
-    @property
     def location_path(self):
         """
         Get the Location-Path option of a response.
@@ -103,7 +44,6 @@ class Response(Message):
             option.number = defines.inv_options['Location-Path']
             option.value = o
             self.add_option(option)
-            #self.options.append(option)
 
     @property
     def location_query(self):

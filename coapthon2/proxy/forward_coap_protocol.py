@@ -45,9 +45,9 @@ class ProxyCoAP(CoAP):
         Called after protocol has started listening.
         """
         # Set the TTL>1 so multicast will cross router hops:
-        #self.transport.setTTL(5)
+        # self.transport.setTTL(5)
         # Join a specific multicast group:
-        #self.transport.joinGroup(defines.ALL_COAP_NODES)
+        # self.transport.joinGroup(defines.ALL_COAP_NODES)
 
     def datagramReceived(self, data, (host, port)):
         """
@@ -107,7 +107,7 @@ class ProxyCoAP(CoAP):
         schema = uri.split("://")
         try:
             path = schema[1]
-            #schema = schema[0]
+            # schema = schema[0]
             host_pos = path.index("/")
             destination = path[:host_pos]
             destination = destination.split(":")
@@ -251,7 +251,7 @@ class ProxyCoAP(CoAP):
             host, port = request.source
             response.destination = request.source
             response.token = request.token
-            response.mid = self._currentMID
+            response._mid = self._currentMID
             response.type = defines.inv_types["NON"]
             response.code = defines.responses["GATEWAY_TIMEOUT"]
             key = hash(str(host) + str(port) + str(response.token))

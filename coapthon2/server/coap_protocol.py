@@ -216,6 +216,15 @@ class CoAP(DatagramProtocol):
         """
         self._currentMID = int(mid)
 
+    def start_seprate_timer(self, request):
+        return self._message_layer.start_separate_timer(request)
+
+    def stop_seprate_timer(self, timer):
+        return self._message_layer.stop_separate_timer(timer)
+
+    def send_separate(self, request):
+        self._message_layer.send_separate(request)
+
     def blockwise_transfer(self, request):
         return self._blockwise_layer.handle_request(request)
 
@@ -285,7 +294,8 @@ class CoAP(DatagramProtocol):
         """
         Render a PUT request.
 
-        :param path: the path
+        :type node: coapthon2.utils.Tree
+        :param node: the node which has the resource
         :param request: the request
         :param response: the response
         :return: the response
@@ -330,8 +340,7 @@ class CoAP(DatagramProtocol):
         Finds the observers that must be notified about the update of the observed resource
         and invoke the notification procedure in different threads.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :param resource: the node resource updated
         """
         commands = self._observe_layer.notify(resource)
         if commands is not None:
@@ -342,8 +351,7 @@ class CoAP(DatagramProtocol):
         Finds the observers that must be notified about the delete of the observed resource
         and invoke the notification procedure in different threads.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :param resource: the node resource deleted
         """
         commands = self._observe_layer.notify_deletion(resource)
         if commands is not None:
@@ -377,7 +385,7 @@ class CoAP(DatagramProtocol):
         Create the notification message for deleted resource and sends it from the main Thread.
 
 
-        :type t: (resource, host, port, token)
+        :type t: (resource, request, notification)
         :param t: the arguments of the notification message
         :return: the notification message
         """
@@ -389,8 +397,9 @@ class CoAP(DatagramProtocol):
         """
         Prepare retrasmission message and schedule it for the future.
 
-        :type t: (Response, Resource) or Response
-        :param t: the response and the resource interested in the retrasmission procedure
+        :param request:  the request
+        :param response: the response
+        :param resource: the resource
         """
         host, port = response.destination
         if response.type == defines.inv_types['CON']:

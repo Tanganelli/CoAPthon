@@ -29,8 +29,8 @@ class ObserveLayer(object):
         """
         Finds the observers that must be notified about the cancellation of the observed resource.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :type resource: coapthon2.resources.resource.Resource
+        :param resource: the deleted resource
         :return: the list of commands that must be executed to notify clients
         """
         assert isinstance(resource, Resource)
@@ -42,7 +42,7 @@ class ObserveLayer(object):
         commands = []
         for item in observers.keys():
             old, request, response = observers[item]
-            #send notification
+            # send notification
             commands.append((self._parent.prepare_notification_deletion(), [(resource, request, response)], {}))
             observers[item] = (now, request, response)
         resource.observe_count += 1
@@ -78,7 +78,7 @@ class ObserveLayer(object):
         Create the notification message.
 
 
-        :type t: (resource, host, port, token)
+        :type t: (resource, request, old_response)
         :param t: the arguments of the notification message
         :return: the notification message
         """
@@ -129,7 +129,7 @@ class ObserveLayer(object):
         Create the notification message for deleted resource.
 
 
-        :type t: (resource, host, port, token)
+        :type t: (resource, request, old_response)
         :param t: the arguments of the notification message
         :return: the notification message
         """
@@ -156,7 +156,7 @@ class ObserveLayer(object):
         """
         Sends a notification message.
 
-        :param t: (the notification message, the resource)
+        :param t: (the resource, request, the notification message)
         """
         assert isinstance(t, tuple)
         resource, request, notification_message = t
@@ -175,6 +175,7 @@ class ObserveLayer(object):
         Add an observer to a resource and sets the Observe option in the response.
 
         :param resource: the resource of interest
+        :param request: the request
         :param response: the response
         :return: response
         """
@@ -249,6 +250,7 @@ class ObserveLayer(object):
         Remove an observer for a certain resource.
 
         :param response: the response message which has not been acknowledge
+        :param request: the request
         :param resource: the resource
         """
         log.msg("Remove observer for the resource")

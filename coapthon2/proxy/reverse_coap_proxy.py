@@ -87,7 +87,7 @@ class ReverseProxyCoAP(ProxyCoAP):
         server = (host, port)
         request.destination = (host, port)
         request.type = defines.inv_types["CON"]
-        request.mid = (self._currentMID + 1) % (1 << 16)
+        request._mid = (self._currentMID + 1) % (1 << 16)
         request.code = defines.inv_codes["GET"]
         uri = "/" + defines.DISCOVERY_URL
         request.proxy_uri = uri
@@ -204,10 +204,10 @@ class ReverseProxyCoAP(ProxyCoAP):
             segments = segments[1].split(":")
             host = segments[0]
             port = int(segments[1])
-            #new_request.destination = (host, port)
+            # new_request.destination = (host, port)
             new_request.source = request.source
             new_request.type = request.type
-            new_request.mid = (self._currentMID + 1) % (1 << 16)
+            new_request._mid = (self._currentMID + 1) % (1 << 16)
             new_request.code = request.code
             new_request.proxy_uri = "coap://" + str(host) + ":" + str(port) + "/" + path
             new_request.payload = request.payload
@@ -221,4 +221,3 @@ class ReverseProxyCoAP(ProxyCoAP):
                 new_request.add_option(option)
             return new_request
         return None
-

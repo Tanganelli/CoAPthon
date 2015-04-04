@@ -104,7 +104,7 @@ options = {
 
 inv_options = {v[0]: k for k, v in options.iteritems()}
 
-################## CoAP Code ###################
+# CoAP Code
 codes = {
     0: 'EMPTY',
     1: 'GET',
@@ -114,7 +114,7 @@ codes = {
 }
 
 inv_codes = {v: k for k, v in codes.iteritems()}
-################## CoAP Type ###################
+# CoAP Type
 types = {
     0: 'CON',
     1: 'NON',
@@ -123,7 +123,7 @@ types = {
 }
 
 inv_types = {v: k for k, v in types.iteritems()}
-################## CoAP Response ###################
+# CoAP Response
 responses = {
     "CREATED": 65,
     "DELETED": 66,
@@ -151,7 +151,7 @@ responses = {
 }
 
 inv_responses = {v: k for k, v in responses.iteritems()}
-################## CoAP Content-Type ###################
+# CoAP Content-Type
 content_types = {
     0: "text/plain",
     40: "application/link-format",

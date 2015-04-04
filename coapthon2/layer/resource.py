@@ -33,9 +33,9 @@ class ResourceLayer(object):
         """
         method = getattr(node.value, "render_POST", None)
         if hasattr(method, '__call__'):
-            timer = self._parent._message_layer.start_separate_timer(request)
+            timer = self._parent.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent._message_layer.stop_separate_timer(timer)
+            stopped = self._parent.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -52,7 +52,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent._message_layer.send_separate(request)
+                    self._parent.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -106,9 +106,9 @@ class ResourceLayer(object):
         """
         method = getattr(old.value, "render_POST", None)
         if hasattr(method, '__call__'):
-            timer = self._parent._message_layer.start_separate_timer(request)
+            timer = self._parent.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent._message_layer.stop_separate_timer(timer)
+            stopped = self._parent.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -125,7 +125,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent._message_layer.send_separate(request)
+                    self._parent.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -203,9 +203,9 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
         method = getattr(resource, "render_PUT", None)
         if hasattr(method, '__call__'):
-            timer = self._parent._message_layer.start_separate_timer(request)
+            timer = self._parent.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent._message_layer.stop_separate_timer(timer)
+            stopped = self._parent.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -221,7 +221,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent._message_layer.send_separate(request)
+                    self._parent.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -236,13 +236,13 @@ class ResourceLayer(object):
             response.token = request.token
             # Blockwise
             response, resource = self._parent.blockwise_response(request, response, resource)
-            #TODO check PUT Blockwise
+            # TODO check PUT Blockwise
             # Observe
             self._parent.notify(resource)
 
-            #Reliability
+            # Reliability
             response = self._parent.reliability_response(request, response)
-            #Matcher
+            # Matcher
             response = self._parent.matcher_response(response)
 
             node.value = resource
@@ -263,9 +263,9 @@ class ResourceLayer(object):
         assert isinstance(node, Tree)
         method = getattr(node.value, 'render_DELETE', None)
         if hasattr(method, '__call__'):
-            timer = self._parent._message_layer.start_separate_timer(request)
+            timer = self._parent.start_separate_timer(request)
             ret = method(request=request)
-            stopped = self._parent._message_layer.stop_separate_timer(timer)
+            self._parent.stop_separate_timer(timer)
             if ret != -1:
                 parent = node.parent
                 assert isinstance(parent, Tree)
@@ -279,10 +279,9 @@ class ResourceLayer(object):
                 response.payload = None
                 # Token
                 response.token = request.token
-                #TODO Blockwise
-                #Reliability
+                # Reliability
                 response = self._parent.reliability_response(request, response)
-                #Matcher
+                # Matcher
                 response = self._parent.matcher_response(response)
                 return response
             elif ret == -1:
@@ -304,15 +303,15 @@ class ResourceLayer(object):
         method = getattr(resource, 'render_GET', None)
         if hasattr(method, '__call__'):
             resource.required_content_type = None
-            #Accept
+            # Accept
             if request.accept is not None:
                 resource.required_content_type = request.accept
                 if resource.required_content_type in defines.content_types:
                     response.content_type = resource.required_content_type
             # Render_GET
-            timer = self._parent._message_layer.start_separate_timer(request)
+            timer = self._parent.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent._message_layer.stop_separate_timer(timer)
+            stopped = self._parent.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -328,7 +327,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent._message_layer.send_separate(request)
+                    self._parent.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):

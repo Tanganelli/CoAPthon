@@ -55,9 +55,9 @@ class CoAP(DatagramProtocol):
             data = socket.gethostbyname(server[0])
             self.server = (data, server[1])
 
-        #defer = reactor.resolve('coap.me')
-        #defer.addCallback(self.start)
-        #self.server = (None, 5683)
+        # defer = reactor.resolve('coap.me')
+        # defer.addCallback(self.start)
+        # self.server = (None, 5683)
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
@@ -65,6 +65,14 @@ class CoAP(DatagramProtocol):
         self.operations = []
         self.l = None
         self.transport = None
+
+    @property
+    def current_mid(self):
+        return self._currentMID
+
+    @current_mid.setter
+    def current_mid(self, c):
+        self._currentMID = c
 
     def set_operations(self, operations):
         for op in operations:
@@ -113,7 +121,7 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
-        #self.transport.connect(host, self.server[1])
+        # self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
 
@@ -248,7 +256,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(client_callback, tuple):
             client_callback = client_callback[0]
         if response is not None:
-            #self.parse_core_link_format(response.payload)
+            # self.parse_core_link_format(response.payload)
             client_callback(response)
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
@@ -320,7 +328,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(client_callback, tuple):
             client_callback = client_callback[0]
         if response is not None:
-            #self.parse_core_link_format(response.payload)
+            # self.parse_core_link_format(response.payload)
             client_callback(response)
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
@@ -362,7 +370,7 @@ class CoAP(DatagramProtocol):
             client_callback = client_callback[0]
         if response is not None:
             if response.observe != 0:
-                #TODO add observing results
+                # TODO add observing results
                 host, port = response.source
                 key = hash(str(host) + str(port) + str(response.token))
                 self.relation[key] = (response, time.time(), client_callback)
@@ -420,7 +428,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(client_callback, tuple):
             client_callback = client_callback[0]
         if response is not None:
-            #self.parse_core_link_format(response.payload)
+            # self.parse_core_link_format(response.payload)
             client_callback(response)
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
@@ -459,7 +467,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(client_callback, tuple):
             client_callback = client_callback[0]
         if response is not None:
-            #self.parse_core_link_format(response.payload)
+            # self.parse_core_link_format(response.payload)
             client_callback(response)
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
@@ -497,7 +505,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(client_callback, tuple):
             client_callback = client_callback[0]
         if response is not None:
-            #self.parse_core_link_format(response.payload)
+            # self.parse_core_link_format(response.payload)
             client_callback(response)
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
@@ -541,11 +549,11 @@ class HelperClient(object):
 
     @property
     def starting_mid(self):
-        return self.protocol._currentMID
+        return self.protocol.current_mid
 
     @starting_mid.setter
     def starting_mid(self, mid):
-        self.protocol._currentMID = mid
+        self.protocol.current_mid = mid
 
     def start(self, operations):
         self.protocol.set_operations(operations)
@@ -554,5 +562,3 @@ class HelperClient(object):
             reactor.run()
         except twisted.internet.error.ReactorAlreadyRunning:
             log.msg("Reactor already started")
-
-

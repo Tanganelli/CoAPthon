@@ -21,6 +21,13 @@ def bit_len(int_type):
 
 class Tree(object):
     def __init__(self, value, parent=None, children=None):
+        """
+        Create a node.
+
+        :param value: the node value
+        :param parent: the parent of the node
+        :param children: the children of the node
+        """
         self.value = value
         self.parent = parent
         if children is None:
@@ -40,6 +47,13 @@ class Tree(object):
         return msg[1:]
 
     def find_complete_last(self, paths):
+        """
+        Find a node and its last path
+
+        :type paths: list of string
+        :param paths: the path as list of string item
+        :return: the node and its last path
+        """
         start = self
         res = None
         for p in paths:
@@ -51,6 +65,13 @@ class Tree(object):
         return res, None
 
     def find_complete(self, path):
+        """
+        Find a node based on a path.
+
+        :type path: sting
+        :param path: the path to search for
+        :return: the node or None
+        """
         paths = path.split("/")
         start = self
         res = None
@@ -63,6 +84,13 @@ class Tree(object):
         return res
 
     def find(self, path, tree=None):
+        """
+        Search path in the children
+
+        :param path: the path to search for
+        :param tree: the starting node, if None then tree=self
+        :return: the children or None
+        """
         if tree is None:
             i = self
         else:
@@ -71,6 +99,12 @@ class Tree(object):
         return i.children.get(path, None)
 
     def add_child(self, resource):
+        """
+        Add a child to the children of the node.
+
+        :param resource: the resource to add
+        :return:the new node
+        """
         if resource.path not in self.children:
             new = Tree(resource, self)
             self.children[resource.path] = new
@@ -80,6 +114,13 @@ class Tree(object):
         return new
 
     def dump(self, msg="", tab=""):
+        """
+        Recursive function, return a formatted string representation of the tree.
+
+        :param msg: the message to be printed
+        :param tab: the tab
+        :return: the string representation
+        """
         msg += tab + "[" + self.value.path + " Name: " + self.value.name + "]\n"
         for i in self.children:
             v = self.children.get(i, None)
@@ -90,6 +131,13 @@ class Tree(object):
         return msg
 
     def corelinkformat(self, msg="", parent=""):
+        """
+        Recursive function, return a formatted string representation of the corelinkformat in the tree.
+
+        :param msg: the message to be printed
+        :param parent: the parent node
+        :return: the string
+        """
         if self.value.name != "root":
             parent += self.value.path + "/"
             msg += "<" + parent[:-1] + ">;"
@@ -111,6 +159,12 @@ class Tree(object):
         return msg
 
     def del_child(self, node):
+        """
+        Recursive function. Delete all the children of a node
+
+        :param node: the node
+        :return: nothing
+        """
         assert isinstance(node, Tree)
         for k in node.children:
             v = node.children.get(k, None)

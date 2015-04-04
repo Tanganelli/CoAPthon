@@ -115,16 +115,33 @@ class MessageLayer(object):
         self._parent.sent[key] = (response, time.time())
 
     def start_separate_timer(self, request):
+        """
+        Start separate Timer.
+
+        :param request: the request
+        :return: the timer object
+        """
         t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
         t.start()
         return t
 
     @staticmethod
     def stop_separate_timer(timer):
+        """
+        Stop separate timer.
+
+        :param timer: the timer object
+        :return: True
+        """
         timer.cancel()
         return True
 
     def send_separate(self, request):
+        """
+        Send separate acknowledgement, if required.
+
+        :param request: the request
+        """
         if request.type == defines.inv_types["CON"]:
             self.send_ack(request)
 
@@ -133,7 +150,7 @@ class MessageLayer(object):
         """
         Sends an ACK message for the request.
 
-        :param args: [request]
+        :param request: [request] or request
         """
         if isinstance(request, list):
             request = request[0]
