@@ -1,8 +1,8 @@
 #!/bin/python
 import httplib
 from twisted.internet import reactor
-from coapthon2.resources.resource import Resource
-from coapthon2.server.coap_protocol import CoAP
+from coapthon.resources.resource import Resource
+from coapthon.server.coap_protocol import CoAP
 
 GARDEN_LED_PIN1 = "12"
 GARDEN_LED_PIN2 = "11"

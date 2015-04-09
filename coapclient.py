@@ -1,7 +1,7 @@
 #!/bin/python
 import getopt
 import sys
-from coapthon2.client.coap_protocol import HelperClient
+from coapthon.client.coap_protocol import HelperClient
 
 client = None
 

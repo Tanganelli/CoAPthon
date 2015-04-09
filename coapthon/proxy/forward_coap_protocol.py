@@ -6,13 +6,13 @@ from twisted.application.service import Application
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
-from coapthon2 import defines
-from coapthon2.client.coap_protocol import HelperClient
-from coapthon2.messages.message import Message
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
-from coapthon2.serializer import Serializer
-from coapthon2.server.coap_protocol import CoAP
+from coapthon import defines
+from coapthon.client.coap_protocol import HelperClient
+from coapthon.messages.message import Message
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
+from coapthon.serializer import Serializer
+from coapthon.server.coap_protocol import CoAP
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

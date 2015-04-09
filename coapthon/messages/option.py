@@ -1,6 +1,6 @@
 from bitstring import BitArray
-from coapthon2 import defines
-from coapthon2.utils import bit_len
+from coapthon import defines
+from coapthon.utils import bit_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

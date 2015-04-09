@@ -1,12 +1,12 @@
 import time
 from twisted.python import log
-from coapthon2 import defines
-from coapthon2.messages.option import Option
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
-from coapthon2.serializer import Serializer
-from coapthon2.utils import Tree
-from coapthon2.resources.resource import Resource
+from coapthon import defines
+from coapthon.messages.option import Option
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
+from coapthon.serializer import Serializer
+from coapthon.utils import Tree
+from coapthon.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

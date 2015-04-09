@@ -1,8 +1,8 @@
 import os
-from coapthon2 import defines
-from coapthon2.client.coap_protocol import HelperClient
-from coapthon2.messages.request import Request
-from coapthon2.serializer import Serializer
+from coapthon import defines
+from coapthon.client.coap_protocol import HelperClient
+from coapthon.messages.request import Request
+from coapthon.serializer import Serializer
 from twisted.application.service import Application
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile

@@ -1,7 +1,7 @@
 #!/bin/python
 from twisted.internet import reactor
-from coapthon2 import defines
-from coapthon2.server.coap_protocol import CoAP
+from coapthon import defines
+from coapthon.server.coap_protocol import CoAP
 from example_resources import Storage, Separate, BasicResource, Long, Big
 
 import twisted.internet.base

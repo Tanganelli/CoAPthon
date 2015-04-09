@@ -3,11 +3,11 @@ import re
 import socket
 import threading
 import time
-from coapthon2.messages.message import Message
-from coapthon2.messages.response import Response
-from coapthon2 import defines
-from coapthon2.serializer import Serializer
-from coapthon2.messages.request import Request
+from coapthon.messages.message import Message
+from coapthon.messages.response import Response
+from coapthon import defines
+from coapthon.serializer import Serializer
+from coapthon.messages.request import Request
 from twisted.python import log
 
 

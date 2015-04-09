@@ -1,5 +1,5 @@
 from twisted.internet import reactor
-from coapthon2.proxy.forward_coap_protocol import ProxyCoAP
+from coapthon.proxy.forward_coap_protocol import ProxyCoAP
 
 __author__ = 'giacomo'
 

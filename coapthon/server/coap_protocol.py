@@ -7,18 +7,18 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor, threads, task
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
-from coapthon2 import defines
-from coapthon2.layer.blockwise import BlockwiseLayer
-from coapthon2.layer.message import MessageLayer
-from coapthon2.layer.observe import ObserveLayer
-from coapthon2.layer.request import RequestLayer
-from coapthon2.layer.resource import ResourceLayer
-from coapthon2.messages.message import Message
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
-from coapthon2.resources.resource import Resource
-from coapthon2.serializer import Serializer
-from coapthon2.utils import Tree
+from coapthon import defines
+from coapthon.layer.blockwise import BlockwiseLayer
+from coapthon.layer.message import MessageLayer
+from coapthon.layer.observe import ObserveLayer
+from coapthon.layer.request import RequestLayer
+from coapthon.layer.resource import ResourceLayer
+from coapthon.messages.message import Message
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
+from coapthon.resources.resource import Resource
+from coapthon.serializer import Serializer
+from coapthon.utils import Tree
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

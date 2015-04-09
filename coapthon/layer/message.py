@@ -1,9 +1,9 @@
 import time
 from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
-from coapthon2 import defines
+from coapthon import defines
 from threading import Timer
-from coapthon2.messages.message import Message
+from coapthon.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

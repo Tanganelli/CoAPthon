@@ -2,7 +2,7 @@
 import getopt
 import sys
 import threading
-from coapthon2.client.coap_synchronous import HelperClientSynchronous
+from coapthon.client.coap_synchronous import HelperClientSynchronous
 
 client = HelperClientSynchronous()
 

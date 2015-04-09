@@ -1,4 +1,4 @@
-from coapthon2 import defines
+from coapthon import defines
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

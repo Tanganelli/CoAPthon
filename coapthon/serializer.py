@@ -1,10 +1,10 @@
 from bitstring import BitStream, ReadError, pack, BitArray
 from twisted.python import log
-from coapthon2 import defines
-from coapthon2.messages.message import Message
-from coapthon2.messages.option import Option
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
+from coapthon import defines
+from coapthon.messages.message import Message
+from coapthon.messages.option import Option
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

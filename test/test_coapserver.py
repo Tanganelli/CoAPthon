@@ -3,12 +3,12 @@ import time
 from twisted.test import proto_helpers
 from twisted.trial import unittest
 from coapserver import CoAPServer
-from coapthon2 import defines
-from coapthon2.messages.message import Message
-from coapthon2.messages.option import Option
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
-from coapthon2.serializer import Serializer
+from coapthon import defines
+from coapthon.messages.message import Message
+from coapthon.messages.option import Option
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
+from coapthon.serializer import Serializer
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

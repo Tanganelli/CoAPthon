@@ -1,7 +1,7 @@
 from bitstring import Bits, BitArray
-from coapthon2 import defines
-from coapthon2.messages.message import Message
-from coapthon2.messages.option import Option
+from coapthon import defines
+from coapthon.messages.message import Message
+from coapthon.messages.option import Option
 
 __author__ = 'Giacomo Tanganelli'
 

@@ -1,6 +1,6 @@
-from coapthon2 import defines
-from coapthon2.resources.resource import Resource
-from coapthon2.utils import Tree
+from coapthon import defines
+from coapthon.resources.resource import Resource
+from coapthon.utils import Tree
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"

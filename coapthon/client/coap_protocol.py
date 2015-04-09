@@ -8,15 +8,15 @@ from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
-from coapthon2 import defines
-from coapthon2.messages.message import Message
-from coapthon2.messages.option import Option
-from coapthon2.messages.request import Request
-from coapthon2.messages.response import Response
-from coapthon2.resources.resource import Resource
-from coapthon2.serializer import Serializer
+from coapthon import defines
+from coapthon.messages.message import Message
+from coapthon.messages.option import Option
+from coapthon.messages.request import Request
+from coapthon.messages.response import Response
+from coapthon.resources.resource import Resource
+from coapthon.serializer import Serializer
 from twisted.internet import task
-from coapthon2.utils import Tree
+from coapthon.utils import Tree
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
