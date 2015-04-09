@@ -216,10 +216,10 @@ class CoAP(DatagramProtocol):
         """
         self._currentMID = int(mid)
 
-    def start_seprate_timer(self, request):
+    def start_separate_timer(self, request):
         return self._message_layer.start_separate_timer(request)
 
-    def stop_seprate_timer(self, timer):
+    def stop_separate_timer(self, timer):
         return self._message_layer.stop_separate_timer(timer)
 
     def send_separate(self, request):
