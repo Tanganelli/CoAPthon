@@ -19,8 +19,8 @@ __version__ = "2.0"
 
 
 home = os.path.expanduser("~")
-if not os.path.exists(home):
-    os.makedirs(home)
+if not os.path.exists(home + "/.coapthon/"):
+    os.makedirs(home + "/.coapthon/")
 
 logfile = DailyLogFile("CoAPthon_forward_proxy.log", home + "/.coapthon/")
 # Now add an observer that logs to a file

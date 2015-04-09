@@ -25,8 +25,8 @@ __version__ = "2.0"
 
 
 home = os.path.expanduser("~")
-if not os.path.exists(home):
-    os.makedirs(home)
+if not os.path.exists(home + "/.coapthon/"):
+    os.makedirs(home + "/.coapthon/")
 
 # First, startLogging to capture stdout
 logfile = DailyLogFile("CoAPthon_client.log", home + "/.coapthon/")
