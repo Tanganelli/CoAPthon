@@ -6,6 +6,6 @@
 
    coapclient
    coapserver
-   coapthon2
+   coapthon
    example_resources
    test
