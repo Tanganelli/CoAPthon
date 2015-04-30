@@ -17,7 +17,7 @@ __version__ = "2.0"
 class Tests(unittest.TestCase):
 
     def setUp(self):
-        self.proto = CoAPServer("127.0.0.1", 5683)
+        self.proto = CoAPServer(("127.0.0.1", 5683))
         self.tr = proto_helpers.FakeDatagramTransport()
         self.proto.makeConnection(self.tr)
         self.current_mid = random.randint(1, 1000)
