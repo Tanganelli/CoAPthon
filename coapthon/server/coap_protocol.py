@@ -1,12 +1,8 @@
+import SocketServer
 import os
 import random
+from threading import Timer
 import time
-from twisted.application.service import Application
-from twisted.python import log
-from twisted.internet.protocol import DatagramProtocol
-from twisted.internet import reactor, threads, task
-from twisted.python.log import ILogObserver, FileLogObserver
-from twisted.python.logfile import DailyLogFile
 from coapthon import defines
 from coapthon.layer.blockwise import BlockwiseLayer
 from coapthon.layer.message import MessageLayer
@@ -27,61 +23,55 @@ home = os.path.expanduser("~")
 if not os.path.exists(home + "/.coapthon/"):
     os.makedirs(home + "/.coapthon/")
 
-logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
-# Now add an observer that logs to a file
-application = Application("CoAPthon_Server")
-application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+# logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
+# # Now add an observer that logs to a file
+# application = Application("CoAPthon_Server")
+# application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
-class CoAP(DatagramProtocol):
-    def __init__(self, multicast=False):
+class CoAP(SocketServer.UDPServer):
+    def __init__(self, server_address, multicast=False):
         """
         Initialize the CoAP protocol
 
         """
+        SocketServer.UDPServer.__init__(self, server_address, None)
         self.received = {}
         self.sent = {}
         self.call_id = {}
         self.relation = {}
         self.blockwise = {}
         self._currentMID = random.randint(1, 1000)
-
-        # Create the resource Tree
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
         self.root = Tree(root)
-
-        # Initialize layers
         self._request_layer = RequestLayer(self)
         self._blockwise_layer = BlockwiseLayer(self)
         self._resource_layer = ResourceLayer(self)
         self._message_layer = MessageLayer(self)
         self._observe_layer = ObserveLayer(self)
-
-        # Start a task for purge MIDs
-        self.l = task.LoopingCall(self.purge_mids)
-        self.l.start(defines.EXCHANGE_LIFETIME)
-
+        # self.l = task.LoopingCall(self.purge_mids)
+        # self.l.start(defines.EXCHANGE_LIFETIME)
         self.multicast = multicast
 
-    def startProtocol(self):
-        """
-        Called after protocol has started listening.
-        """
-
-        if self.multicast:
-            # Set the TTL>1 so multicast will cross router hops:
-            self.transport.setTTL(5)
-            # Join a specific multicast group:
-            self.transport.joinGroup(defines.ALL_COAP_NODES)
-            self.transport.setLoopbackMode(True)
-
-    def stopProtocol(self):
-        """
-        Stop the purge MIDs task
-
-        """
-        self.l.stop()
+    # def startProtocol(self):
+    #     """
+    #     Called after protocol has started listening.
+    #     """
+    #
+    #     if self.multicast:
+    #         # Set the TTL>1 so multicast will cross router hops:
+    #         self.transport.setTTL(5)
+    #         # Join a specific multicast group:
+    #         self.transport.joinGroup(defines.ALL_COAP_NODES)
+    #         self.transport.setLoopbackMode(True)
+    #
+    # def stopProtocol(self):
+    #     """
+    #     Stop the purge MIDs task
+    #
+    #     """
+    #     self.l.stop()
 
     def send(self, message, host, port):
         """
@@ -97,9 +87,10 @@ class CoAP(DatagramProtocol):
         print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
-        self.transport.write(message, (host, port))
+        self.socket.sendto(message, (host, port))
+        # self.transport.write(message, (host, port))
 
-    def datagramReceived(self, data, (host, port)):
+    def finish_request(self, request, client_address):
         """
         Handler for received UDP datagram.
 
@@ -107,7 +98,12 @@ class CoAP(DatagramProtocol):
         :param host: source host
         :param port: source port
         """
-        log.msg("Datagram received from " + str(host) + ":" + str(port))
+        host = client_address[0]
+        port = client_address[1]
+        data = request[0]
+        self.socket = request[1]
+
+        # log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
         print "Message received from " + host + ":" + str(port)
@@ -115,20 +111,20 @@ class CoAP(DatagramProtocol):
         print message
         print "----------------------------------------"
         if isinstance(message, Request):
-            log.msg("Received request")
+            # log.msg("Received request")
             ret = self._request_layer.handle_request(message)
             if isinstance(ret, Request):
                 response = self._request_layer.process(ret)
             else:
                 response = ret
             self.schedule_retrasmission(message, response, None)
-            log.msg("Send Response")
+            # log.msg("Send Response")
             self.send(response, host, port)
         elif isinstance(message, Response):
-            log.err("Received response")
+            # log.err("Received response")
             rst = Message.new_rst(message)
             rst = self._message_layer.matcher_response(rst)
-            log.msg("Send RST")
+            # log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
             message, error = message
@@ -137,11 +133,11 @@ class CoAP(DatagramProtocol):
             response.code = defines.responses[error]
             response = self.reliability_response(message, response)
             response = self._message_layer.matcher_response(response)
-            log.msg("Send Error")
+            # log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
-            log.msg("Received ACK or RST")
+            # log.msg("Received ACK or RST")
             self._message_layer.handle_message(message)
 
     def purge_mids(self):
@@ -150,7 +146,7 @@ class CoAP(DatagramProtocol):
         Executed in a thread.
 
         """
-        log.msg("Purge MIDs")
+        # log.msg("Purge MIDs")
         now = time.time()
         sent_key_to_delete = []
         for key in self.sent.keys():
@@ -344,7 +340,9 @@ class CoAP(DatagramProtocol):
         """
         commands = self._observe_layer.notify(resource)
         if commands is not None:
-            threads.callMultipleInThread(commands)
+            for f, t in commands:
+                f(t)
+            # threads.callMultipleInThread(commands)
 
     def notify_deletion(self, resource):
         """
@@ -355,7 +353,9 @@ class CoAP(DatagramProtocol):
         """
         commands = self._observe_layer.notify_deletion(resource)
         if commands is not None:
-            threads.callMultipleInThread(commands)
+            for f, t in commands:
+                f(t)
+            # threads.callMultipleInThread(commands)
 
     def remove_observers(self, node):
         """
@@ -366,7 +366,9 @@ class CoAP(DatagramProtocol):
         """
         commands = self._observe_layer.remove_observers(node)
         if commands is not None:
-            threads.callMultipleInThread(commands)
+            for f, t in commands:
+                f(t)
+            # threads.callMultipleInThread(commands)
 
     def prepare_notification(self, t):
         """
@@ -378,7 +380,8 @@ class CoAP(DatagramProtocol):
         """
         resource, request, notification = self._observe_layer.prepare_notification(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            self._observe_layer.send_notification((resource, request, notification))
+            # reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
 
     def prepare_notification_deletion(self, t):
         """
@@ -391,7 +394,8 @@ class CoAP(DatagramProtocol):
         """
         resource, request, notification = self._observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            self._observe_layer.send_notification((resource, request, notification))
+            # reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
 
     def schedule_retrasmission(self, request, response, resource):
         """
@@ -405,8 +409,10 @@ class CoAP(DatagramProtocol):
         if response.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
-            self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (request, response, resource, future_time)), 1)
+            self.call_id[key] = Timer(future_time, self.retransmit, (request, response, resource, future_time))
+            self.call_id[key].start()
+            # self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
+            #                                        (request, response, resource, future_time)), 1)
 
     def retransmit(self, t):
         """
@@ -414,7 +420,7 @@ class CoAP(DatagramProtocol):
 
         :param t: ((Response, Resource), host, port, future_time) or (Response, host, port, future_time)
         """
-        log.msg("Retransmit")
+        # log.msg("Retransmit")
         request, response, resource, future_time = t
         host, port = response.destination
 
@@ -428,8 +434,10 @@ class CoAP(DatagramProtocol):
             self.sent[key] = (response, time.time())
             self.send(response, host, port)
             future_time *= 2
-            self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-                                                   (request, response, resource, future_time)), retransmit_count)
+            self.call_id[key] = Timer(future_time, self.retransmit, (request, response, resource, future_time))
+            self.call_id[key].start()
+            # self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
+            #                                        (request, response, resource, future_time)), retransmit_count)
         elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             print "Give up on Message " + str(response.mid)
             print "----------------------------------------"
