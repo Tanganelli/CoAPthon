@@ -478,7 +478,7 @@ class Tree(object):
         else:
             i = tree
         assert isinstance(i, Tree)
-        return i.children.get(path, None)
+        return i.children.get(str(path), None)
 
     def add_child(self, resource):
         """
