@@ -15,6 +15,7 @@ from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from coapthon.utils import Tree
+import logging
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
