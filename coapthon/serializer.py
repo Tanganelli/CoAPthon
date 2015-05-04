@@ -418,7 +418,7 @@ class Serializer(object):
                 fmt += "H"
                 values.append(option.value)
             else:
-                for b in str(option.value):
+                for b in option.value:
                     fmt += "c"
                     values.append(b)
 

@@ -48,7 +48,7 @@ class Option(object):
             self._value = bytearray()
         name, opt_type, repeatable, defaults = defines.options[self._number]
         if opt_type == defines.INTEGER:
-            if len(self._value) > 0:
+            if bit_len(self._value) > 0:
                 return int(self._value)
             else:
                 return defaults
@@ -64,10 +64,9 @@ class Option(object):
         if type(val) is str:
             val = bytearray(val, "utf-8")
         if type(val) is int and bit_len(val) != 0:
-            val = bytearray(val)
+            val = val
         if type(val) is int and bit_len(val) == 0:
             val = bytearray()
-        assert(type(val) is bytearray)
         self._value = val
 
     @property
@@ -88,7 +87,8 @@ class Option(object):
 
         :return: the len of the option value
         """
-        assert(type(self._value) is bytearray)
+        if isinstance(self._value, int):
+            return bit_len(self._value * 8)
         return len(self._value)
 
     @property

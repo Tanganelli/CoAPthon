@@ -14,7 +14,7 @@ from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
-from coapthon.utils import Tree
+from Bio import trie
 import logging
 
 __author__ = 'Giacomo Tanganelli'
@@ -45,7 +45,9 @@ class CoAP(SocketServer.UDPServer):
         self._currentMID = random.randint(1, 1000)
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
-        self.root = Tree(root)
+        self.root = trie.trie()
+        self.root["/"] = root
+
         self._request_layer = RequestLayer(self)
         self._blockwise_layer = BlockwiseLayer(self)
         self._resource_layer = ResourceLayer(self)
@@ -175,24 +177,27 @@ class CoAP(SocketServer.UDPServer):
         assert isinstance(resource, Resource)
         path = path.strip("/")
         paths = path.split("/")
-        old = self.root
+        actual_path = ""
         i = 0
         for p in paths:
             i += 1
-            res = old.find(p)
+            actual_path += "/" + p
+            try:
+                res = self.root[actual_path]
+            except KeyError:
+                res = None
             if res is None:
                 if len(paths) != i:
                     return False
-                resource.path = p
+                resource.path = actual_path
                 if not resource.content_type:
                     resource.content_type = "text/plain"
                 if not resource.resource_type:
-                    resource.resource_type = "prova"
+                    resource.resource_type = None
                 if not resource.maximum_size_estimated:
-                    resource.maximum_size_estimated = 10
-                old = old.add_child(resource)
-            else:
-                old = res
+                    resource.maximum_size_estimated = 0
+                self.root[actual_path] = resource
+
         return True
 
     @property
@@ -247,7 +252,7 @@ class CoAP(SocketServer.UDPServer):
         """
         return self._observe_layer.add_observing(resource, request, response)
 
-    def update_relations(self, node, resource):
+    def update_relations(self, path, resource):
         """
         Update a relation. It is used when a resource change due a POST request, without changing its path.
 
@@ -255,7 +260,7 @@ class CoAP(SocketServer.UDPServer):
         :param node: the node which has the deleted resource
         :param resource: the new resource
         """
-        self._observe_layer.update_relations(node, resource)
+        self._observe_layer.update_relations(path, resource)
 
     def reliability_response(self, request, response):
         """
@@ -287,7 +292,7 @@ class CoAP(SocketServer.UDPServer):
         """
         return self._resource_layer.create_resource(path, request, response)
 
-    def update_resource(self, request, response, node):
+    def update_resource(self, request, response, resource):
         """
         Render a PUT request.
 
@@ -297,19 +302,19 @@ class CoAP(SocketServer.UDPServer):
         :param response: the response
         :return: the response
         """
-        return self._resource_layer.update_resource(request, response, node)
+        return self._resource_layer.update_resource(request, response, resource)
 
-    def delete_resource(self, request, response, node):
+    def delete_resource(self, request, response, path):
         """
         Render a DELETE request.
 
-        :type node: coapthon2.utils.Tree
+        :type path: string
         :param request: the request
         :param response: the response
-        :param node: the node which has the resource
+        :param path: the path
         :return: the response
         """
-        return self._resource_layer.delete_resource(request, response, node)
+        return self._resource_layer.delete_resource(request, response, path)
 
     def get_resource(self, request, response, resource):
         """
@@ -358,14 +363,13 @@ class CoAP(SocketServer.UDPServer):
                 f(t)
             # threads.callMultipleInThread(commands)
 
-    def remove_observers(self, node):
+    def remove_observers(self, path):
         """
         Remove all the observers of a resource and and invoke the notification procedure in different threads.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :param path: the path of the deleted resource
         """
-        commands = self._observe_layer.remove_observers(node)
+        commands = self._observe_layer.remove_observers(path)
         if commands is not None:
             for f, t in commands:
                 f(t)

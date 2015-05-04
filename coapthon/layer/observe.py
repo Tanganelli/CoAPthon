@@ -3,7 +3,6 @@ from twisted.python import log
 from coapthon import defines
 from coapthon.messages.option import Option
 from coapthon.messages.response import Response
-from coapthon.utils import Tree
 from coapthon.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
@@ -196,7 +195,7 @@ class ObserveLayer(object):
         response.add_option(option)
         return response
 
-    def remove_observers(self, node):
+    def remove_observers(self, path):
         """
         Remove all the observers of a resource and notifies the delete of the resource observed.
 
@@ -204,15 +203,11 @@ class ObserveLayer(object):
         :param node: the node which has the deleted resource
         :return: the list of commands that must be executed to notify clients
         """
-        assert isinstance(node, Tree)
         commands = []
         log.msg("Remove observers")
-        for n in node.children:
-            assert isinstance(n, Tree)
-            if len(n.children) > 0:
-                c = self.remove_observers(n)
-                commands += c
-            resource = n.value
+        t = self._parent.root.with_prefix(path)
+        for n in t:
+            resource = self._parent.root[n]
             observers = self._parent.relation.get(resource)
             if observers is not None:
                 for item in observers.keys():
@@ -223,7 +218,7 @@ class ObserveLayer(object):
             del self._parent.relation[resource]
         return commands
 
-    def update_relations(self, node, resource):
+    def update_relations(self, path, resource):
         """
         Update a relation. It is used when a resource change due a POST request, without changing its path.
 
@@ -231,7 +226,7 @@ class ObserveLayer(object):
         :param node: the node which has the deleted resource
         :param resource: the new resource
         """
-        old_resource = node.value
+        old_resource = self._parent.root[path]
         observers = self._parent.relation.get(old_resource)
         if observers is not None:
             del self._parent.relation[old_resource]

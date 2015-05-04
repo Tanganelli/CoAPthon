@@ -12,12 +12,11 @@ class CoAPServer(CoAP):
         self.add_resource('long/', Long())
         self.add_resource('big/', Big())
         print "CoAP Server start on " + host + ":" + str(port)
-        print(self.root.dump())
+        print self.root.with_prefix("/")
 
 
 def main():
     server = CoAPServer("127.0.0.1", 5683)
-    #reactor.listenMulticast(5683, server, listenMultiple=True)
     server.serve_forever()
 
 
