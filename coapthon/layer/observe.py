@@ -161,14 +161,8 @@ class ObserveLayer(object):
         assert isinstance(t, tuple)
         resource, request, notification_message = t
         host, port = notification_message.destination
-        serializer = Serializer()
         self._parent.schedule_retrasmission(request, notification_message, resource)
-        print "Notification Message send to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print notification_message
-        print "----------------------------------------"
-        notification_message = serializer.serialize(notification_message)
-        self._parent.transport.write(notification_message, (host, port))
+        self._parent.send(notification_message, host, port)
 
     def add_observing(self, resource, request, response):
         """
