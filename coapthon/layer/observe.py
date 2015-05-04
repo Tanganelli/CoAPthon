@@ -2,9 +2,7 @@ import time
 from twisted.python import log
 from coapthon import defines
 from coapthon.messages.option import Option
-from coapthon.messages.request import Request
 from coapthon.messages.response import Response
-from coapthon.serializer import Serializer
 from coapthon.utils import Tree
 from coapthon.resources.resource import Resource
 
