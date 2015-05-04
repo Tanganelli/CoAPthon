@@ -1,5 +1,4 @@
 import time
-from twisted.internet.error import AlreadyCancelled
 from twisted.python import log
 from coapthon import defines
 from threading import Timer
@@ -108,9 +107,7 @@ class MessageLayer(object):
             call_id, retrasmission_count = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
-        except AlreadyCancelled:
-            pass
-        except TypeError:
+        except:
             pass
         self._parent.sent[key] = (response, time.time())
 
@@ -121,8 +118,7 @@ class MessageLayer(object):
         :param request: the request
         :return: the timer object
         """
-        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        t.start()
+        t = self._parent.executor.submit(self.send_ack, [request, defines.SEPARATE_TIMEOUT])
         return t
 
     @staticmethod
@@ -133,8 +129,7 @@ class MessageLayer(object):
         :param timer: the timer object
         :return: True
         """
-        timer.cancel()
-        return True
+        return timer.cancel()
 
     def send_separate(self, request):
         """
@@ -153,6 +148,9 @@ class MessageLayer(object):
         :param request: [request] or request
         """
         if isinstance(request, list):
+            if len(request) == 2:
+                wait = request[1]
+                time.sleep(wait)
             request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source

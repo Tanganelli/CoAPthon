@@ -15,6 +15,7 @@ from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from Bio import trie
+import concurrent.futures
 import logging
 
 __author__ = 'Giacomo Tanganelli'
@@ -37,6 +38,7 @@ class CoAP(SocketServer.UDPServer):
 
         """
         SocketServer.UDPServer.__init__(self, server_address, None)
+        self.executor = concurrent.futures.ProcessPoolExecutor(max_workers=10)
         self.received = {}
         self.sent = {}
         self.call_id = {}
