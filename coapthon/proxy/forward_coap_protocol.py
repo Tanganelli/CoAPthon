@@ -66,7 +66,7 @@ class ProxyCoAP(CoAP):
         print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
-            ret = self._request_layer.handle_request(message)
+            ret = self.request_layer.handle_request(message)
             if isinstance(ret, Request):
                 self.forward_request(ret)
             else:
@@ -74,7 +74,7 @@ class ProxyCoAP(CoAP):
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
-            rst = self._message_layer.matcher_response(rst)
+            rst = self.message_layer.matcher_response(rst)
             log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
@@ -83,13 +83,13 @@ class ProxyCoAP(CoAP):
             response.destination = (host, port)
             response.code = defines.responses[error]
             response = self.reliability_response(message, response)
-            response = self._message_layer.matcher_response(response)
+            response = self.message_layer.matcher_response(response)
             log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
             log.msg("Received ACK or RST")
-            self._message_layer.handle_message(message)
+            self.message_layer.handle_message(message)
 
     def forward_request(self, request):
         """

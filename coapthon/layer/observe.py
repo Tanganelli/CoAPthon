@@ -102,9 +102,9 @@ class ObserveLayer(object):
                 del self._parent.blockwise[key]
             # Reliability
             request.acknowledged = True
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
             return resource, request, response
         else:
             response.code = defines.responses['METHOD_NOT_ALLOWED']
@@ -116,9 +116,9 @@ class ObserveLayer(object):
                 del self._parent.blockwise[key]
             # Reliability
             request.acknowledged = True
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
             return resource, request, response
 
     def prepare_notification_deletion(self, t):
@@ -144,9 +144,9 @@ class ObserveLayer(object):
             del self._parent.blockwise[key]
         # Reliability
         request.acknowledged = True
-        response = self._parent.reliability_response(request, response)
+        response = self._parent.message_layer.reliability_response(request, response)
         # Matcher
-        response = self._parent.matcher_response(response)
+        response = self._parent.message_layer.matcher_response(response)
         return resource, request, response
 
     def send_notification(self, t):

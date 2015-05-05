@@ -1,7 +1,6 @@
 import SocketServer
 import os
 import random
-from threading import Timer
 import time
 from coapthon import defines
 from coapthon.layer.blockwise import BlockwiseLayer
@@ -38,7 +37,8 @@ class CoAP(SocketServer.UDPServer):
 
         """
         SocketServer.UDPServer.__init__(self, server_address, None)
-        self.executor = concurrent.futures.ProcessPoolExecutor(max_workers=10)
+        self.stopped = False
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.received = {}
         self.sent = {}
         self.call_id = {}
@@ -50,33 +50,14 @@ class CoAP(SocketServer.UDPServer):
         self.root = trie.trie()
         self.root["/"] = root
 
-        self._request_layer = RequestLayer(self)
-        self._blockwise_layer = BlockwiseLayer(self)
-        self._resource_layer = ResourceLayer(self)
-        self._message_layer = MessageLayer(self)
-        self._observe_layer = ObserveLayer(self)
-        # self.l = task.LoopingCall(self.purge_mids)
-        # self.l.start(defines.EXCHANGE_LIFETIME)
+        self.request_layer = RequestLayer(self)
+        self.blockwise_layer = BlockwiseLayer(self)
+        self.resource_layer = ResourceLayer(self)
+        self.message_layer = MessageLayer(self)
+        self.observe_layer = ObserveLayer(self)
         self.multicast = multicast
-
-    # def startProtocol(self):
-    #     """
-    #     Called after protocol has started listening.
-    #     """
-    #
-    #     if self.multicast:
-    #         # Set the TTL>1 so multicast will cross router hops:
-    #         self.transport.setTTL(5)
-    #         # Join a specific multicast group:
-    #         self.transport.joinGroup(defines.ALL_COAP_NODES)
-    #         self.transport.setLoopbackMode(True)
-    #
-    # def stopProtocol(self):
-    #     """
-    #     Stop the purge MIDs task
-    #
-    #     """
-    #     self.l.stop()
+        self.executor_mid = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        self.executor_mid.submit(self.purge_mids)
 
     def send(self, message, host, port):
         """
@@ -93,7 +74,6 @@ class CoAP(SocketServer.UDPServer):
         serializer = Serializer()
         message = serializer.serialize(message)
         self.socket.sendto(message, (host, port))
-        # self.transport.write(message, (host, port))
 
     def finish_request(self, request, client_address):
         """
@@ -117,9 +97,9 @@ class CoAP(SocketServer.UDPServer):
         # print "----------------------------------------"
         if isinstance(message, Request):
             # log.msg("Received request")
-            ret = self._request_layer.handle_request(message)
+            ret = self.request_layer.handle_request(message)
             if isinstance(ret, Request):
-                response = self._request_layer.process(ret)
+                response = self.request_layer.process(ret)
             else:
                 response = ret
             self.schedule_retrasmission(message, response, None)
@@ -128,7 +108,7 @@ class CoAP(SocketServer.UDPServer):
         elif isinstance(message, Response):
             # log.err("Received response")
             rst = Message.new_rst(message)
-            rst = self._message_layer.matcher_response(rst)
+            rst = self.message_layer.matcher_response(rst)
             # log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
@@ -137,13 +117,13 @@ class CoAP(SocketServer.UDPServer):
             response.destination = (host, port)
             response.code = defines.responses[error]
             response = self.reliability_response(message, response)
-            response = self._message_layer.matcher_response(response)
+            response = self.message_layer.matcher_response(response)
             # log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
             # log.msg("Received ACK or RST")
-            self._message_layer.handle_message(message)
+            self.message_layer.handle_message(message)
 
     def purge_mids(self):
         """
@@ -152,21 +132,23 @@ class CoAP(SocketServer.UDPServer):
 
         """
         # log.msg("Purge MIDs")
-        now = time.time()
-        sent_key_to_delete = []
-        for key in self.sent.keys():
-            message, timestamp = self.sent.get(key)
-            if timestamp + defines.EXCHANGE_LIFETIME <= now:
-                sent_key_to_delete.append(key)
-        received_key_to_delete = []
-        for key in self.received.keys():
-            message, timestamp = self.received.get(key)
-            if timestamp + defines.EXCHANGE_LIFETIME <= now:
-                received_key_to_delete.append(key)
-        for key in sent_key_to_delete:
-            del self.sent[key]
-        for key in received_key_to_delete:
-            del self.received[key]
+        while not self.stopped:
+            time.sleep(defines.EXCHANGE_LIFETIME)
+            now = time.time()
+            sent_key_to_delete = []
+            for key in self.sent.keys():
+                message, timestamp = self.sent.get(key)
+                if timestamp + defines.EXCHANGE_LIFETIME <= now:
+                    sent_key_to_delete.append(key)
+            received_key_to_delete = []
+            for key in self.received.keys():
+                message, timestamp = self.received.get(key)
+                if timestamp + defines.EXCHANGE_LIFETIME <= now:
+                    received_key_to_delete.append(key)
+            for key in sent_key_to_delete:
+                del self.sent[key]
+            for key in received_key_to_delete:
+                del self.received[key]
 
     def add_resource(self, path, resource):
         """
@@ -192,14 +174,7 @@ class CoAP(SocketServer.UDPServer):
                 if len(paths) != i:
                     return False
                 resource.path = actual_path
-                if not resource.content_type:
-                    resource.content_type = "text/plain"
-                if not resource.resource_type:
-                    resource.resource_type = None
-                if not resource.maximum_size_estimated:
-                    resource.maximum_size_estimated = 0
                 self.root[actual_path] = resource
-
         return True
 
     @property
@@ -220,124 +195,17 @@ class CoAP(SocketServer.UDPServer):
         """
         self._currentMID = int(mid)
 
-    def start_separate_timer(self, request):
-        return self._message_layer.start_separate_timer(request)
-
-    def stop_separate_timer(self, timer):
-        return self._message_layer.stop_separate_timer(timer)
-
-    def send_separate(self, request):
-        self._message_layer.send_separate(request)
-
-    def blockwise_transfer(self, request):
-        return self._blockwise_layer.handle_request(request)
-
     def blockwise_response(self, request, response, resource):
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.token))
         if key in self.blockwise:
             # Handle Blockwise transfer
-            return self._blockwise_layer.handle_response(key, response, resource), resource
+            return self.blockwise_layer.handle_response(key, response, resource), resource
         if resource is not None and len(resource.payload) > defines.MAX_PAYLOAD \
                 and request.code == defines.inv_codes["GET"]:
-            self._blockwise_layer.start_block2(request)
-            return self._blockwise_layer.handle_response(key, response, resource), resource
+            self.blockwise_layer.start_block2(request)
+            return self.blockwise_layer.handle_response(key, response, resource), resource
         return response, resource
-
-    def add_observing(self, resource, request, response):
-        """
-        Add an observer to a resource and sets the Observe option in the response.
-
-        :param resource: the resource of interest
-        :param response: the response
-        :return: response
-        """
-        return self._observe_layer.add_observing(resource, request, response)
-
-    def update_relations(self, path, resource):
-        """
-        Update a relation. It is used when a resource change due a POST request, without changing its path.
-
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
-        :param resource: the new resource
-        """
-        self._observe_layer.update_relations(path, resource)
-
-    def reliability_response(self, request, response):
-        """
-        Sets Message type according to the request
-
-        :param request: the request object
-        :param response: the response object
-        :return: the response
-        """
-        return self._message_layer.reliability_response(request, response)
-
-    def matcher_response(self, response):
-        """
-        Sets MID if not already set. Save the sent message for acknowledge and duplication handling.
-
-        :param response: the response
-        :return: the response
-        """
-        return self._message_layer.matcher_response(response)
-
-    def create_resource(self, path, request, response):
-        """
-        Render a POST request.
-
-        :param path: the path of the request
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.create_resource(path, request, response)
-
-    def update_resource(self, request, response, resource):
-        """
-        Render a PUT request.
-
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the resource
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.update_resource(request, response, resource)
-
-    def delete_resource(self, request, response, path):
-        """
-        Render a DELETE request.
-
-        :type path: string
-        :param request: the request
-        :param response: the response
-        :param path: the path
-        :return: the response
-        """
-        return self._resource_layer.delete_resource(request, response, path)
-
-    def get_resource(self, request, response, resource):
-        """
-        Render a GET request.
-
-        :param request: the request
-        :param response: the response
-        :param resource: the resource required
-        :return: the response
-        """
-        return self._resource_layer.get_resource(request, response, resource)
-
-    def discover(self, request, response):
-        """
-        Render a GET request to the .weel-know/core link.
-
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.discover(request, response)
 
     def notify(self, resource):
         """
@@ -346,11 +214,10 @@ class CoAP(SocketServer.UDPServer):
 
         :param resource: the node resource updated
         """
-        commands = self._observe_layer.notify(resource)
+        commands = self.observe_layer.notify(resource)
         if commands is not None:
             for f, t in commands:
-                f(t)
-            # threads.callMultipleInThread(commands)
+                self.executor.submit(f, t)
 
     def notify_deletion(self, resource):
         """
@@ -359,11 +226,10 @@ class CoAP(SocketServer.UDPServer):
 
         :param resource: the node resource deleted
         """
-        commands = self._observe_layer.notify_deletion(resource)
+        commands = self.observe_layer.notify_deletion(resource)
         if commands is not None:
             for f, t in commands:
-                f(t)
-            # threads.callMultipleInThread(commands)
+                self.executor.submit(f, t)
 
     def remove_observers(self, path):
         """
@@ -371,11 +237,10 @@ class CoAP(SocketServer.UDPServer):
 
         :param path: the path of the deleted resource
         """
-        commands = self._observe_layer.remove_observers(path)
+        commands = self.observe_layer.remove_observers(path)
         if commands is not None:
             for f, t in commands:
-                f(t)
-            # threads.callMultipleInThread(commands)
+                self.executor.submit(f, t)
 
     def prepare_notification(self, t):
         """
@@ -385,10 +250,9 @@ class CoAP(SocketServer.UDPServer):
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        resource, request, notification = self._observe_layer.prepare_notification(t)
+        resource, request, notification = self.observe_layer.prepare_notification(t)
         if notification is not None:
-            self._observe_layer.send_notification((resource, request, notification))
-            # reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            self.executor.submit(self.observe_layer.send_notification, (resource, request, notification))
 
     def prepare_notification_deletion(self, t):
         """
@@ -399,10 +263,9 @@ class CoAP(SocketServer.UDPServer):
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        resource, request, notification = self._observe_layer.prepare_notification_deletion(t)
+        resource, request, notification = self.observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            self._observe_layer.send_notification((resource, request, notification))
-            # reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            self.executor.submit(self.observe_layer.send_notification, (resource, request, notification))
 
     def schedule_retrasmission(self, request, response, resource):
         """
@@ -416,10 +279,7 @@ class CoAP(SocketServer.UDPServer):
         if response.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
-            self.call_id[key] = Timer(future_time, self.retransmit, (request, response, resource, future_time))
-            self.call_id[key].start()
-            # self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-            #                                        (request, response, resource, future_time)), 1)
+            self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
 
     def retransmit(self, t):
         """
@@ -429,6 +289,7 @@ class CoAP(SocketServer.UDPServer):
         """
         # log.msg("Retransmit")
         request, response, resource, future_time = t
+        time.sleep(future_time)
         host, port = response.destination
 
         key = hash(str(host) + str(port) + str(response.mid))
@@ -441,10 +302,7 @@ class CoAP(SocketServer.UDPServer):
             self.sent[key] = (response, time.time())
             self.send(response, host, port)
             future_time *= 2
-            self.call_id[key] = Timer(future_time, self.retransmit, (request, response, resource, future_time))
-            self.call_id[key].start()
-            # self.call_id[key] = (reactor.callLater(future_time, self.retransmit,
-            #                                        (request, response, resource, future_time)), retransmit_count)
+            self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
         elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             print "Give up on Message " + str(response.mid)
             print "----------------------------------------"
@@ -454,7 +312,7 @@ class CoAP(SocketServer.UDPServer):
         else:
             response.timeouted = True
             if resource is not None:
-                self._observe_layer.remove_observer(resource, request, response)
+                self.observe_layer.remove_observer(resource, request, response)
             del self.call_id[key]
 
     @staticmethod

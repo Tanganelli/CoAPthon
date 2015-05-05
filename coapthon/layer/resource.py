@@ -34,9 +34,9 @@ class ResourceLayer(object):
 
         method = getattr(resource_node, "render_POST", None)
         if hasattr(method, '__call__'):
-            timer = self._parent.start_separate_timer(request)
+            timer = self._parent.message_layer.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent.stop_separate_timer(timer)
+            stopped = self._parent.message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -53,7 +53,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent.send_separate(request)
+                    self._parent.message_layer.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -67,7 +67,7 @@ class ResourceLayer(object):
             response, resource = self._parent.blockwise_response(request, response, resource)
 
             # Observe
-            self._parent.update_relations(path, resource)
+            self._parent.observe_layer.update_relations(path, resource)
 
             self._parent.notify(resource)
 
@@ -83,9 +83,9 @@ class ResourceLayer(object):
             # Token
             response.token = request.token
             # Reliability
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
 
             self._parent.root[path] = resource
 
@@ -108,9 +108,9 @@ class ResourceLayer(object):
         old_resource = self._parent.root[path]
         method = getattr(old_resource, "render_POST", None)
         if hasattr(method, '__call__'):
-            timer = self._parent.start_separate_timer(request)
+            timer = self._parent.message_layer.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent.stop_separate_timer(timer)
+            stopped = self._parent.message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -127,7 +127,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent.send_separate(request)
+                    self._parent.message_layer.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -153,9 +153,9 @@ class ResourceLayer(object):
             response, resource = self._parent.blockwise_response(request, response, resource)
 
             # Reliability
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
 
             self._parent.root[path] = resource
 
@@ -210,9 +210,9 @@ class ResourceLayer(object):
             return self._parent.send_error(request, response, 'PRECONDITION_FAILED')
         method = getattr(resource, "render_PUT", None)
         if hasattr(method, '__call__'):
-            timer = self._parent.start_separate_timer(request)
+            timer = self._parent.message_layer.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent.stop_separate_timer(timer)
+            stopped = self._parent.message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -228,7 +228,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent.send_separate(request)
+                    self._parent.message_layer.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -248,9 +248,9 @@ class ResourceLayer(object):
             self._parent.notify(resource)
 
             # Reliability
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
 
             return response
         else:
@@ -272,9 +272,9 @@ class ResourceLayer(object):
 
         method = getattr(resource, 'render_DELETE', None)
         if hasattr(method, '__call__'):
-            timer = self._parent.start_separate_timer(request)
+            timer = self._parent.message_layer.start_separate_timer(request)
             ret = method(request=request)
-            self._parent.stop_separate_timer(timer)
+            self._parent.message_layer.stop_separate_timer(timer)
             if ret != -1:
                 # Observe
                 self._parent.notify_deletion(resource)
@@ -286,9 +286,9 @@ class ResourceLayer(object):
                 # Token
                 response.token = request.token
                 # Reliability
-                response = self._parent.reliability_response(request, response)
+                response = self._parent.message_layer.reliability_response(request, response)
                 # Matcher
-                response = self._parent.matcher_response(response)
+                response = self._parent.message_layer.matcher_response(response)
                 return response
             elif ret == -1:
                 return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
@@ -315,9 +315,9 @@ class ResourceLayer(object):
                 if resource.required_content_type in defines.content_types:
                     response.content_type = resource.required_content_type
             # Render_GET
-            timer = self._parent.start_separate_timer(request)
+            timer = self._parent.message_layer.start_separate_timer(request)
             resource = method(request=request)
-            stopped = self._parent.stop_separate_timer(timer)
+            stopped = self._parent.message_layer.stop_separate_timer(timer)
             separate = False
             callback = None
             if isinstance(resource, Resource):
@@ -333,7 +333,7 @@ class ResourceLayer(object):
             if separate:
                 # Handle separate
                 if stopped:
-                    self._parent.send_separate(request)
+                    self._parent.message_layer.send_separate(request)
                     request.acknowledged = True
                 resource = callback(request=request)
                 if not isinstance(resource, Resource):
@@ -357,10 +357,10 @@ class ResourceLayer(object):
 
             # Observe
             if request.observe == 0 and resource.observable:
-                response = self._parent.add_observing(resource, request, response)
+                response = self._parent.observe_layer.add_observing(resource, request, response)
 
-            response = self._parent.reliability_response(request, response)
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.reliability_response(request, response)
+            response = self._parent.message_layer.matcher_response(response)
 
             return response
         else:
@@ -387,8 +387,8 @@ class ResourceLayer(object):
         response.token = request.token
         # Blockwise
         response, resource = self._parent.blockwise_response(request, response, None)
-        response = self._parent.reliability_response(request, response)
-        response = self._parent.matcher_response(response)
+        response = self._parent.message_layer.reliability_response(request, response)
+        response = self._parent.message_layer.matcher_response(response)
         return response
 
     @staticmethod

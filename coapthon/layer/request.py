@@ -32,7 +32,7 @@ class RequestLayer(object):
         if key not in self._parent.received:
             if request.blockwise:
                 # Blockwise
-                last, request = self._parent.blockwise_transfer(request)
+                last, request = self._parent.blockwise_layer.handle_request(request)
                 if last:
                     self._parent.received[key] = (request, time.time())
                     return request
@@ -100,7 +100,7 @@ class RequestLayer(object):
             return response
 
         # Update request
-        response = self._parent.update_resource(request, response, resource)
+        response = self._parent.resource_layer.update_resource(request, response, resource)
         return response
 
     def handle_post(self, request):
@@ -114,7 +114,7 @@ class RequestLayer(object):
         response = Response()
         response.destination = request.source
         # Create request
-        response = self._parent.create_resource(path, request, response)
+        response = self._parent.resource_layer.create_resource(path, request, response)
         return response
 
     def handle_delete(self, request):
@@ -138,7 +138,7 @@ class RequestLayer(object):
             return response
         else:
             # Delete
-            response = self._parent.delete_resource(request, response, path)
+            response = self._parent.resource_layer.delete_resource(request, response, path)
             return response
 
     def handle_get(self, request):
@@ -152,7 +152,7 @@ class RequestLayer(object):
         response = Response()
         response.destination = request.source
         if path == defines.DISCOVERY_URL:
-            response = self._parent.discover(request, response)
+            response = self._parent.resource_layer.discover(request, response)
         else:
             try:
                 resource = self._parent.root[path]
@@ -162,5 +162,5 @@ class RequestLayer(object):
                 # Not Found
                 response = self._parent.send_error(request, response, 'NOT_FOUND')
             else:
-                response = self._parent.get_resource(request, response, resource)
+                response = self._parent.resource_layer.get_resource(request, response, resource)
         return response

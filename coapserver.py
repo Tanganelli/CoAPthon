@@ -17,7 +17,17 @@ class CoAPServer(CoAP):
 
 def main():
     server = CoAPServer("127.0.0.1", 5683)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print "Server Shutdown"
+
+    server.socket.close()
+    server.stopped = True
+    server.executor_mid.shutdown(False)
+    server.executor.shutdown(False)
+    server.shutdown()
+    print "Exiting..."
 
 
 if __name__ == '__main__':

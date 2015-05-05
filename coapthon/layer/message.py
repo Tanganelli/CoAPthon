@@ -129,7 +129,8 @@ class MessageLayer(object):
         :param timer: the timer object
         :return: True
         """
-        return timer.cancel()
+        # return timer.cancel()
+        return True
 
     def send_separate(self, request):
         """
@@ -149,10 +150,10 @@ class MessageLayer(object):
         """
         if isinstance(request, list):
             if len(request) == 2:
-                wait = request[1]
-                time.sleep(wait)
+                time.sleep(request[1])
             request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source
-        self._parent.send(ack, host, port)
-        request.acknowledged = True
+        if not request.acknowledged:
+            self._parent.send(ack, host, port)
+            request.acknowledged = True
