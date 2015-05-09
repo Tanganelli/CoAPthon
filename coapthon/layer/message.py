@@ -1,7 +1,5 @@
 import time
-from twisted.python import log
 from coapthon import defines
-from threading import Timer
 from coapthon.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
@@ -80,7 +78,7 @@ class MessageLayer(object):
 
         t = self._parent.sent.get(key)
         if t is None:
-            log.err(defines.types[message.type] + " received without the corresponding message")
+            # log.err(defines.types[message.type] + " received without the corresponding message")
             return
         response, timestamp = t
         # Reliability
@@ -102,7 +100,7 @@ class MessageLayer(object):
                         del self._parent.relation[resource]
 
         # cancel retransmission
-        log.msg("Cancel retrasmission to:" + host + ":" + str(port))
+        # log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         try:
             call_id, retrasmission_count = self._parent.call_id.get(key)
             if call_id is not None:

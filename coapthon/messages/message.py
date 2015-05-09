@@ -79,7 +79,6 @@ class Message(object):
         :type option: coapthon2.messages.option.Option
         :param option: the option
         """
-        assert isinstance(option, Option)
         try:
             while True:
                 self._options.remove(option)
@@ -155,7 +154,6 @@ class Message(object):
 
         :param d: if a duplicate
         """
-        assert isinstance(d, bool)
         self._duplicate = d
 
     @property
@@ -174,7 +172,6 @@ class Message(object):
 
         :param a: if acknowledged
         """
-        assert isinstance(a, bool)
         self._acknowledged = a
 
     @property
@@ -193,7 +190,6 @@ class Message(object):
 
         :param r: if rejected
         """
-        assert isinstance(r, bool)
         self._rejected = r
 
     @property
@@ -214,7 +210,6 @@ class Message(object):
 
         :param t: if timeouted
         """
-        assert isinstance(t, bool)
         self._timeouted = t
 
     @property
@@ -233,7 +228,6 @@ class Message(object):
 
         :param c: if canceled
         """
-        assert isinstance(c, bool)
         self._canceled = c
 
     @staticmethod

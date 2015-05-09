@@ -1,4 +1,5 @@
 #!/bin/python
+import os
 from coapthon.server.coap_protocol import CoAP
 from example_resources import Storage, Separate, BasicResource, Long, Big
 
@@ -18,17 +19,16 @@ class CoAPServer(CoAP):
 def main():
     server = CoAPServer("127.0.0.1", 5683)
     try:
-        server.serve_forever()
+        server.serve_forever(poll_interval=0.01)
     except KeyboardInterrupt:
         print "Server Shutdown"
-
-    server.socket.close()
-    server.stopped = True
-    server.executor_mid.shutdown(False)
-    server.executor.shutdown(False)
-    server.shutdown()
-    print "Exiting..."
-
+        server.server_close()
+        server.stopped.set()
+        server.executor_mid.shutdown(False)
+        server.executor.shutdown(False)
+        print "Exiting..."
+    finally:
+        os._exit(0)
 
 if __name__ == '__main__':
     main()

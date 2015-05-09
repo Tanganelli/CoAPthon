@@ -1,4 +1,3 @@
-from bitstring import Bits, BitArray
 from coapthon import defines
 from coapthon.messages.message import Message
 from coapthon.messages.option import Option
@@ -124,19 +123,12 @@ class Response(Message):
         option = Option()
         option.number = defines.inv_options['Block2']
         num, m, size = value
-        m = Bits(uint=m, length=1)
-        size = Bits(uint=size, length=3)
-        if num <= 15:
-            num = Bits(uint=num, length=4)
-        elif num <= pow(2, 12) - 1:
-            num = Bits(uint=num, length=12)
-        else:
-            num = Bits(uint=num, length=20)
-        value = BitArray()
-        value.append(num)
-        value.append(m)
-        value.append(size)
-        option.value = value.tobytes()
+
+        value = (num << 4)
+        value |= (m << 3)
+        value |= size
+
+        option.value = value
         self.add_option(option)
 
     @property
@@ -152,17 +144,8 @@ class Response(Message):
         option = Option()
         option.number = defines.inv_options['Block1']
         num, m, size = value
-        m = Bits(uint=m, length=1)
-        size = Bits(uint=size, length=3)
-        if num <= 15:
-            num = Bits(uint=num, length=4)
-        elif num <= pow(2, 12) - 1:
-            num = Bits(uint=num, length=12)
-        else:
-            num = Bits(uint=num, length=20)
-        value = BitArray()
-        value.append(num)
-        value.append(m)
-        value.append(size)
-        option.value = value.tobytes()
-        self.add_option(option)
+        value = (num << 4)
+        value |= (m << 3)
+        value |= size
+
+        option.value = value

@@ -1,5 +1,4 @@
 import time
-from twisted.python import log
 from coapthon import defines
 from coapthon.messages.option import Option
 from coapthon.messages.response import Response
@@ -176,16 +175,16 @@ class ObserveLayer(object):
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
         if observers is None:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Initiate an observe relation between " + str(host) + ":" +
+            #        str(port) + " and resource " + str(resource.path))
             observers = {key: (now, request, response)}
         elif key not in observers:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Initiate an observe relation between " + str(host) + ":" +
+            #         str(port) + " and resource " + str(resource.path))
             observers[key] = (now, request, response)
         else:
-            log.msg("Update observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Update observe relation between " + str(host) + ":" +
+            #         str(port) + " and resource " + str(resource.path))
             old, request, response = observers[key]
             observers[key] = (now, request, response)
         self._parent.relation[resource] = observers
@@ -204,7 +203,7 @@ class ObserveLayer(object):
         :return: the list of commands that must be executed to notify clients
         """
         commands = []
-        log.msg("Remove observers")
+        #log.msg("Remove observers")
         t = self._parent.root.with_prefix(path)
         for n in t:
             resource = self._parent.root[n]
@@ -240,7 +239,7 @@ class ObserveLayer(object):
         :param request: the request
         :param resource: the resource
         """
-        log.msg("Remove observer for the resource")
+        #log.msg("Remove observer for the resource")
         host, port = response.destination
         key = str(host) + str(port) + str(response.token)
         observers = self._parent.relation.get(resource)

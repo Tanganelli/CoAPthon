@@ -24,10 +24,11 @@ class Request(Message):
 
         :return: the Uri-Path
         """
-        value = ""
+        value = []
         for option in self.options:
             if option.number == defines.inv_options['Uri-Path']:
-                value += option.value + '/'
+                value.append(str(option.value) + '/')
+        value = "".join(value)
         value = value[:-1]
         return value
 

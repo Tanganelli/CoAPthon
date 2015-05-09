@@ -1,6 +1,9 @@
+# from Bio import trie
 import SocketServer
 import os
 import random
+import socket
+import threading
 import time
 from coapthon import defines
 from coapthon.layer.blockwise import BlockwiseLayer
@@ -13,9 +16,9 @@ from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
-from Bio import trie
 import concurrent.futures
 import logging
+from coapthon.utils import Tree
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -23,6 +26,7 @@ __version__ = "2.0"
 home = os.path.expanduser("~")
 if not os.path.exists(home + "/.coapthon/"):
     os.makedirs(home + "/.coapthon/")
+
 
 # logfile = DailyLogFile("CoAPthon_server.log", home + "/.coapthon/")
 # # Now add an observer that logs to a file
@@ -37,7 +41,8 @@ class CoAP(SocketServer.UDPServer):
 
         """
         SocketServer.UDPServer.__init__(self, server_address, None)
-        self.stopped = False
+        self.stopped = threading.Event()
+        self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.received = {}
         self.sent = {}
@@ -47,7 +52,8 @@ class CoAP(SocketServer.UDPServer):
         self._currentMID = random.randint(1, 1000)
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
-        self.root = trie.trie()
+        # self.root = trie.trie()
+        self.root = Tree()
         self.root["/"] = root
 
         self.request_layer = RequestLayer(self)
@@ -58,6 +64,29 @@ class CoAP(SocketServer.UDPServer):
         self.multicast = multicast
         self.executor_mid = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.executor_mid.submit(self.purge_mids)
+
+    # def serve_forever(self, poll_interval=0.5):
+    #     """Handle one request at a time until shutdown.
+    #
+    #     Polls for shutdown every poll_interval seconds. Ignores
+    #     self.timeout. If you need to do periodic tasks, do them in
+    #     another thread.
+    #     """
+    #     try:
+    #         while not self.stopped:
+    #             try:
+    #                 request, client_address = self.get_request()
+    #             except socket.error:
+    #                 return
+    #             if self.verify_request(request, client_address):
+    #                 try:
+    #                     self.process_request(request, client_address)
+    #                 except:
+    #                     self.handle_error(request, client_address)
+    #                     self.shutdown_request(request)
+    #
+    #     finally:
+    #         self.__shutdown_request = True
 
     def send(self, message, host, port):
         """
@@ -116,7 +145,7 @@ class CoAP(SocketServer.UDPServer):
             response = Response()
             response.destination = (host, port)
             response.code = defines.responses[error]
-            response = self.reliability_response(message, response)
+            response = self.message_layer.reliability_response(message, response)
             response = self.message_layer.matcher_response(response)
             # log.msg("Send Error")
             self.send(response, host, port)
@@ -132,8 +161,8 @@ class CoAP(SocketServer.UDPServer):
 
         """
         # log.msg("Purge MIDs")
-        while not self.stopped:
-            time.sleep(defines.EXCHANGE_LIFETIME)
+        while not self.stopped.isSet():
+            time.sleep(2)
             now = time.time()
             sent_key_to_delete = []
             for key in self.sent.keys():
@@ -149,6 +178,7 @@ class CoAP(SocketServer.UDPServer):
                 del self.sent[key]
             for key in received_key_to_delete:
                 del self.received[key]
+        print "Exit Purge MIDS"
 
     def add_resource(self, path, resource):
         """
