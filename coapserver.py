@@ -1,5 +1,4 @@
 #!/bin/python
-import os
 from coapthon.server.coap_protocol import CoAP
 from example_resources import Storage, Separate, BasicResource, Long, Big
 
@@ -24,11 +23,9 @@ def main():
         print "Server Shutdown"
         server.server_close()
         server.stopped.set()
-        server.executor_mid.shutdown(False)
+        server.executor_mid.cancel()
         server.executor.shutdown(False)
         print "Exiting..."
-    finally:
-        os._exit(0)
 
 if __name__ == '__main__':
     main()

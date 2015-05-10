@@ -61,31 +61,9 @@ class CoAP(SocketServer.UDPServer):
         self.message_layer = MessageLayer(self)
         self.observe_layer = ObserveLayer(self)
         self.multicast = multicast
-        self.executor_mid = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        self.executor_mid.submit(self.purge_mids)
-
-    # def serve_forever(self, poll_interval=0.5):
-    #     """Handle one request at a time until shutdown.
-    #
-    #     Polls for shutdown every poll_interval seconds. Ignores
-    #     self.timeout. If you need to do periodic tasks, do them in
-    #     another thread.
-    #     """
-    #     try:
-    #         while not self.stopped:
-    #             try:
-    #                 request, client_address = self.get_request()
-    #             except socket.error:
-    #                 return
-    #             if self.verify_request(request, client_address):
-    #                 try:
-    #                     self.process_request(request, client_address)
-    #                 except:
-    #                     self.handle_error(request, client_address)
-    #                     self.shutdown_request(request)
-    #
-    #     finally:
-    #         self.__shutdown_request = True
+        self.executor_mid = threading.Timer(defines.EXCHANGE_LIFETIME, self.purge_mids)
+        self.executor_mid.setDaemon(True)
+        self.executor_mid.start()
 
     def send(self, message, host, port):
         """
@@ -161,7 +139,7 @@ class CoAP(SocketServer.UDPServer):
         """
         # log.msg("Purge MIDs")
         while not self.stopped.isSet():
-            time.sleep(2)
+            time.sleep(defines.EXCHANGE_LIFETIME)
             now = time.time()
             sent_key_to_delete = []
             for key in self.sent.keys():
@@ -178,6 +156,8 @@ class CoAP(SocketServer.UDPServer):
             for key in received_key_to_delete:
                 del self.received[key]
         print "Exit Purge MIDS"
+
+
 
     def add_resource(self, path, resource):
         """
