@@ -2,7 +2,6 @@
 import SocketServer
 import os
 import random
-import socket
 import threading
 import time
 from coapthon import defines
