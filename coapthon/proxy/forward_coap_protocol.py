@@ -1,6 +1,7 @@
 import hashlib
 import os
 import random
+import re
 from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
 from twisted.application.service import Application
@@ -87,6 +88,49 @@ class ProxyCoAP(CoAP):
             # log.msg("Received ACK or RST")
             self.message_layer.handle_message(message)
 
+    def parse_path(self, path):
+        m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
+                if m is None:
+                    ip, port, path = self.parse_path_ipv6(path)
+                else:
+                    ip = m.group(2)
+                    port = 5683
+                    path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path
+
+    def parse_path_ipv6(self, path):
+        m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
+                ip = m.group(2)
+                port = 5683
+                path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path
+
     def forward_request(self, request):
         """
         Forward an incoming request to the specified server.
@@ -100,37 +144,10 @@ class ProxyCoAP(CoAP):
         token = self.generate_token()
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
-        schema = uri.split("://")
-        try:
-            path = str(schema[1])
-            try:
-                host_pos = path.index("]")
-                destination = path[:host_pos]
-                destination.replace("[", "")
-                destination.replace("]", "")
-                if path[host_pos+1] == ":":
-                    port_pos = path.index("/")
-                    port = int(path[host_pos+1:port_pos])
-                else:
-                    port = 5683
-                host = destination
 
-                path = path[path.index("/"):]
-                server = (host, port)
-            except ValueError:
+        ip, port, path = self.parse_path(uri)
+        server = (ip, port)
 
-                # schema = schema[0]
-                host_pos = path.index("/")
-                destination = path[:host_pos]
-                destination = destination.split(":")
-                port = 5683
-                host = destination[0]
-                if len(destination) > 1:
-                    port = int(destination[1])
-                path = path[host_pos:]
-                server = (host, port)
-        except IndexError:
-            return self.send_error(request, response, "BAD_REQUEST")
         request.uri_path = path
         client = HelperClientSynchronous()
         self._currentMID += 1
