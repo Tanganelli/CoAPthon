@@ -2,6 +2,7 @@
 import SocketServer
 import os
 import random
+import socket
 import threading
 import time
 from coapthon import defines
@@ -39,6 +40,7 @@ class CoAP(SocketServer.UDPServer):
         Initialize the CoAP protocol
 
         """
+        SocketServer.UDPServer.address_family = socket.AF_INET6
         SocketServer.UDPServer.__init__(self, server_address, None)
         self.stopped = threading.Event()
         self.stopped.clear()

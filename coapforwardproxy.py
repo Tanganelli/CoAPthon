@@ -11,6 +11,7 @@ class CoAPForwardProxy(ProxyCoAP):
 
 
 def main():
+
     server = CoAPForwardProxy("bbbb::2", 5683)
     try:
         server.serve_forever(poll_interval=0.01)
