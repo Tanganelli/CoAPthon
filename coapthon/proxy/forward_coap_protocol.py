@@ -217,14 +217,14 @@ class ProxyCoAP(CoAP):
         ack = Message.new_ack(request)
         self.send(ack, host, port)
 
-    def result_forward(self, future):
+    def result_forward(self):
         """
         Forward results to the client.
 
         :param response: the response sent by the server.
         """
 
-        response, request = future.results()
+        response, request = self.results()
         skip_delete = False
         key = None
         if request is None:
