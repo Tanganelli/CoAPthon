@@ -14,7 +14,7 @@ __author__ = 'giacomo'
 
 
 class HelperClientSynchronous(object):
-    def __init__(self):
+    def __init__(self, parent=None):
         self._currentMID = 100
         self.relation = {}
         self.received = {}
@@ -28,6 +28,7 @@ class HelperClientSynchronous(object):
         self._socket = None
         self._receiver_thread = None
         self.stop = False
+        self.parent = parent;
 
     def start(self, operations):
         # self.transport.connect(host, self.server[1])
@@ -304,7 +305,7 @@ class HelperClientSynchronous(object):
             self.condition.acquire()
             self.condition.wait()
             message = self._response
-        return message
+        return request, message
 
     def delete(self, *args, **kwargs):
         """
