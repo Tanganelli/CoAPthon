@@ -2,12 +2,14 @@ import hashlib
 import os
 import random
 from threading import Timer
+from concurrent.futures import ThreadPoolExecutor
 from twisted.application.service import Application
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
 from coapthon import defines
 from coapthon.client.coap_protocol import HelperClient
+from coapthon.client.coap_synchronous import HelperClientSynchronous
 from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
@@ -29,66 +31,60 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class ProxyCoAP(CoAP):
-    def __init__(self):
+    def __init__(self, server_address, multicast=False):
         """
         Initialize the CoAP protocol
 
         """
-        CoAP.__init__(self)
+        CoAP.__init__(self, server_address, multicast)
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
         self.timer = None
 
-    def startProtocol(self):
+    def finish_request(self, request, client_address):
         """
-        Called after protocol has started listening.
-        """
-        # Set the TTL>1 so multicast will cross router hops:
-        # self.transport.setTTL(5)
-        # Join a specific multicast group:
-        # self.transport.joinGroup(defines.ALL_COAP_NODES)
-
-    def datagramReceived(self, data, (host, port)):
-        """
-        Handler for received dUDP datagram.
+        Handler for received UDP datagram.
 
         :param data: the UDP datagram
         :param host: source host
         :param port: source port
         """
-        log.msg("Datagram received from " + str(host) + ":" + str(port))
+        host = client_address[0]
+        port = client_address[1]
+        data = request[0]
+        self.socket = request[1]
+
+        # log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         if isinstance(message, Request):
-            log.msg("Received request")
+            # log.msg("Received request")
             ret = self.request_layer.handle_request(message)
             if isinstance(ret, Request):
                 self.forward_request(ret)
-            else:
-                return
         elif isinstance(message, Response):
-            log.err("Received response")
+            # log.err("Received response")
             rst = Message.new_rst(message)
             rst = self.message_layer.matcher_response(rst)
-            log.msg("Send RST")
+            # log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
             message, error = message
             response = Response()
             response.destination = (host, port)
             response.code = defines.responses[error]
-            response = self.reliability_response(message, response)
+            response = self.message_layer.reliability_response(message, response)
             response = self.message_layer.matcher_response(response)
-            log.msg("Send Error")
+            # log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
-            log.msg("Received ACK or RST")
+            # log.msg("Received ACK or RST")
             self.message_layer.handle_message(message)
 
     def forward_request(self, request):
@@ -107,62 +103,86 @@ class ProxyCoAP(CoAP):
         schema = uri.split("://")
         try:
             path = schema[1]
-            # schema = schema[0]
-            host_pos = path.index("/")
-            destination = path[:host_pos]
-            destination = destination.split(":")
-            port = 5683
-            host = destination[0]
-            if len(destination) > 1:
-                port = int(destination[1])
-            path = path[host_pos:]
-            server = (host, port)
+            assert(isinstance(path, str))
+            try:
+                host_pos = path.index("]")
+                destination = path[:host_pos]
+                destination.replace("[", "")
+                destination.replace("]", "")
+                if path[host_pos+1] == ":":
+                    port_pos = path.index("/")
+                    port = int(path[host_pos+1:port_pos])
+                else:
+                    port = 5683
+                host = destination
+
+                path = path[path.index("/"):]
+                server = (host, port)
+            except ValueError:
+
+                # schema = schema[0]
+                host_pos = path.index("/")
+                destination = path[:host_pos]
+                destination = destination.split(":")
+                port = 5683
+                host = destination[0]
+                if len(destination) > 1:
+                    port = int(destination[1])
+                path = path[host_pos:]
+                server = (host, port)
         except IndexError:
             return self.send_error(request, response, "BAD_REQUEST")
         request.uri_path = path
-        client = HelperClient(server, True)
+        client = HelperClientSynchronous()
         self._currentMID += 1
         client.starting_mid = self._currentMID % (1 << 16)
         method = defines.codes[request.code]
+        req = None
         if method == 'GET':
-            function = client.protocol.get
-            args = (path,)
-            kwargs = {"Token": str(token)}
-            callback = self.result_forward
-            err_callback = self.error
+            function = client.get
+            req = request
+            req.destination = server
+            req.uri_path = path
+            req.token = str(token)
+            args = (req,)
         elif method == 'POST':
-            function = client.protocol.post
-            args = (path, request.payload)
-            kwargs = {"Token": str(token)}
-            callback = self.result_forward
-            err_callback = self.error
+            function = client.post
+            req = request
+            req.destination = server
+            req.uri_path = path
+            req.token = str(token)
+            args = (req,)
         elif method == 'PUT':
-            function = client.protocol.put
-            args = (path, request.payload)
-            kwargs = {"Token": str(token)}
-            callback = self.result_forward
-            err_callback = self.error
+            function = client.put
+            req = request
+            req.destination = server
+            req.uri_path = path
+            req.token = str(token)
+            args = (req,)
         elif method == 'DELETE':
-            function = client.protocol.delete
-            args = (path,)
-            kwargs = {"Token": str(token)}
-            callback = self.result_forward
-            err_callback = self.error
+            function = client.delete
+            req = request
+            req.destination = server
+            req.uri_path = path
+            req.token = str(token)
+            args = (req,)
         else:
             return self.send_error(request, response, "BAD_REQUEST")
-        for option in request.options:
-            if option.safe:
-                kwargs[option.name] = option.value
+        for option in req.options:
+            if not option.safe:
+                req.del_option(option)
 
-        operations = [(function, args, kwargs, (callback, err_callback))]
         key = hash(str(host) + str(port) + str(token))
         self._forward[key] = request
         key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
         self._forward_mid[key] = request
-        client.start(operations)
         # Render_GET
         self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
         self.timer.start()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(client.start, [(function, args)])
+            future.add_done_callback(self.result_forward)
+
         return None
 
     def send_ack(self, list_request):
@@ -181,12 +201,14 @@ class ProxyCoAP(CoAP):
         ack = Message.new_ack(request)
         self.send(ack, host, port)
 
-    def result_forward(self, response, request=None):
+    def result_forward(self, future):
         """
         Forward results to the client.
 
         :param response: the response sent by the server.
         """
+
+        response, request = future.results()
         skip_delete = False
         key = None
         if request is None:
