@@ -95,6 +95,7 @@ class ProxyCoAP(CoAP):
         :return: None if success, send an error otherwise
         """
         uri = request.proxy_uri
+        print uri
         response = Response()
         response.destination = request.source
         token = self.generate_token()
