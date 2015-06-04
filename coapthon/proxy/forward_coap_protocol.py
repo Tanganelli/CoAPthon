@@ -95,7 +95,6 @@ class ProxyCoAP(CoAP):
         :return: None if success, send an error otherwise
         """
         uri = request.proxy_uri
-        print uri
         response = Response()
         response.destination = request.source
         token = self.generate_token()
@@ -104,6 +103,8 @@ class ProxyCoAP(CoAP):
         schema = uri.split("://")
         try:
             path = schema[1]
+            print schema
+            print type(path)
             assert(isinstance(path, str))
             try:
                 host_pos = path.index("]")
