@@ -11,7 +11,7 @@ class CoAPForwardProxy(ProxyCoAP):
 
 
 def main():
-    server = CoAPForwardProxy("127.0.0.1", 5683)
+    server = CoAPForwardProxy("bbbb::2", 5683)
     try:
         server.serve_forever(poll_interval=0.01)
     except KeyboardInterrupt:
