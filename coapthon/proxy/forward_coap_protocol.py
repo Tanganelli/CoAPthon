@@ -145,8 +145,8 @@ class ProxyCoAP(CoAP):
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
 
-        ip, port, path = self.parse_path(uri)
-        server = (ip, port)
+        host, port, path = self.parse_path(uri)
+        server = (host, port)
 
         request.uri_path = path
         client = HelperClientSynchronous()
