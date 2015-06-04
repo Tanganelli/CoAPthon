@@ -43,7 +43,6 @@ class CoAP(SocketServer.UDPServer):
         SocketServer.UDPServer.address_family = socket.AF_INET6
         SocketServer.UDPServer.__init__(self, server_address, None)
         self.address_family = socket.AF_INET6
-        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, True)
         self.stopped = threading.Event()
         self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
