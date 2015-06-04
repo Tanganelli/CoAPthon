@@ -258,7 +258,7 @@ class HelperClientSynchronous(object):
             self.condition.wait()
             message = self._response
             self._response = None
-        return message
+        return message, request
 
     def observe(self, *args, **kwargs):
         """
