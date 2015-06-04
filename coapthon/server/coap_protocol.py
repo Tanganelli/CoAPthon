@@ -40,10 +40,10 @@ class CoAP(SocketServer.UDPServer):
         Initialize the CoAP protocol
 
         """
-        SocketServer.UDPServer.address_family = socket.AF_INET6
 
         SocketServer.UDPServer.__init__(self, server_address, None)
-        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+        self.address_family = socket.AF_INET6
+        # self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
         self.stopped = threading.Event()
         self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
