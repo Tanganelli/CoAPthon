@@ -41,6 +41,7 @@ class CoAP(SocketServer.UDPServer):
 
         """
         SocketServer.UDPServer.address_family = socket.AF_INET6
+        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
         SocketServer.UDPServer.__init__(self, server_address, None)
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -81,6 +82,7 @@ class CoAP(SocketServer.UDPServer):
         # print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
+
         self.socket.sendto(message, (host, port))
 
     def finish_request(self, request, client_address):
