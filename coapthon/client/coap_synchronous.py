@@ -258,7 +258,7 @@ class HelperClientSynchronous(object):
             self.condition.wait()
             message = self._response
             self._response = None
-        return message, request
+        return message
 
     def observe(self, *args, **kwargs):
         """
@@ -305,7 +305,7 @@ class HelperClientSynchronous(object):
             self.condition.acquire()
             self.condition.wait()
             message = self._response
-        return message, request
+        return message
 
     def delete(self, *args, **kwargs):
         """
