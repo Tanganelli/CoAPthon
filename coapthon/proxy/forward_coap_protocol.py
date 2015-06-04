@@ -102,10 +102,7 @@ class ProxyCoAP(CoAP):
             return self.send_error(request, response, "BAD_REQUEST")
         schema = uri.split("://")
         try:
-            path = schema[1]
-            print schema
-            print type(path)
-            assert(isinstance(path, str))
+            path = str(schema[1])
             try:
                 host_pos = path.index("]")
                 destination = path[:host_pos]
