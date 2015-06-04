@@ -223,7 +223,7 @@ class ProxyCoAP(CoAP):
 
         :param response: the response sent by the server.
         """
-
+        print future.result()
         response = future.result()
         request = None
         skip_delete = False
