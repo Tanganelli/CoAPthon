@@ -305,7 +305,7 @@ class HelperClientSynchronous(object):
             self.condition.acquire()
             self.condition.wait()
             message = self._response
-        return request, message
+        return message, request
 
     def delete(self, *args, **kwargs):
         """
