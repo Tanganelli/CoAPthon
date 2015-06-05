@@ -72,27 +72,28 @@ class ProxyCoAP(CoAP):
 
     def parse_path(self, path):
         print "IPv4"
-        m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
-        if m is None:
-            m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
-            if m is None:
-                m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
-                if m is None:
-                    ip, port, path = self.parse_path_ipv6(path)
-                else:
-                    ip = m.group(2)
-                    port = 5683
-                    path = ""
-            else:
-                ip = m.group(2)
-                port = 5683
-                path = m.group(3)
-        else:
-            ip = m.group(2)
-            port = int(m.group(3))
-            path = m.group(4)
-
-        return ip, port, path
+        return self.parse_path_ipv6(path)
+        # m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
+        # if m is None:
+        #     m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
+        #     if m is None:
+        #         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
+        #         if m is None:
+        #             ip, port, path = self.parse_path_ipv6(path)
+        #         else:
+        #             ip = m.group(2)
+        #             port = 5683
+        #             path = ""
+        #     else:
+        #         ip = m.group(2)
+        #         port = 5683
+        #         path = m.group(3)
+        # else:
+        #     ip = m.group(2)
+        #     port = int(m.group(3))
+        #     path = m.group(4)
+        #
+        # return ip, port, path
 
     @staticmethod
     def parse_path_ipv6(path):
