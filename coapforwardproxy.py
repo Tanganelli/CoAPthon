@@ -15,7 +15,7 @@ def main():
     portSocket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     # Make the port non-blocking and start it listening.
     portSocket.setblocking(False)
-    portSocket.bind(('127.0.0.1', 9999))
+    portSocket.bind(('bbbb::2', 5683))
 
     # Now pass the port file descriptor to the reactor
     port = reactor.adoptDatagramPort(
