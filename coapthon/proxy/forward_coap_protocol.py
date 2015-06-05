@@ -71,6 +71,7 @@ class ProxyCoAP(CoAP):
             self.message_layer.handle_message(message)
 
     def parse_path(self, path):
+        print "IPv4"
         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
@@ -95,11 +96,14 @@ class ProxyCoAP(CoAP):
 
     @staticmethod
     def parse_path_ipv6(path):
+        print "IPv6"
+        print path
         m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
             if m is None:
                 m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
+                print "here"
                 ip = m.group(2)
                 port = 5683
                 path = ""
