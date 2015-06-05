@@ -50,7 +50,7 @@ class ProxyCoAP(CoAP):
         # Join a specific multicast group:
         # self.transport.joinGroup(defines.ALL_COAP_NODES)
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
         """
         Handler for received dUDP datagram.
 
@@ -58,6 +58,12 @@ class ProxyCoAP(CoAP):
         :param host: source host
         :param port: source port
         """
+        print addr
+        try:
+            host, port = addr
+        except ValueError:
+            host = addr
+            port = 0
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
