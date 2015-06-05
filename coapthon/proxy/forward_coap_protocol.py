@@ -176,10 +176,12 @@ class ProxyCoAP(CoAP):
         # Render_GET
         with ThreadPoolExecutor(max_workers=100) as executor:
             self.timer[request.mid] = executor.submit(self.send_delayed_ack, request)
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            future = executor.submit(client.start, [(function, args, {})])
-            future.add_done_callback(self.result_forward)
+        # with ThreadPoolExecutor(max_workers=100) as executor:
+        #     future = executor.submit(client.start, [(function, args, {})])
+        #     future.add_done_callback(self.result_forward)
 
+        response = function(*args, {})
+        self.result_forward(response=response)
         return None
 
     def send_delayed_ack(self, request):
@@ -203,15 +205,16 @@ class ProxyCoAP(CoAP):
         ack = Message.new_ack(request)
         self.send(ack, host, port)
 
-    def result_forward(self, future):
+    def result_forward(self, future=None, response=None):
         """
         Forward results to the client.
 
         :param future: the future object.
         """
-        print future
-        print future.result()
-        response = future.result()
+        if future is not None:
+            print future
+            print future.result()
+            response = future.result()
         host, port = response.source
         key = hash(str(host) + str(port) + str(response.token))
         request = self._forward.get(key)
