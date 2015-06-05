@@ -123,7 +123,9 @@ class CoAP(DatagramProtocol):
 
     def start(self, host):
         # self.transport.connect(host, self.server[1])
+        print "start"
         function, args, kwargs, client_callback = self.get_operation()
+        print function, args, kwargs, client_callback
         function(client_callback, *args, **kwargs)
 
     def start_test(self, transport):
