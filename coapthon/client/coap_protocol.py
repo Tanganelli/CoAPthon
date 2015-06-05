@@ -52,8 +52,9 @@ class CoAP(DatagramProtocol):
             # legal
         except socket.error:
             # Not legal
-            data = socket.gethostbyname(server[0])
-            self.server = (data, server[1])
+            data = socket.getaddrinfo(server[0], server[1])
+
+            self.server = (server[0], server[1])
 
         # defer = reactor.resolve('coap.me')
         # defer.addCallback(self.start)
