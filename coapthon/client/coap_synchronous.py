@@ -8,7 +8,7 @@ from coapthon.messages.response import Response
 from coapthon import defines
 from coapthon.serializer import Serializer
 from coapthon.messages.request import Request
-import logging as log
+# import logging as log
 
 __author__ = 'giacomo'
 
@@ -28,9 +28,10 @@ class HelperClientSynchronous(object):
         self._socket = None
         self._receiver_thread = None
         self.stop = False
-        self.parent = parent;
+        self.parent = parent
 
-    def start(self, operations):
+    @staticmethod
+    def start(operations):
         # self.transport.connect(host, self.server[1])
         function, args, kwargs = operations[0]
         function(*args, **kwargs)
@@ -53,7 +54,7 @@ class HelperClientSynchronous(object):
             request.type = defines.inv_types["CON"]
         serializer = Serializer()
         request.destination = self._endpoint
-        host, port = request.destination
+        # host, port = request.destination
         # print "Message sent to " + host + ":" + str(port)
         # print "----------------------------------------"
         # print request
@@ -70,7 +71,7 @@ class HelperClientSynchronous(object):
             self.call_id[key] = (threading.Timer(future_time, self.retransmit, (request, host, port, future_time)), 0)
 
     def retransmit(self, t):
-        log.info("Retransmit")
+        # log.info("Retransmit")
         request, host, port, future_time = t
         key = hash(str(host) + str(port) + str(request.mid))
         call_id, retransmit_count = self.call_id[key]
@@ -87,7 +88,7 @@ class HelperClientSynchronous(object):
             del self.call_id[key]
         else:
             request.timeouted = True
-            log.error("Request timeouted")
+            # log.error("Request timeouted")
             del self.call_id[key]
             # notify timeout
             self.condition.acquire()
@@ -130,7 +131,8 @@ class HelperClientSynchronous(object):
             if isinstance(message, Response):
                 self.handle_response(message)
             elif isinstance(message, Request):
-                log.error("Received request")
+                # log.error("Received request")
+                pass
             else:
                 self.handle_message(message)
             key = hash(str(host) + str(port) + str(message.mid))
@@ -180,7 +182,7 @@ class HelperClientSynchronous(object):
             if message.type == defines.inv_types["RST"]:
                 self._response = message
             else:
-                log.error("Received unattended message")
+                # log.error("Received unattended message")
                 # handle error
                 self._response = "Received unattended message"
             self.condition.acquire()
@@ -451,7 +453,8 @@ class HelperClientSynchronous(object):
             message = self._response
         return message
 
-    def parse_path_ipv6(self, path):
+    @staticmethod
+    def parse_path_ipv6(path):
         m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
