@@ -218,6 +218,7 @@ class HelperClientSynchronous(object):
         :param args: request object
         :param kwargs: dictionary with parameters
         """
+        print args
         if len(args) > 0:
             request = args[0]
             assert(isinstance(request, Request))
