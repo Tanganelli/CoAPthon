@@ -252,10 +252,11 @@ class ProxyCoAP(CoAP):
         :return: a token.
         """
         self._token += 1
-        md5 = hashlib.md5()
-        md5.update(str(self._token))
-        token = md5.digest()
-        return token[0:15]
+        # md5 = hashlib.md5()
+        # md5.update(str(self._token))
+        # token = md5.digest()
+        # return token[0:15]
+        return str(self._token)
 
     def error(self, mid, host, port):
         """
