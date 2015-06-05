@@ -1,17 +1,9 @@
-import functools
 import hashlib
-import os
 import random
 import re
-from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
 import time
-from twisted.application.service import Application
-from twisted.python import log
-from twisted.python.log import ILogObserver, FileLogObserver
-from twisted.python.logfile import DailyLogFile
 from coapthon import defines
-from coapthon.client.coap_protocol import HelperClient
 from coapthon.client.coap_synchronous import HelperClientSynchronous
 from coapthon.messages.message import Message
 from coapthon.messages.request import Request
@@ -21,16 +13,6 @@ from coapthon.server.coap_protocol import CoAP
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
-
-
-home = os.path.expanduser("~")
-if not os.path.exists(home + "/.coapthon/"):
-    os.makedirs(home + "/.coapthon/")
-
-logfile = DailyLogFile("CoAPthon_forward_proxy.log", home + "/.coapthon/")
-# Now add an observer that logs to a file
-application = Application("CoAPthon_Forward_Proxy")
-application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class ProxyCoAP(CoAP):
@@ -49,9 +31,6 @@ class ProxyCoAP(CoAP):
         """
         Handler for received UDP datagram.
 
-        :param data: the UDP datagram
-        :param host: source host
-        :param port: source port
         """
         host = client_address[0]
         port = client_address[1]
@@ -113,7 +92,8 @@ class ProxyCoAP(CoAP):
 
         return ip, port, path
 
-    def parse_path_ipv6(self, path):
+    @staticmethod
+    def parse_path_ipv6(path):
         m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
@@ -155,7 +135,6 @@ class ProxyCoAP(CoAP):
         self._currentMID += 1
         client.starting_mid = self._currentMID % (1 << 16)
         method = defines.codes[request.code]
-        req = None
         if method == 'GET':
             function = client.get
             req = request
@@ -228,9 +207,8 @@ class ProxyCoAP(CoAP):
         """
         Forward results to the client.
 
-        :param response: the response sent by the server.
+        :param future: the future object.
         """
-        print future
         print future.result()
         response = future.result()
         host, port = response.source
@@ -255,7 +233,8 @@ class ProxyCoAP(CoAP):
             try:
                 del self._forward_mid[key]
             except KeyError:
-                log.err("MID has not been deleted")
+                # log.err("MID has not been deleted")
+                pass
             host, port = request.source
             if response.mid is None:
                 response.mid = self._currentMID
@@ -297,5 +276,6 @@ class ProxyCoAP(CoAP):
             try:
                 del self._forward_mid[key]
             except KeyError:
-                log.err("MID has not been deleted")
+                # log.err("MID has not been deleted")
+                pass
             self.send(response, host, port)
