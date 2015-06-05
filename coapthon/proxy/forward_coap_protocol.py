@@ -198,8 +198,8 @@ class ProxyCoAP(CoAP):
         self._forward_mid[key] = request
         client.start(operations)
         # Render_GET
-        self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        self.timer.start()
+        # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        # self.timer.start()
         return None
 
     def send_ack(self, list_request):
