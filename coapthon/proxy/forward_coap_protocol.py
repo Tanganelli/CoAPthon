@@ -95,6 +95,7 @@ class ProxyCoAP(CoAP):
             # ACK or RST
             log.msg("Received ACK or RST")
             self._message_layer.handle_message(message)
+
     def parse_path(self, path):
         return self.parse_path_ipv6(path)
         # m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
@@ -154,7 +155,7 @@ class ProxyCoAP(CoAP):
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
         host, port, path = self.parse_path(uri)
-        server = (host, port)
+        server = (str(host), int(port))
         request.uri_path = path
         client = HelperClient(server, True)
         self._currentMID += 1
