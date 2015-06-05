@@ -179,7 +179,7 @@ class Serializer(object):
         :param message: the message
         :return: the stream of bytes
         """
-
+        print message
         fmt = "!BBH"
 
         if message.token is None or message.token == "":
