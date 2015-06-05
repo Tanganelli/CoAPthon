@@ -176,7 +176,10 @@ class CoAP(DatagramProtocol):
 
     def datagramReceived(self, datagram, host):
         serializer = Serializer()
-        host, port = host
+        try:
+            host, port = host
+        except ValueError:
+            host, port, tmp1, tmp2 = host
         message = serializer.deserialize(datagram, host, port)
         print "Message received from " + host + ":" + str(port)
         print "----------------------------------------"
