@@ -43,7 +43,7 @@ class ProxyCoAP(CoAP):
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
-        self.timer = []
+        self.timer = {}
 
     def finish_request(self, request, client_address):
         """
@@ -196,7 +196,7 @@ class ProxyCoAP(CoAP):
         self._forward_mid[key] = request
         # Render_GET
         with ThreadPoolExecutor(max_workers=100) as executor:
-            self.timer[request] = executor.submit(self.send_delayed_ack, request)
+            self.timer[request.mid] = executor.submit(self.send_delayed_ack, request)
         with ThreadPoolExecutor(max_workers=100) as executor:
             future = executor.submit(client.start, [(function, args, {})])
             future.add_done_callback(self.result_forward)
@@ -214,11 +214,12 @@ class ProxyCoAP(CoAP):
         :param list_request: the request to be acknowledge.
         :type list_request: [Request] or Request
         """
-        self.timer = None
+
         if isinstance(list_request, list):
             request = list_request[0]
         else:
             request = list_request
+        del self.timer[request.mid]
         host, port = request.source
         ack = Message.new_ack(request)
         self.send(ack, host, port)
@@ -235,7 +236,7 @@ class ProxyCoAP(CoAP):
         host, port = response.source
         key = hash(str(host) + str(port) + str(response.token))
         request = self._forward.get(key)
-        if self.timer[request].cancel():
+        if self.timer[request.mid].cancel():
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
