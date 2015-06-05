@@ -198,7 +198,7 @@ class ProxyCoAP(CoAP):
         self.timer.start()
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(client.start, [(function, args)])
-            future.add_done_callback(functools.partial(self.result_forward, self))
+            future.add_done_callback(functools.partial(result_forward, self))
 
         return None
 
@@ -217,52 +217,6 @@ class ProxyCoAP(CoAP):
         host, port = request.source
         ack = Message.new_ack(request)
         self.send(ack, host, port)
-
-    def result_forward(self, future):
-        """
-        Forward results to the client.
-
-        :param response: the response sent by the server.
-        """
-        print future.result()
-        response = future.result()
-        request = None
-        skip_delete = False
-        key = None
-        if request is None:
-            host, port = response.source
-            key = hash(str(host) + str(port) + str(response.token))
-            request = self._forward.get(key)
-        else:
-            skip_delete = True
-        if self.timer is not None:
-            self.timer.cancel()
-            response.type = defines.inv_types["ACK"]
-            response.mid = request.mid
-        elif skip_delete:
-            response.type = defines.inv_types["ACK"]
-            response.mid = request.mid
-        else:
-            if request.type == defines.inv_types["CON"]:
-                response.type = defines.inv_types["CON"]
-            else:
-                response.type = defines.inv_types["NON"]
-
-        if request is not None:
-            response.destination = request.source
-            response.token = request.token
-            if not skip_delete:
-                del self._forward[key]
-                host, port = response.source
-                key = hash(str(host) + str(port) + str(response.mid))
-                try:
-                    del self._forward_mid[key]
-                except KeyError:
-                    log.err("MID has not been deleted")
-            host, port = request.source
-            if response.mid is None:
-                response.mid = self._currentMID
-            self.send(response, host, port)
 
     def generate_token(self):
         """
@@ -302,3 +256,53 @@ class ProxyCoAP(CoAP):
             except KeyError:
                 log.err("MID has not been deleted")
             self.send(response, host, port)
+
+
+def result_forward(proxy, future):
+        """
+        Forward results to the client.
+
+        :param response: the response sent by the server.
+        """
+        print proxy
+        print future
+        print type(proxy)
+        print type(future)
+        response = future.result()
+        request = None
+        skip_delete = False
+        key = None
+        if request is None:
+            host, port = response.source
+            key = hash(str(host) + str(port) + str(response.token))
+            request = proxy._forward.get(key)
+        else:
+            skip_delete = True
+        if proxy.timer is not None:
+            proxy.timer.cancel()
+            response.type = defines.inv_types["ACK"]
+            response.mid = request.mid
+        elif skip_delete:
+            response.type = defines.inv_types["ACK"]
+            response.mid = request.mid
+        else:
+            if request.type == defines.inv_types["CON"]:
+                response.type = defines.inv_types["CON"]
+            else:
+                response.type = defines.inv_types["NON"]
+
+        if request is not None:
+            response.destination = request.source
+            response.token = request.token
+            if not skip_delete:
+                del proxy._forward[key]
+                host, port = response.source
+                key = hash(str(host) + str(port) + str(response.mid))
+                try:
+                    del proxy._forward_mid[key]
+                except KeyError:
+                    log.err("MID has not been deleted")
+            host, port = request.source
+            if response.mid is None:
+                response.mid = proxy._currentMID
+            proxy.send(response, host, port)
