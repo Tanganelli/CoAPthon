@@ -65,10 +65,10 @@ class ProxyCoAP(CoAP):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self._request_layer.handle_request(message)
@@ -224,6 +224,7 @@ class ProxyCoAP(CoAP):
 
         :param response: the response sent by the server.
         """
+        print "FORWARD"
         skip_delete = False
         key = None
         if request is None:
@@ -232,6 +233,7 @@ class ProxyCoAP(CoAP):
             request = self._forward.get(key)
         else:
             skip_delete = True
+        print request
         if self.timer is not None:
             self.timer.cancel()
             response.type = defines.inv_types["ACK"]
