@@ -226,12 +226,13 @@ class CoAP(DatagramProtocol):
                 callback(message.mid, client_callback)
 
     def handle_response(self, response):
-        print "Response\n" + response
+        print "Response\n"
+        print response
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
             self.send(ack)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
-        print "Token" + response.token + ", key=" + key_token
+        print "Token" + str(response.token) + ", key=" + str(key_token)
         print self.sent_token.keys()
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
@@ -555,7 +556,7 @@ class CoAP(DatagramProtocol):
 
 
 class HelperClient(object):
-    def __init__(self, server=("127.0.0.1", 5683), forward=False):
+    def __init__(self, server=("bbbb::2", 5683), forward=False):
         self.protocol = CoAP(server, forward)
 
     @property
@@ -568,7 +569,7 @@ class HelperClient(object):
 
     def start(self, operations):
         self.protocol.set_operations(operations)
-        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
+        reactor.listenUDP(0, self.protocol, interface="127.0.0.1")
         try:
             reactor.run()
         except twisted.internet.error.ReactorAlreadyRunning:
