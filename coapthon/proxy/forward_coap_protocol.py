@@ -209,6 +209,7 @@ class ProxyCoAP(CoAP):
 
         :param future: the future object.
         """
+        print future
         print future.result()
         response = future.result()
         host, port = response.source
