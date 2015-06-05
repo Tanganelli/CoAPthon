@@ -557,7 +557,7 @@ class HelperClient(object):
 
     def start(self, operations):
         self.protocol.set_operations(operations)
-        reactor.listenUDP(0, self.protocol)
+        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
         try:
             reactor.run()
         except twisted.internet.error.ReactorAlreadyRunning:
