@@ -24,7 +24,7 @@ def main():
     # # The portSocket should be cleaned up by the process that creates it.
     # portSocket.close()
 
-    reactor.listenUDP(5683, CoAPForwardProxy("bbbb::2", 5683), "::")
+    reactor.listenUDP(5683, CoAPForwardProxy("bbbb::2", 5683), interface='::')
     reactor.run()
 
 
