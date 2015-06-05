@@ -194,11 +194,14 @@ class ProxyCoAP(CoAP):
         key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
         self._forward_mid[key] = request
         # Render_GET
-        self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        self.timer.start()
-        with ThreadPoolExecutor(max_workers=1) as executor:
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            self.timer[request] = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+            executor.submit(self.timer[request].start)
+        with ThreadPoolExecutor(max_workers=100) as executor:
             future = executor.submit(client.start, [(function, args, {})])
             future.add_done_callback(self.result_forward)
+
+
 
         return None
 
@@ -236,8 +239,8 @@ class ProxyCoAP(CoAP):
             request = self._forward.get(key)
         else:
             skip_delete = True
-        if self.timer is not None:
-            self.timer.cancel()
+        if self.timer[request] is not None:
+            self.timer[request].cancel()
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         elif skip_delete:
