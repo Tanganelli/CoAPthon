@@ -127,10 +127,10 @@ class HelperClientSynchronous(object):
             except ValueError:
                 host, port, tmp1, tmp2 = addr
             message = serializer.deserialize(datagram, host, port)
-            print "Message received from " + host + ":" + str(port)
-            print "----------------------------------------"
-            print message
-            print "----------------------------------------"
+            # print "Message received from " + host + ":" + str(port)
+            # print "----------------------------------------"
+            # print message
+            # print "----------------------------------------"
             if isinstance(message, Response):
                 self.handle_response(message)
             elif isinstance(message, Request):
@@ -221,7 +221,6 @@ class HelperClientSynchronous(object):
         :param args: request object
         :param kwargs: dictionary with parameters
         """
-        print args[0]
         if len(args) > 0:
             request = args[0]
             assert(isinstance(request, Request))
@@ -237,7 +236,6 @@ class HelperClientSynchronous(object):
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
 
-        print endpoint
         self.send(request, endpoint)
         future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
         retransmit_count = 0

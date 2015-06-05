@@ -101,7 +101,6 @@ class ProxyCoAP(CoAP):
             m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
             if m is None:
                 m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
-                print "here"
                 ip = m.group(2)
                 port = 5683
                 path = ""
@@ -186,14 +185,14 @@ class ProxyCoAP(CoAP):
         # Render_GET
         with ThreadPoolExecutor(max_workers=100) as executor:
             self.timer[request.mid] = executor.submit(self.send_delayed_ack, request)
-        # with ThreadPoolExecutor(max_workers=100) as executor:
-        #     future = executor.submit(client.start, [(function, args, {})])
-        #     future.add_done_callback(self.result_forward)
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            future = executor.submit(client.start, [(function, args, {})])
+            future.add_done_callback(self.result_forward)
         # print req
-        operations = [(function, args, {})]
-        function, args, kwargs = operations[0]
-        response = function(*args, **kwargs)
-        self.result_forward(response=response)
+        # operations = [(function, args, {})]
+        # function, args, kwargs = operations[0]
+        # response = function(*args, **kwargs)
+        # self.result_forward(response=response)
         return None
 
     def send_delayed_ack(self, request):
