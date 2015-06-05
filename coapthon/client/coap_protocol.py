@@ -125,7 +125,6 @@ class CoAP(DatagramProtocol):
         # self.transport.connect(host, self.server[1])
         print "start"
         function, args, kwargs, client_callback = self.get_operation()
-        print function, args, kwargs, client_callback
         function(client_callback, *args, **kwargs)
 
     def start_test(self, transport):
@@ -174,6 +173,7 @@ class CoAP(DatagramProtocol):
         else:
             err_callback = None
         self.schedule_retrasmission(req, err_callback)
+        print "Send"
         self.send(req)
 
     def datagramReceived(self, datagram, host):
@@ -225,13 +225,17 @@ class CoAP(DatagramProtocol):
                 callback(message.mid, client_callback)
 
     def handle_response(self, response):
+        print "Response\n" + response
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
             self.send(ack)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
+        print "Token" + response.token + ", key=" + key_token
+        print self.sent_token.keys()
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
             req, timestamp, callback, client_callback = self.sent_token[key_token]
+            print req, timestamp, callback, client_callback
             key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
             self.received[key] = response
             callback(req.mid, client_callback)
@@ -300,7 +304,7 @@ class CoAP(DatagramProtocol):
         log.msg(self.root.dump())
 
     def get(self, client_callback, *args, **kwargs):
-        path = args[0]
+        path = str(args[0])
         req = Request()
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
