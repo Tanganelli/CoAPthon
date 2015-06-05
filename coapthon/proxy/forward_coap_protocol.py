@@ -179,8 +179,9 @@ class ProxyCoAP(CoAP):
         # with ThreadPoolExecutor(max_workers=100) as executor:
         #     future = executor.submit(client.start, [(function, args, {})])
         #     future.add_done_callback(self.result_forward)
-
-        response = function(*args, {})
+        operations = [(function, args, {})]
+        function, args, kwargs = operations[0]
+        response = function(*args, **kwargs)
         self.result_forward(response=response)
         return None
 
