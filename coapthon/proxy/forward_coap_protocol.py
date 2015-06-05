@@ -127,6 +127,7 @@ class ProxyCoAP(CoAP):
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
         host, port, path = self.parse_path(uri)
+        print host, port, path
         server = (str(host), int(port))
         token = self.generate_token()
         key = hash(str(host) + str(port) + str(token))
