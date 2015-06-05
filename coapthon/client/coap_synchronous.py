@@ -39,7 +39,7 @@ class HelperClientSynchronous(object):
     def send(self, request, endpoint, resend=False):
 
         self._endpoint = endpoint
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         self._receiver_thread = threading.Thread(target=self.datagram_received)
         self._receiver_thread.start()
         if not resend:
