@@ -183,10 +183,11 @@ class CoAP(DatagramProtocol):
         except ValueError:
             host, port, tmp1, tmp2 = host
         message = serializer.deserialize(datagram, host, port)
-        # print "Message received from " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         if isinstance(message, Response):
             self.handle_response(message)
         elif isinstance(message, Request):
