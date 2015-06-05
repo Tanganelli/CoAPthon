@@ -1,3 +1,4 @@
+import functools
 import hashlib
 import os
 import random
@@ -197,7 +198,7 @@ class ProxyCoAP(CoAP):
         self.timer.start()
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(client.start, [(function, args)])
-            future.add_done_callback(self.result_forward)
+            future.add_done_callback(functools.partial(self.result_forward, self))
 
         return None
 
