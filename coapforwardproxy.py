@@ -11,7 +11,7 @@ class CoAPForwardProxy(ProxyCoAP):
 
 
 def main():
-    reactor.listenUDP(5684, CoAPForwardProxy("127.0.0.1", 5684), "127.0.0.1")
+    reactor.listenUDP(5683, CoAPForwardProxy("bbbb::2", 5683), "bbbb::2")
     reactor.run()
 
 
