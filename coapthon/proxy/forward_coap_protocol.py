@@ -5,6 +5,7 @@ import random
 import re
 from threading import Timer
 from concurrent.futures import ThreadPoolExecutor
+import time
 from twisted.application.service import Application
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
@@ -195,15 +196,16 @@ class ProxyCoAP(CoAP):
         self._forward_mid[key] = request
         # Render_GET
         with ThreadPoolExecutor(max_workers=100) as executor:
-            self.timer[request] = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-            executor.submit(self.timer[request].start)
+            self.timer[request] = executor.submit(self.send_delayed_ack, request)
         with ThreadPoolExecutor(max_workers=100) as executor:
             future = executor.submit(client.start, [(function, args, {})])
             future.add_done_callback(self.result_forward)
 
-
-
         return None
+
+    def send_delayed_ack(self, request):
+        time.sleep(defines.SEPARATE_TIMEOUT)
+        self.send_ack([request])
 
     def send_ack(self, list_request):
         """
@@ -230,20 +232,10 @@ class ProxyCoAP(CoAP):
         print future
         print future.result()
         response = future.result()
-        request = None
-        skip_delete = False
-        key = None
-        if request is None:
-            host, port = response.source
-            key = hash(str(host) + str(port) + str(response.token))
-            request = self._forward.get(key)
-        else:
-            skip_delete = True
-        if self.timer[request] is not None:
-            self.timer[request].cancel()
-            response.type = defines.inv_types["ACK"]
-            response.mid = request.mid
-        elif skip_delete:
+        host, port = response.source
+        key = hash(str(host) + str(port) + str(response.token))
+        request = self._forward.get(key)
+        if self.timer[request].cancel():
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
@@ -255,14 +247,14 @@ class ProxyCoAP(CoAP):
         if request is not None:
             response.destination = request.source
             response.token = request.token
-            if not skip_delete:
-                del self._forward[key]
-                host, port = response.source
-                key = hash(str(host) + str(port) + str(response.mid))
-                try:
-                    del self._forward_mid[key]
-                except KeyError:
-                    log.err("MID has not been deleted")
+
+            del self._forward[key]
+            host, port = response.source
+            key = hash(str(host) + str(port) + str(response.mid))
+            try:
+                del self._forward_mid[key]
+            except KeyError:
+                log.err("MID has not been deleted")
             host, port = request.source
             if response.mid is None:
                 response.mid = self._currentMID
