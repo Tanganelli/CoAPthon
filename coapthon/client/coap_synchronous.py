@@ -122,6 +122,7 @@ class HelperClientSynchronous(object):
                     return
 
             serializer = Serializer()
+            print addr
             host, port = addr
             message = serializer.deserialize(datagram, host, port)
             print "Message received from " + host + ":" + str(port)
