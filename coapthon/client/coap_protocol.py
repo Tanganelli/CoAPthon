@@ -153,10 +153,10 @@ class CoAP(DatagramProtocol):
         serializer = Serializer()
         message.destination = self.server
         host, port = message.destination
-        # print "Message sent to " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+        print "Message sent to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
         self.transport.write(datagram, self.server)
