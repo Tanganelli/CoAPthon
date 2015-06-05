@@ -20,6 +20,7 @@ TODO
 ====
 
 - CoAP to HTTP Proxy
+- DTLS support
 
 Install instructions
 =============
