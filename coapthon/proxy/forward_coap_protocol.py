@@ -42,7 +42,7 @@ class ProxyCoAP(CoAP):
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
-        self.timer = None
+        self.timer = []
 
     def finish_request(self, request, client_address):
         """
