@@ -233,7 +233,7 @@ class HelperClientSynchronous(object):
             request.uri_path = path
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
-        print request
+
         print endpoint
         self.send(request, endpoint)
         future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))

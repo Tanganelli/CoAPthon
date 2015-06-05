@@ -177,6 +177,7 @@ class ProxyCoAP(CoAP):
         else:
             return self.send_error(request, response, "BAD_REQUEST")
         req.source = None
+        print req
         args = (req,)
 
         key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
