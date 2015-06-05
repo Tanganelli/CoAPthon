@@ -148,34 +148,34 @@ class ProxyCoAP(CoAP):
 
         if method == 'GET':
             function = client.get
-            req = request
+            req = copy.deepcopy(request)
             req.destination = server
             req.uri_path = path
             req.token = str(token)
 
         elif method == 'POST':
             function = client.post
-            req = request
+            req = copy.deepcopy(request)
             req.destination = server
             req.uri_path = path
             req.token = str(token)
 
         elif method == 'PUT':
             function = client.put
-            req = request
+            req = copy.deepcopy(request)
             req.destination = server
             req.uri_path = path
             req.token = str(token)
 
         elif method == 'DELETE':
             function = client.delete
-            req = request
+            req = copy.deepcopy(request)
             req.destination = server
             req.uri_path = path
             req.token = str(token)
 
         else:
-            return self.send_error(request, response, "BAD_REQUEST")
+            return self.send_error(to_store, response, "BAD_REQUEST")
         req.source = None
         print req
         args = (req,)
