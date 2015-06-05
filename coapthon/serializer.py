@@ -179,7 +179,7 @@ class Serializer(object):
         :param message: the message
         :return: the stream of bytes
         """
-        print message
+        # print message
         fmt = "!BBH"
 
         if message.token is None or message.token == "":
@@ -238,7 +238,7 @@ class Serializer(object):
                 fmt += "H"
                 values.append(option.value)
             else:
-                for b in option.value:
+                for b in str(option.raw_value):
                     fmt += "c"
                     values.append(b)
 

@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import random
 import re
@@ -123,62 +124,70 @@ class ProxyCoAP(CoAP):
         uri = request.proxy_uri
         response = Response()
         response.destination = request.source
-        token = self.generate_token()
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
-
         host, port, path = self.parse_path(uri)
-        server = (host, port)
+        server = (str(host), int(port))
+        token = self.generate_token()
+        key = hash(str(host) + str(port) + str(token))
+        to_store = copy.deepcopy(request)
+        self._forward[key] = to_store
+        # print request
+        to_delete = []
+        for option in request.options:
+            if option.name == "Proxy-Uri" or not option.safe:
+                to_delete.append(option)
 
-        request.uri_path = path
+        for option in to_delete:
+            request.del_option(option)
+
         client = HelperClientSynchronous()
         self._currentMID += 1
         client.starting_mid = self._currentMID % (1 << 16)
         method = defines.codes[request.code]
+
         if method == 'GET':
             function = client.get
             req = request
             req.destination = server
             req.uri_path = path
             req.token = str(token)
-            args = (req,)
+
         elif method == 'POST':
             function = client.post
             req = request
             req.destination = server
             req.uri_path = path
             req.token = str(token)
-            args = (req,)
+
         elif method == 'PUT':
             function = client.put
             req = request
             req.destination = server
             req.uri_path = path
             req.token = str(token)
-            args = (req,)
+
         elif method == 'DELETE':
             function = client.delete
             req = request
             req.destination = server
             req.uri_path = path
             req.token = str(token)
-            args = (req,)
+
         else:
             return self.send_error(request, response, "BAD_REQUEST")
-        for option in req.options:
-            if not option.safe:
-                req.del_option(option)
+        req.source = None
+        args = (req,)
 
-        key = hash(str(host) + str(port) + str(token))
-        self._forward[key] = request
         key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
-        self._forward_mid[key] = request
+        self._forward_mid[key] = req
         # Render_GET
         with ThreadPoolExecutor(max_workers=100) as executor:
             self.timer[request.mid] = executor.submit(self.send_delayed_ack, request)
         # with ThreadPoolExecutor(max_workers=100) as executor:
         #     future = executor.submit(client.start, [(function, args, {})])
         #     future.add_done_callback(self.result_forward)
+        # print req
         operations = [(function, args, {})]
         function, args, kwargs = operations[0]
         response = function(*args, **kwargs)
@@ -219,7 +228,7 @@ class ProxyCoAP(CoAP):
         host, port = response.source
         key = hash(str(host) + str(port) + str(response.token))
         request = self._forward.get(key)
-        if self.timer[request.mid].cancel():
+        if request.mid in self.timer and self.timer[request.mid].cancel():
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
