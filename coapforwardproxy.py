@@ -1,5 +1,7 @@
 import socket
+import twisted
 from twisted.internet import reactor
+from twisted.python import log
 from coapthon.proxy.forward_coap_protocol import ProxyCoAP
 
 __author__ = 'giacomo'
@@ -25,7 +27,12 @@ def main():
     # portSocket.close()
 
     reactor.listenUDP(5683, CoAPForwardProxy("bbbb::2", 5683), interface='bbbb::2')
-    reactor.run()
+    try:
+        reactor.run()
+    except twisted.internet.error.ReactorAlreadyRunning:
+        log.msg("Reactor already started")
+    except twisted.internet.error.ReactorNotRestartable:
+        log.msg("Reactor not Restartable")
 
 
 if __name__ == '__main__':
