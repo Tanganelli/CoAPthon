@@ -164,7 +164,7 @@ class CoAP(DatagramProtocol):
         print self.transport
         print self.transport.getPeer()
         print self.transport.getHost()
-        self.transport.write(datagram, self.server)
+        self.transport.write(datagram, message.destination)
 
     def send_callback(self, req, callback, client_callback):
         if req.mid is None:
