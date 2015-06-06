@@ -30,9 +30,9 @@ def main():
     try:
         reactor.run()
     except twisted.internet.error.ReactorAlreadyRunning:
-        log.msg("Reactor already started")
+        log.err("CoAPForwardProxy - Reactor already started")
     except twisted.internet.error.ReactorNotRestartable:
-        log.msg("Reactor not Restartable")
+        log.err("CoAPForwardProxy - Reactor not Restartable")
 
 
 if __name__ == '__main__':

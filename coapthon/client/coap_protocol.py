@@ -603,6 +603,6 @@ class HelperClient(object):
         try:
             reactor.run()
         except twisted.internet.error.ReactorAlreadyRunning:
-            log.msg("Reactor already started")
+            log.err("HelperClient - Reactor already started")
         except twisted.internet.error.ReactorNotRestartable:
-            log.msg("Reactor not Restartable")
+            log.err("HelperClient - Reactor not Restartable")
