@@ -36,9 +36,8 @@ class ProxyCoAP(CoAP):
 
         """
         CoAP.__init__(self)
-
-        self.client = HelperClient(server, True)
-        self.client.starting_mid = self._currentMID % (1 << 16)
+        self.client = None
+        self.server = server
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
@@ -52,6 +51,8 @@ class ProxyCoAP(CoAP):
         # self.transport.setTTL(5)
         # Join a specific multicast group:
         # self.transport.joinGroup(defines.ALL_COAP_NODES)
+        self.client = HelperClient(self.server, True)
+        self.client.starting_mid = self._currentMID % (1 << 16)
 
     def datagramReceived(self, data, addr):
         """
