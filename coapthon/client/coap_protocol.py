@@ -161,8 +161,9 @@ class CoAP(DatagramProtocol):
         self.transport.write(datagram, self.server)
 
     def send_callback(self, req, callback, client_callback):
-        self._currentMID += 1
-        req.mid = self._currentMID
+        if req.mid is None:
+            self._currentMID += 1
+            req.mid = self._currentMID
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
         self.sent[key] = (req, time.time(), callback, client_callback)
@@ -241,6 +242,8 @@ class CoAP(DatagramProtocol):
         req = Request()
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
@@ -306,6 +309,9 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+            del kwargs["MID"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -346,6 +352,9 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+            del kwargs["MID"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -407,6 +416,9 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+            del kwargs["MID"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -446,6 +458,9 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+            del kwargs["MID"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]
@@ -485,6 +500,9 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
+        elif "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+            del kwargs["MID"]
         for key in kwargs:
             o = Option()
             o.number = defines.inv_options[key]

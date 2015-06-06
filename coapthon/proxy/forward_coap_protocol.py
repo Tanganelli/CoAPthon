@@ -164,25 +164,25 @@ class ProxyCoAP(CoAP):
         if method == 'GET':
             function = client.protocol.get
             args = (path,)
-            kwargs = {"Token": str(token)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'POST':
             function = client.protocol.post
             args = (path, request.payload)
-            kwargs = {"Token": str(token)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'PUT':
             function = client.protocol.put
             args = (path, request.payload)
-            kwargs = {"Token": str(token)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'DELETE':
             function = client.protocol.delete
             args = (path,)
-            kwargs = {"Token": str(token)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         else:
@@ -194,7 +194,7 @@ class ProxyCoAP(CoAP):
         operations = [(function, args, kwargs, (callback, err_callback))]
         key = hash(str(host) + str(port) + str(token))
         self._forward[key] = request
-        key = hash(str(host) + str(port) + str(client.starting_mid % (1 << 16)))
+        key = hash(str(host) + str(port) + str(self._currentMID % (1 << 16)))
         self._forward_mid[key] = request
         client.start(operations)
         # Render_GET
