@@ -154,13 +154,14 @@ class CoAP(DatagramProtocol):
     def send(self, message):
         print "SEND\n"
         serializer = Serializer()
-        host, port = message.destination
-        print "Message sent to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # host, port = message.destination
+        # print "Message sent to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
+        print self.transport
         self.transport.write(datagram, self.server)
 
     def send_callback(self, req, callback, client_callback):
