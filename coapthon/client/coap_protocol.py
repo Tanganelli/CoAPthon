@@ -37,6 +37,7 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 class CoAP(DatagramProtocol):
     def __init__(self, server, forward):
+        print "INIT CLIENT\n"
         self._forward = forward
         self.received = {}
         self.sent = {}
@@ -84,6 +85,7 @@ class CoAP(DatagramProtocol):
             self.start(host)
 
     def startProtocol(self):
+        print "STARTPROTOCOL\n"
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
@@ -122,6 +124,7 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
+        print "START\n"
         # self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
@@ -149,6 +152,7 @@ class CoAP(DatagramProtocol):
             return None, None, None, None
 
     def send(self, message):
+        print "SEND\n"
         serializer = Serializer()
         message.destination = self.server
         # host, port = message.destination
@@ -176,6 +180,7 @@ class CoAP(DatagramProtocol):
         self.send(req)
 
     def datagramReceived(self, datagram, host):
+        print "RECEIVED\n"
         serializer = Serializer()
         try:
             host, port = host
@@ -225,7 +230,6 @@ class CoAP(DatagramProtocol):
                 callback(message.mid, client_callback)
 
     def handle_response(self, response):
-
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
             self.send(ack)
@@ -304,6 +308,7 @@ class CoAP(DatagramProtocol):
         log.msg(self.root.dump())
 
     def get(self, client_callback, *args, **kwargs):
+        print "GET\n"
         path = str(args[0])
         req = Request()
         if "Token" in kwargs.keys():
@@ -585,6 +590,7 @@ class CoAP(DatagramProtocol):
 
 class HelperClient(object):
     def __init__(self, server=("bbbb::2", 5683), forward=False):
+        print "INIT HELPER\n"
         self.protocol = CoAP(server, forward)
 
     @property
@@ -596,4 +602,5 @@ class HelperClient(object):
         self.protocol.current_mid = mid
 
     def start(self, operations):
+        print "START HELPER\n"
         self.protocol.set_operations(operations)

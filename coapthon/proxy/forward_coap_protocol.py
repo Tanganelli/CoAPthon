@@ -151,6 +151,8 @@ class ProxyCoAP(CoAP):
         :param request: the request to be forwarded
         :return: None if success, send an error otherwise
         """
+        print "FORWARD REQUEST\n"
+        print self.client
         uri = request.proxy_uri
         response = Response()
         response.destination = request.source
@@ -225,7 +227,7 @@ class ProxyCoAP(CoAP):
 
         :param response: the response sent by the server.
         """
-        print "FORWARD"
+        print "RESULT FORWARD\n"
         skip_delete = False
         host, port = response.source
         key_mid = hash(str(host) + str(port) + str(response.mid))
