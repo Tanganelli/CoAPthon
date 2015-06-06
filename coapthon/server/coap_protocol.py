@@ -91,10 +91,10 @@ class CoAP(DatagramProtocol):
         :param host: destination host
         :param port: destination port
         """
-        print "Message send to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message send to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
         self.transport.write(message, (host, port))
@@ -110,10 +110,13 @@ class CoAP(DatagramProtocol):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self._request_layer.handle_request(message)

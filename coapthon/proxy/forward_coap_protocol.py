@@ -226,6 +226,8 @@ class ProxyCoAP(CoAP):
         """
         print "FORWARD"
         skip_delete = False
+        host, port = response.source
+        key_mid = hash(str(host) + str(port) + str(response.mid))
         key = None
         if request is None:
             host, port = response.source
@@ -252,10 +254,8 @@ class ProxyCoAP(CoAP):
             response.token = request.token
             if not skip_delete:
                 del self._forward[key]
-                host, port = response.source
-                key = hash(str(host) + str(port) + str(response.mid))
                 try:
-                    del self._forward_mid[key]
+                    del self._forward_mid[key_mid]
                 except KeyError:
                     log.err("MID has not been deleted")
             host, port = request.source
