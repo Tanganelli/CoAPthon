@@ -52,6 +52,7 @@ class ProxyCoAP(CoAP):
         # Join a specific multicast group:
         # self.transport.joinGroup(defines.ALL_COAP_NODES)
         self.client = HelperClient(self.server, True)
+        self.client.start_listener()
         self.client.starting_mid = self._currentMID % (1 << 16)
 
     def datagramReceived(self, data, addr):

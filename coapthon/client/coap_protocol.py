@@ -586,11 +586,6 @@ class CoAP(DatagramProtocol):
 class HelperClient(object):
     def __init__(self, server=("bbbb::2", 5683), forward=False):
         self.protocol = CoAP(server, forward)
-        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
-        try:
-            reactor.run()
-        except twisted.internet.error.ReactorAlreadyRunning:
-            log.msg("Reactor already started")
 
     @property
     def starting_mid(self):
@@ -602,3 +597,10 @@ class HelperClient(object):
 
     def start(self, operations):
         self.protocol.set_operations(operations)
+
+    def start_listener(self):
+        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
+        try:
+            reactor.run()
+        except twisted.internet.error.ReactorAlreadyRunning:
+            log.msg("Reactor already started")
