@@ -194,7 +194,7 @@ class ProxyCoAP(CoAP):
         operations = [(function, args, kwargs, (callback, err_callback))]
         key = hash(str(host) + str(port) + str(token))
         self._forward[key] = request
-        key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
+        key = hash(str(host) + str(port) + str(client.starting_mid % (1 << 16)))
         self._forward_mid[key] = request
         client.start(operations)
         # Render_GET
