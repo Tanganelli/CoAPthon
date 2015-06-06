@@ -29,7 +29,7 @@ def main():
     client = HelperClient(("bbbb::2", 5683), True)
 
     reactor.listenUDP(5683, CoAPForwardProxy("bbbb::2", 5683, client), interface='bbbb::2')
-    reactor.listenUDP(0, client.protocol, interface="bbbb::2")
+    reactor.listenUDP(0, client.protocol, interface="::")
     try:
         reactor.run()
     except twisted.internet.error.ReactorAlreadyRunning:
