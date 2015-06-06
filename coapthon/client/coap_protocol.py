@@ -313,10 +313,13 @@ class CoAP(DatagramProtocol):
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
 
         req.code = defines.inv_codes['GET']
         req.uri_path = path
@@ -356,10 +359,13 @@ class CoAP(DatagramProtocol):
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
 
         req.code = defines.inv_codes['GET']
         req.uri_path = path
@@ -420,10 +426,13 @@ class CoAP(DatagramProtocol):
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['POST']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -462,10 +471,13 @@ class CoAP(DatagramProtocol):
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['PUT']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -504,10 +516,13 @@ class CoAP(DatagramProtocol):
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['DELETE']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
