@@ -599,6 +599,7 @@ class HelperClient(object):
         self.protocol.set_operations(operations)
 
     def start_listener(self):
+        print self.protocol
         reactor.listenUDP(0, self.protocol, interface="bbbb::2")
         try:
             reactor.run()
