@@ -167,25 +167,25 @@ class ProxyCoAP(CoAP):
         if method == 'GET':
             function = self.client.protocol.get
             args = (path,)
-            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (host, port)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (str(host), int(port))}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'POST':
             function = self.client.protocol.post
             args = (path, request.payload)
-            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (host, port)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (str(host), int(port))}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'PUT':
             function = self.client.protocol.put
             args = (path, request.payload)
-            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (host, port)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (str(host), int(port))}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'DELETE':
             function = self.client.protocol.delete
             args = (path,)
-            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (host, port)}
+            kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16), "Server": (str(host), int(port))}
             callback = self.result_forward
             err_callback = self.error
         else:
