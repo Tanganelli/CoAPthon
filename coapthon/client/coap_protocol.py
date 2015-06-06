@@ -123,7 +123,6 @@ class CoAP(DatagramProtocol):
 
     def start(self, host):
         # self.transport.connect(host, self.server[1])
-        print "start"
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
 
@@ -152,11 +151,11 @@ class CoAP(DatagramProtocol):
     def send(self, message):
         serializer = Serializer()
         message.destination = self.server
-        host, port = message.destination
-        print "Message sent to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # host, port = message.destination
+        # print "Message sent to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
         self.transport.write(datagram, self.server)
@@ -173,7 +172,6 @@ class CoAP(DatagramProtocol):
         else:
             err_callback = None
         self.schedule_retrasmission(req, err_callback)
-        print "Send"
         self.send(req)
 
     def datagramReceived(self, datagram, host):
@@ -183,11 +181,11 @@ class CoAP(DatagramProtocol):
         except ValueError:
             host, port, tmp1, tmp2 = host
         message = serializer.deserialize(datagram, host, port)
-
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        #
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         if isinstance(message, Response):
             self.handle_response(message)
         elif isinstance(message, Request):
@@ -226,18 +224,15 @@ class CoAP(DatagramProtocol):
                 callback(message.mid, client_callback)
 
     def handle_response(self, response):
-        print "Response\n"
-        print response
+
         if response.type == defines.inv_types["CON"]:
             ack = Message.new_ack(response)
             self.send(ack)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
-        print "Token" + str(response.token) + ", key=" + str(key_token)
-        print self.sent_token.keys()
+
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
             req, timestamp, callback, client_callback = self.sent_token[key_token]
-            print req, timestamp, callback, client_callback
             key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
             self.received[key] = response
             callback(req.mid, client_callback)
