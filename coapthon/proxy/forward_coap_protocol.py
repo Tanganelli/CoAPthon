@@ -30,12 +30,15 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
 class ProxyCoAP(CoAP):
-    def __init__(self):
+    def __init__(self, server):
         """
         Initialize the CoAP protocol
 
         """
         CoAP.__init__(self)
+
+        self.client = HelperClient(server, True)
+        self.client.starting_mid = self._currentMID % (1 << 16)
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
@@ -155,32 +158,31 @@ class ProxyCoAP(CoAP):
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
         host, port, path = self.parse_path(uri)
-        server = (str(host), int(port))
+
         request.uri_path = path
-        client = HelperClient(server, True)
         self._currentMID += 1
-        client.starting_mid = self._currentMID % (1 << 16)
+
         method = defines.codes[request.code]
         if method == 'GET':
-            function = client.protocol.get
+            function = self.client.protocol.get
             args = (path,)
             kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'POST':
-            function = client.protocol.post
+            function = self.client.protocol.post
             args = (path, request.payload)
             kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'PUT':
-            function = client.protocol.put
+            function = self.client.protocol.put
             args = (path, request.payload)
             kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
             err_callback = self.error
         elif method == 'DELETE':
-            function = client.protocol.delete
+            function = self.client.protocol.delete
             args = (path,)
             kwargs = {"Token": str(token), "MID": self._currentMID % (1 << 16)}
             callback = self.result_forward
@@ -196,7 +198,7 @@ class ProxyCoAP(CoAP):
         self._forward[key] = request
         key = hash(str(host) + str(port) + str(self._currentMID % (1 << 16)))
         self._forward_mid[key] = request
-        client.start(operations)
+        self.client.start(operations)
         # Render_GET
         # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
         # self.timer.start()

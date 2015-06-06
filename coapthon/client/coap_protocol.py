@@ -79,14 +79,14 @@ class CoAP(DatagramProtocol):
         for op in operations:
             function, args, kwargs, client_callback = op
             self.operations.append((function, args, kwargs, client_callback))
+        host, port = self.server
+        if host is not None:
+            self.start(host)
 
     def startProtocol(self):
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
-        host, port = self.server
-        if host is not None:
-            self.start(host)
         self.l = task.LoopingCall(self.purge_mids)
         self.l.start(defines.EXCHANGE_LIFETIME)
 
@@ -586,6 +586,11 @@ class CoAP(DatagramProtocol):
 class HelperClient(object):
     def __init__(self, server=("bbbb::2", 5683), forward=False):
         self.protocol = CoAP(server, forward)
+        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
+        try:
+            reactor.run()
+        except twisted.internet.error.ReactorAlreadyRunning:
+            log.msg("Reactor already started")
 
     @property
     def starting_mid(self):
@@ -597,8 +602,3 @@ class HelperClient(object):
 
     def start(self, operations):
         self.protocol.set_operations(operations)
-        reactor.listenUDP(0, self.protocol, interface="bbbb::2")
-        try:
-            reactor.run()
-        except twisted.internet.error.ReactorAlreadyRunning:
-            log.msg("Reactor already started")
