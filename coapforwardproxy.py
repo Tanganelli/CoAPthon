@@ -7,7 +7,7 @@ __author__ = 'giacomo'
 
 class CoAPForwardProxy(ProxyCoAP):
     def __init__(self, host, port):
-        ProxyCoAP.__init__(self)
+        ProxyCoAP.__init__(self, (host, port))
         print "CoAP Forward Proxy start on " + host + ":" + str(port)
 
 
