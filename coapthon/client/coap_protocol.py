@@ -162,6 +162,8 @@ class CoAP(DatagramProtocol):
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
         print self.transport
+        print self.transport.getPeer()
+        print self.transport.getHost()
         self.transport.write(datagram, self.server)
 
     def send_callback(self, req, callback, client_callback):
