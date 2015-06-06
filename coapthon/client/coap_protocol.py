@@ -154,8 +154,6 @@ class CoAP(DatagramProtocol):
     def send(self, message):
         print "SEND\n"
         serializer = Serializer()
-        message.destination = self.server
-
         host, port = message.destination
         print "Message sent to " + host + ":" + str(port)
         print "----------------------------------------"
@@ -247,8 +245,11 @@ class CoAP(DatagramProtocol):
         req = Request()
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
@@ -315,9 +316,12 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         for key in kwargs:
             try:
                 o = Option()
@@ -361,9 +365,12 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         for key in kwargs:
             try:
                 o = Option()
@@ -428,9 +435,12 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         for key in kwargs:
             try:
                 o = Option()
@@ -473,9 +483,12 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         for key in kwargs:
             try:
                 o = Option()
@@ -518,9 +531,12 @@ class CoAP(DatagramProtocol):
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
             del kwargs["Token"]
-        elif "MID" in kwargs.keys():
+        if "MID" in kwargs.keys():
             req.mid = kwargs.get("MID")
             del kwargs["MID"]
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         for key in kwargs:
             try:
                 o = Option()
