@@ -219,7 +219,8 @@ class CoAP(DatagramProtocol):
                 function(client_callback, *args, **kwargs)
 
     def handle_message(self, message):
-        key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
+        host, port = message.source
+        key = hash(str(host) + str(port) + str(message.mid))
         if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
            and key in self.sent.keys():
             return None
