@@ -65,7 +65,7 @@ class ProxyCoAP(CoAP):
         try:
             host, port = addr
         except ValueError:
-            host, port , tmp1, tmp2 = addr
+            host, port, tmp1, tmp2 = addr
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
