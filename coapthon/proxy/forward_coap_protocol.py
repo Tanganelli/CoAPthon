@@ -229,11 +229,11 @@ class ProxyCoAP(CoAP):
         self._forward[key] = request
         key = hash(str(host) + str(port) + str(self._currentMID % (1 << 16)))
         self._forward_mid[key] = request
-        print "************"
-        print str(host),  str(port), str(self._currentMID % (1 << 16))
-        print req
-        print "************"
-        self.sent[key] = (req, time.time())
+        # print "************"
+        # print str(host),  str(port), str(self._currentMID % (1 << 16))
+        # print req
+        # print "************"
+        self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
         # Render_GET
         # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])

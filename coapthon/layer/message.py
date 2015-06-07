@@ -77,10 +77,10 @@ class MessageLayer(object):
             host, port = message.source
         except AttributeError:
             return
-        key = hash(str(host) + str(port) + str(message.mid))
-        print "______________"
-        print message
-        print "______________"
+        key = str(message.mid)
+        # print "______________"
+        # print message
+        # print "______________"
 
         t = self._parent.sent.get(key)
         if t is None:
