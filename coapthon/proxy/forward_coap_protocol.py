@@ -324,6 +324,7 @@ class ProxyCoAP(CoAP):
         :param host: the host of the server.
         :param port: the port of the server.
         """
+        print "ERROR"
         key = hash(str(host) + str(port) + str(mid))
         request = self._forward_mid.get(key)
         if request is not None:
