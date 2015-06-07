@@ -275,8 +275,7 @@ class ProxyCoAP(CoAP):
             request = self._forward.get(key)
         else:
             skip_delete = True
-        if request is None:
-            return
+
         # print request
         if self.timer is not None:
             self.timer.cancel()
@@ -286,10 +285,13 @@ class ProxyCoAP(CoAP):
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
-            if request.type == defines.inv_types["CON"]:
+            try:
+                if request.type == defines.inv_types["CON"]:
+                    response.type = defines.inv_types["CON"]
+                else:
+                    response.type = defines.inv_types["NON"]
+            except AttributeError:
                 response.type = defines.inv_types["CON"]
-            else:
-                response.type = defines.inv_types["NON"]
 
         if request is not None:
             response.destination = request.source
