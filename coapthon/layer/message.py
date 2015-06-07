@@ -79,7 +79,7 @@ class MessageLayer(object):
             return
         key = hash(str(host) + str(port) + str(message.mid))
         print message
-        for r in self._parent.sent:
+        for (r, t) in self._parent.sent:
             print r
             print "________"
         t = self._parent.sent.get(key)
