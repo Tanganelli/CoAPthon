@@ -238,8 +238,8 @@ class ProxyCoAP(CoAP):
         # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
         # Render_GET
-        # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        # self.timer.start()
+        self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        self.timer.start()
         return None
 
     def send_ack(self, list_request):
