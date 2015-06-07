@@ -3,6 +3,7 @@ import os
 import random
 import re
 from threading import Timer
+import time
 from twisted.application.service import Application
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
@@ -198,6 +199,7 @@ class ProxyCoAP(CoAP):
         self._forward[key] = request
         key = hash(str(host) + str(port) + str(self._currentMID % (1 << 16)))
         self._forward_mid[key] = request
+        self.sent[key] = (request, time.time())
         self.client.start(operations)
         # Render_GET
         # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])

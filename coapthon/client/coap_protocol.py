@@ -172,6 +172,7 @@ class CoAP(DatagramProtocol):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
         self.sent[key] = (req, time.time(), callback, client_callback)
+        (req, time.time())
         self.sent_token[key_token] = (req, time.time(), callback, client_callback)
         if isinstance(client_callback, tuple) and len(client_callback) > 1:
             client_callback, err_callback = client_callback
