@@ -79,7 +79,9 @@ class MessageLayer(object):
             return
         key = hash(str(host) + str(port) + str(message.mid))
         print message
-        print self._parent.sent
+        for r in self._parent.sent:
+            print r
+            print "________"
         t = self._parent.sent.get(key)
         if t is None:
             log.err(defines.types[message.type] + " received without the corresponding message")
