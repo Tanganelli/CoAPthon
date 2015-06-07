@@ -314,17 +314,21 @@ class CoAP(DatagramProtocol):
 
     def get(self, client_callback, *args, **kwargs):
         # print "GET\n"
-        path = str(args[0])
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
-        if "MID" in kwargs.keys():
-            req.mid = kwargs.get("MID")
-            del kwargs["MID"]
-        if "Server" in kwargs.keys():
-            req.destination = kwargs.get("Server")
-            del kwargs["Server"]
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
             try:
                 o = Option()
@@ -335,7 +339,6 @@ class CoAP(DatagramProtocol):
                 pass
 
         req.code = defines.inv_codes['GET']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
         self.send_callback(req, self.get_results, client_callback)
 
@@ -363,17 +366,21 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def observe(self, client_callback, *args, **kwargs):
-        path = args[0]
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
-        if "MID" in kwargs.keys():
-            req.mid = kwargs.get("MID")
-            del kwargs["MID"]
-        if "Server" in kwargs.keys():
-            req.destination = kwargs.get("Server")
-            del kwargs["Server"]
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
             try:
                 o = Option()
@@ -433,17 +440,21 @@ class CoAP(DatagramProtocol):
             self.send(rst)
 
     def post(self, client_callback, *args, **kwargs):
-        path, payload = args
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
-        if "MID" in kwargs.keys():
-            req.mid = kwargs.get("MID")
-            del kwargs["MID"]
-        if "Server" in kwargs.keys():
-            req.destination = kwargs.get("Server")
-            del kwargs["Server"]
+        if isinstance(args[0], tuple):
+            path, payload = args
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
             try:
                 o = Option()
@@ -453,9 +464,7 @@ class CoAP(DatagramProtocol):
             except KeyError:
                 pass
         req.code = defines.inv_codes['POST']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.payload = payload
         self.send_callback(req, self.post_results, client_callback)
 
     def post_results(self, mid, client_callback):
@@ -481,17 +490,21 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def put(self, client_callback, *args, **kwargs):
-        path, payload = args
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
-        if "MID" in kwargs.keys():
-            req.mid = kwargs.get("MID")
-            del kwargs["MID"]
-        if "Server" in kwargs.keys():
-            req.destination = kwargs.get("Server")
-            del kwargs["Server"]
+        if isinstance(args[0], tuple):
+            path, payload = args
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
             try:
                 o = Option()
@@ -501,9 +514,7 @@ class CoAP(DatagramProtocol):
             except KeyError:
                 pass
         req.code = defines.inv_codes['PUT']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.payload = payload
         self.send_callback(req, self.put_results, client_callback)
 
     def put_results(self, mid, client_callback):
@@ -529,17 +540,21 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def delete(self, client_callback, *args, **kwargs):
-        path = args[0]
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
-        if "MID" in kwargs.keys():
-            req.mid = kwargs.get("MID")
-            del kwargs["MID"]
-        if "Server" in kwargs.keys():
-            req.destination = kwargs.get("Server")
-            del kwargs["Server"]
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
             try:
                 o = Option()
@@ -549,7 +564,6 @@ class CoAP(DatagramProtocol):
             except KeyError:
                 pass
         req.code = defines.inv_codes['DELETE']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
         self.send_callback(req, self.delete_results, client_callback)
 
