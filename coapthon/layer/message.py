@@ -77,15 +77,17 @@ class MessageLayer(object):
             host, port = message.source
         except AttributeError:
             return
-        key = str(message.mid)
+        key = hash(str(host) + str(port) + str(message.mid))
         # print "______________"
         # print message
         # print "______________"
 
         t = self._parent.sent.get(key)
         if t is None:
-            log.err(defines.types[message.type] + " received without the corresponding message")
-            return
+            t = self._parent.received.get(key)
+            if t is None:
+                log.err(defines.types[message.type] + " received without the corresponding message")
+                return
         response, timestamp = t
         # Reliability
         if message.type == defines.inv_types['ACK']:
