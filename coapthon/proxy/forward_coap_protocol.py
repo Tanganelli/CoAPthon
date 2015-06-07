@@ -171,6 +171,8 @@ class ProxyCoAP(CoAP):
             req.mid = self._currentMID % (1 << 16)
             req.token = str(token)
             req.uri_path = path
+            req.type = defines.inv_types["CON"]
+            req.code = defines.inv_codes['GET']
             args = (req,)
             kwargs = {}
             callback = self.result_forward
@@ -183,6 +185,8 @@ class ProxyCoAP(CoAP):
             req.token = str(token)
             req.uri_path = path
             req.payload = request.payload
+            req.type = defines.inv_types["CON"]
+            req.code = defines.inv_codes['POST']
             args = (req,)
             kwargs = {}
             callback = self.result_forward
@@ -195,6 +199,8 @@ class ProxyCoAP(CoAP):
             req.token = str(token)
             req.uri_path = path
             req.payload = request.payload
+            req.type = defines.inv_types["CON"]
+            req.code = defines.inv_codes['PUT']
             args = (req,)
             kwargs = {}
             callback = self.result_forward
@@ -206,6 +212,8 @@ class ProxyCoAP(CoAP):
             req.mid = self._currentMID % (1 << 16)
             req.token = str(token)
             req.uri_path = path
+            req.type = defines.inv_types["CON"]
+            req.code = defines.inv_codes['DELETE']
             args = (req,)
             kwargs = {}
             callback = self.result_forward
