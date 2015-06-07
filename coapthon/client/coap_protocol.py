@@ -37,7 +37,7 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 class CoAP(DatagramProtocol):
     def __init__(self, server, forward):
-        print "INIT CLIENT\n"
+        # print "INIT CLIENT\n"
         self._forward = forward
         self.received = {}
         self.sent = {}
@@ -85,7 +85,7 @@ class CoAP(DatagramProtocol):
             self.start(host)
 
     def startProtocol(self):
-        print "STARTPROTOCOL\n"
+        # print "STARTPROTOCOL\n"
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
@@ -124,7 +124,7 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
-        print "START\n"
+        # print "START\n"
         # self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
