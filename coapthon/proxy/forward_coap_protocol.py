@@ -292,25 +292,23 @@ class ProxyCoAP(CoAP):
         elif skip_delete:
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
+        elif request.type == defines.inv_types["CON"]:
+            response.type = defines.inv_types["CON"]
         else:
-            if request.type == defines.inv_types["CON"]:
-                response.type = defines.inv_types["CON"]
-            else:
-                response.type = defines.inv_types["NON"]
+            response.type = defines.inv_types["NON"]
 
-        if request is not None:
-            response.destination = request.source
-            response.token = request.token
-            if not skip_delete:
-                del self._forward[key]
-                try:
-                    del self._forward_mid[key_mid]
-                except KeyError:
-                    log.err("MID has not been deleted")
-            host, port = request.source
-            if response.mid is None:
-                response.mid = self._currentMID
-            self.send(response, host, port)
+        response.destination = request.source
+        response.token = request.token
+        if not skip_delete:
+            del self._forward[key]
+            try:
+                del self._forward_mid[key_mid]
+            except KeyError:
+                log.err("MID has not been deleted")
+        host, port = request.source
+        if response.mid is None:
+            response.mid = self._currentMID
+        self.send(response, host, port)
 
     def generate_token(self):
         """
