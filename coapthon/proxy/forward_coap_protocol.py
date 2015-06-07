@@ -285,13 +285,10 @@ class ProxyCoAP(CoAP):
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         else:
-            try:
-                if request.type == defines.inv_types["CON"]:
-                    response.type = defines.inv_types["CON"]
-                else:
-                    response.type = defines.inv_types["NON"]
-            except AttributeError:
+            if request.type == defines.inv_types["CON"]:
                 response.type = defines.inv_types["CON"]
+            else:
+                response.type = defines.inv_types["NON"]
 
         if request is not None:
             response.destination = request.source
