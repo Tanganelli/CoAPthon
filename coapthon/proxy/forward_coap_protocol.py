@@ -282,6 +282,8 @@ class ProxyCoAP(CoAP):
             skip_delete = True
 
         # print request
+        if request is None:
+            return
         key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
         if self.timer.get(key_timer) is not None:
             self.timer[key_timer].cancel()
