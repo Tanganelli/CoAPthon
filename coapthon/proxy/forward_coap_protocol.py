@@ -5,6 +5,7 @@ import re
 from threading import Timer
 import time
 from twisted.application.service import Application
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
@@ -42,7 +43,7 @@ class ProxyCoAP(CoAP):
         self._forward = {}
         self._forward_mid = {}
         self._token = random.randint(1, 1000)
-        self.timer = None
+        self.timer = {}
 
     def startProtocol(self):
         """
@@ -238,8 +239,10 @@ class ProxyCoAP(CoAP):
         # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
         # Render_GET
-        self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        self.timer.start()
+        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
+        self.timer[key_timer] = reactor.callLater(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        # self.timer.start()
         return None
 
     def send_ack(self, list_request):
@@ -249,11 +252,13 @@ class ProxyCoAP(CoAP):
         :param list_request: the request to be acknowledge.
         :type list_request: [Request] or Request
         """
-        self.timer = None
+
         if isinstance(list_request, list):
             request = list_request[0]
         else:
             request = list_request
+        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
+        del self.timer[key_timer]
         host, port = request.source
         ack = Message.new_ack(request)
         self.send(ack, host, port)
@@ -277,8 +282,9 @@ class ProxyCoAP(CoAP):
             skip_delete = True
 
         # print request
-        if self.timer is not None:
-            self.timer.cancel()
+        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
+        if self.timer.get(key_timer) is not None:
+            self.timer[key_timer].cancel()
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
         elif skip_delete:
