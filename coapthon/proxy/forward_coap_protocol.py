@@ -234,8 +234,8 @@ class ProxyCoAP(CoAP):
         # print req
         # print "************"
 
-        # self.sent[key] = (req, time.time())
-        self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
+        self.sent[key] = (req, time.time())
+        # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
         # Render_GET
         # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
