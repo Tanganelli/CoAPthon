@@ -113,9 +113,6 @@ class CoAP(DatagramProtocol):
         # print "Message received from " + host + ":" + str(port)
         # print "----------------------------------------"
         # print message
-        # print "----------------------------------------"print "Message received from " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
         # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")

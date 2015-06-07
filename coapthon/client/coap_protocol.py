@@ -152,7 +152,7 @@ class CoAP(DatagramProtocol):
             return None, None, None, None
 
     def send(self, message):
-        print "SEND\n"
+        # print "SEND\n"
         serializer = Serializer()
         if message.destination is None:
             message.destination = self.server
@@ -181,7 +181,7 @@ class CoAP(DatagramProtocol):
         self.send(req)
 
     def datagramReceived(self, datagram, host):
-        print "RECEIVED\n"
+        # print "RECEIVED\n"
         serializer = Serializer()
         try:
             host, port = host
@@ -312,7 +312,7 @@ class CoAP(DatagramProtocol):
         log.msg(self.root.dump())
 
     def get(self, client_callback, *args, **kwargs):
-        print "GET\n"
+        # print "GET\n"
         path = str(args[0])
         req = Request()
         if "Token" in kwargs.keys():
@@ -609,7 +609,7 @@ class CoAP(DatagramProtocol):
 
 class HelperClient(object):
     def __init__(self, server=("bbbb::2", 5683), forward=False):
-        print "INIT HELPER\n"
+        # print "INIT HELPER\n"
         self.protocol = CoAP(server, forward)
 
     @property
@@ -621,5 +621,5 @@ class HelperClient(object):
         self.protocol.current_mid = mid
 
     def start(self, operations):
-        print "START HELPER\n"
+        # print "START HELPER\n"
         self.protocol.set_operations(operations)
