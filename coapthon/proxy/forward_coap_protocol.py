@@ -224,7 +224,7 @@ class ProxyCoAP(CoAP):
         for option in request.options:
             if option.safe:
                 kwargs[option.name] = option.value
-
+        self.send_ack([request])
         operations = [(function, args, kwargs, (callback, err_callback))]
         key = hash(str(host) + str(port) + str(token))
         self._forward[key] = request
@@ -239,10 +239,8 @@ class ProxyCoAP(CoAP):
         # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
         # Render_GET
-        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
-        self.timer[key_timer] = reactor.callLater(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        # self.timer = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        # self.timer.start()
+        # key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
+        # self.timer[key_timer] = reactor.callLater(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
         return None
 
     def send_ack(self, list_request):
