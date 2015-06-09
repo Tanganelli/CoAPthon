@@ -78,19 +78,10 @@ class MessageLayer(object):
         except AttributeError:
             return
         key = hash(str(host) + str(port) + str(message.mid))
-        # key = str(message.mid)
-        # print "______________"
-        # print message
-        # print "______________"
-
-
+        key = message.mid
         t = self._parent.sent.get(key)
         if t is None:
             t = self._parent.received.get(key)
-            # for (r, t) in self._parent.received.values():
-            #     print "PPPPPPPPPPP"
-            #     print r
-            #     print "PPPPPPPPPPP"
             if t is None:
                 log.err(defines.types[message.type] + " received without the corresponding message")
                 return

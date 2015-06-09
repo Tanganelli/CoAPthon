@@ -234,7 +234,7 @@ class ProxyCoAP(CoAP):
         # print str(host),  str(port), str(self._currentMID % (1 << 16))
         # print req
         # print "************"
-
+        key = req.mid
         self.sent[key] = (req, time.time())
         # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
         self.client.start(operations)
