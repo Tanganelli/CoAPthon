@@ -256,7 +256,8 @@ class ProxyCoAP(CoAP):
         else:
             request = list_request
         key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
-        del self.timer[key_timer]
+        if self.timer.get(key_timer) is not None:
+            del self.timer[key_timer]
         host, port = request.source
         ack = Message.new_ack(request)
         self.send(ack, host, port)
