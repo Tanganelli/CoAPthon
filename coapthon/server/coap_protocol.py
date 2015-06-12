@@ -50,14 +50,16 @@ class CoAP(DatagramProtocol):
         # Create the resource Tree
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
-        self.root = Tree(root)
+        # self.root = trie.trie()
+        self.root = Tree()
+        self.root["/"] = root
 
         # Initialize layers
-        self._request_layer = RequestLayer(self)
-        self._blockwise_layer = BlockwiseLayer(self)
-        self._resource_layer = ResourceLayer(self)
-        self._message_layer = MessageLayer(self)
-        self._observe_layer = ObserveLayer(self)
+        self.request_layer = RequestLayer(self)
+        self.blockwise_layer = BlockwiseLayer(self)
+        self.resource_layer = ResourceLayer(self)
+        self.message_layer = MessageLayer(self)
+        self.observe_layer = ObserveLayer(self)
 
         # Start a task for purge MIDs
         self.l = task.LoopingCall(self.purge_mids)
@@ -166,9 +168,9 @@ class CoAP(DatagramProtocol):
         # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
-            ret = self._request_layer.handle_request(message)
+            ret = self.request_layer.handle_request(message)
             if isinstance(ret, Request):
-                response = self._request_layer.process(ret)
+                response = self.request_layer.process(ret)
             else:
                 response = ret
             self.schedule_retrasmission(message, response, None)
@@ -177,7 +179,7 @@ class CoAP(DatagramProtocol):
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
-            rst = self._message_layer.matcher_response(rst)
+            rst = self.message_layer.matcher_response(rst)
             log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
@@ -186,13 +188,13 @@ class CoAP(DatagramProtocol):
             response.destination = (host, port)
             response.code = defines.responses[error]
             response = self.reliability_response(message, response)
-            response = self._message_layer.matcher_response(response)
+            response = self.message_layer.matcher_response(response)
             log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
             log.msg("Received ACK or RST")
-            self._message_layer.handle_message(message)
+            self.message_layer.handle_message(message)
 
     def purge_mids(self):
         """
@@ -220,7 +222,6 @@ class CoAP(DatagramProtocol):
     def add_resource(self, path, resource):
         """
         Helper function to add resources to the resource Tree during server initialization.
-
         :param path: path of the resource to create
         :param resource: the actual resource to create
         :return: True, if successful
@@ -228,24 +229,20 @@ class CoAP(DatagramProtocol):
         assert isinstance(resource, Resource)
         path = path.strip("/")
         paths = path.split("/")
-        old = self.root
+        actual_path = ""
         i = 0
         for p in paths:
             i += 1
-            res = old.find(p)
+            actual_path += "/" + p
+            try:
+                res = self.root[actual_path]
+            except KeyError:
+                res = None
             if res is None:
                 if len(paths) != i:
                     return False
-                resource.path = p
-                if not resource.content_type:
-                    resource.content_type = "text/plain"
-                if not resource.resource_type:
-                    resource.resource_type = "prova"
-                if not resource.maximum_size_estimated:
-                    resource.maximum_size_estimated = 10
-                old = old.add_child(resource)
-            else:
-                old = res
+                resource.path = actual_path
+                self.root[actual_path] = resource
         return True
 
     @property
@@ -266,124 +263,17 @@ class CoAP(DatagramProtocol):
         """
         self._currentMID = int(mid)
 
-    def start_separate_timer(self, request):
-        return self._message_layer.start_separate_timer(request)
-
-    def stop_separate_timer(self, timer):
-        return self._message_layer.stop_separate_timer(timer)
-
-    def send_separate(self, request):
-        self._message_layer.send_separate(request)
-
-    def blockwise_transfer(self, request):
-        return self._blockwise_layer.handle_request(request)
-
     def blockwise_response(self, request, response, resource):
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.token))
         if key in self.blockwise:
             # Handle Blockwise transfer
-            return self._blockwise_layer.handle_response(key, response, resource), resource
+            return self.blockwise_layer.handle_response(key, response, resource), resource
         if resource is not None and len(resource.payload) > defines.MAX_PAYLOAD \
                 and request.code == defines.inv_codes["GET"]:
-            self._blockwise_layer.start_block2(request)
-            return self._blockwise_layer.handle_response(key, response, resource), resource
+            self.blockwise_layer.start_block2(request)
+            return self.blockwise_layer.handle_response(key, response, resource), resource
         return response, resource
-
-    def add_observing(self, resource, request, response):
-        """
-        Add an observer to a resource and sets the Observe option in the response.
-
-        :param resource: the resource of interest
-        :param response: the response
-        :return: response
-        """
-        return self._observe_layer.add_observing(resource, request, response)
-
-    def update_relations(self, node, resource):
-        """
-        Update a relation. It is used when a resource change due a POST request, without changing its path.
-
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
-        :param resource: the new resource
-        """
-        self._observe_layer.update_relations(node, resource)
-
-    def reliability_response(self, request, response):
-        """
-        Sets Message type according to the request
-
-        :param request: the request object
-        :param response: the response object
-        :return: the response
-        """
-        return self._message_layer.reliability_response(request, response)
-
-    def matcher_response(self, response):
-        """
-        Sets MID if not already set. Save the sent message for acknowledge and duplication handling.
-
-        :param response: the response
-        :return: the response
-        """
-        return self._message_layer.matcher_response(response)
-
-    def create_resource(self, path, request, response):
-        """
-        Render a POST request.
-
-        :param path: the path of the request
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.create_resource(path, request, response)
-
-    def update_resource(self, request, response, node):
-        """
-        Render a PUT request.
-
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the resource
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.update_resource(request, response, node)
-
-    def delete_resource(self, request, response, node):
-        """
-        Render a DELETE request.
-
-        :type node: coapthon2.utils.Tree
-        :param request: the request
-        :param response: the response
-        :param node: the node which has the resource
-        :return: the response
-        """
-        return self._resource_layer.delete_resource(request, response, node)
-
-    def get_resource(self, request, response, resource):
-        """
-        Render a GET request.
-
-        :param request: the request
-        :param response: the response
-        :param resource: the resource required
-        :return: the response
-        """
-        return self._resource_layer.get_resource(request, response, resource)
-
-    def discover(self, request, response):
-        """
-        Render a GET request to the .weel-know/core link.
-
-        :param request: the request
-        :param response: the response
-        :return: the response
-        """
-        return self._resource_layer.discover(request, response)
 
     def notify(self, resource):
         """
