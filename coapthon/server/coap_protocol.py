@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import time
 from twisted.application.service import Application
 from twisted.python import log
@@ -83,6 +84,51 @@ class CoAP(DatagramProtocol):
         """
         self.l.stop()
 
+    def parse_path(self, path):
+        return self.parse_path_ipv6(path)
+        # m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
+        # if m is None:
+        #     m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
+        #     if m is None:
+        #         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
+        #         if m is None:
+        #             ip, port, path = self.parse_path_ipv6(path)
+        #         else:
+        #             ip = m.group(2)
+        #             port = 5683
+        #             path = ""
+        #     else:
+        #         ip = m.group(2)
+        #         port = 5683
+        #         path = m.group(3)
+        # else:
+        #     ip = m.group(2)
+        #     port = int(m.group(3))
+        #     path = m.group(4)
+        #
+        # return ip, port, path
+
+    @staticmethod
+    def parse_path_ipv6(path):
+        m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
+                ip = m.group(2)
+                port = 5683
+                path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path
+
     def send(self, message, host, port):
         """
         Send the message
@@ -99,7 +145,7 @@ class CoAP(DatagramProtocol):
         message = serializer.serialize(message)
         self.transport.write(message, (host, port))
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
         """
         Handler for received UDP datagram.
 
@@ -107,6 +153,10 @@ class CoAP(DatagramProtocol):
         :param host: source host
         :param port: source port
         """
+        try:
+            host, port = addr
+        except ValueError:
+            host, port, tmp1, tmp2 = addr
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
