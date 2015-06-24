@@ -87,28 +87,27 @@ class CoAP(DatagramProtocol):
         self.l.stop()
 
     def parse_path(self, path):
-        return self.parse_path_ipv6(path)
-        # m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
-        # if m is None:
-        #     m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
-        #     if m is None:
-        #         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
-        #         if m is None:
-        #             ip, port, path = self.parse_path_ipv6(path)
-        #         else:
-        #             ip = m.group(2)
-        #             port = 5683
-        #             path = ""
-        #     else:
-        #         ip = m.group(2)
-        #         port = 5683
-        #         path = m.group(3)
-        # else:
-        #     ip = m.group(2)
-        #     port = int(m.group(3))
-        #     path = m.group(4)
-        #
-        # return ip, port, path
+        m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
+                if m is None:
+                    ip, port, path = self.parse_path_ipv6(path)
+                else:
+                    ip = m.group(2)
+                    port = 5683
+                    path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path
 
     @staticmethod
     def parse_path_ipv6(path):
@@ -139,10 +138,10 @@ class CoAP(DatagramProtocol):
         :param host: destination host
         :param port: destination port
         """
-        # print "Message send to " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+        print "Message send to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
         self.transport.write(message, (host, port))
@@ -162,10 +161,10 @@ class CoAP(DatagramProtocol):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
-        # print "Message received from " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self.request_layer.handle_request(message)

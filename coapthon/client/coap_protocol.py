@@ -63,10 +63,11 @@ class CoAP(DatagramProtocol):
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
-        self.root = Tree(root)
+        self.root = Tree()
+        self.root["/"] = root
         self.operations = []
         self.l = None
-        self.transport = None
+
 
     @property
     def current_mid(self):
@@ -81,11 +82,13 @@ class CoAP(DatagramProtocol):
             function, args, kwargs, client_callback = op
             self.operations.append((function, args, kwargs, client_callback))
         host, port = self.server
+
         if host is not None:
             self.start(host)
 
     def startProtocol(self):
         # print "STARTPROTOCOL\n"
+        # self.transport.connect(self.server)
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
@@ -129,10 +132,10 @@ class CoAP(DatagramProtocol):
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
 
-    def start_test(self, transport):
-        self.transport = transport
-        function, args, kwargs, client_callback = self.get_operation()
-        function(client_callback, *args, **kwargs)
+    # def start_test(self, transport):
+    #     self.transport = transport
+    #     function, args, kwargs, client_callback = self.get_operation()
+    #     function(client_callback, *args, **kwargs)
 
     def get_operation(self):
         try:
@@ -156,11 +159,11 @@ class CoAP(DatagramProtocol):
         serializer = Serializer()
         if message.destination is None:
             message.destination = self.server
-        # host, port = message.destination
-        # print "Message sent to " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+        host, port = message.destination
+        print "Message sent to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
         self.transport.write(datagram, message.destination)
@@ -172,7 +175,6 @@ class CoAP(DatagramProtocol):
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
         self.sent[key] = (req, time.time(), callback, client_callback)
-        (req, time.time())
         self.sent_token[key_token] = (req, time.time(), callback, client_callback)
         if isinstance(client_callback, tuple) and len(client_callback) > 1:
             client_callback, err_callback = client_callback
@@ -189,11 +191,11 @@ class CoAP(DatagramProtocol):
         except ValueError:
             host, port, tmp1, tmp2 = host
         message = serializer.deserialize(datagram, host, port)
-        #
-        # print "Message received from " + host + ":" + str(port)
-        # print "----------------------------------------"
-        # print message
-        # print "----------------------------------------"
+
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
         if isinstance(message, Response):
             self.handle_response(message)
         elif isinstance(message, Request):
@@ -281,38 +283,6 @@ class CoAP(DatagramProtocol):
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
 
-    def parse_core_link_format(self, link_format):
-        while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
-            result = re.match(pattern, link_format)
-            path = result.group(1)
-            path = path.split("/")
-            path = path[1:]
-            link_format = link_format[result.end(1) + 2:]
-            pattern = "([^<,])*"
-            result = re.match(pattern, link_format)
-            attributes = result.group(0)
-            dict_att = {}
-            if len(attributes) > 0:
-                attributes = attributes.split(";")
-                for att in attributes:
-                    a = att.split("=")
-                    # TODO check correctness
-                    dict_att[a[0]] = a[1]
-                link_format = link_format[result.end(0) + 1:]
-
-            while True:
-                last, p = self.root.find_complete_last(path)
-                if p is not None:
-                    resource = Resource("/".join(path))
-                    resource.path = p
-                    if p == "".join(path):
-                        resource.attributes = dict_att
-                    last.add_child(resource)
-                else:
-                    break
-        log.msg(self.root.dump())
-
     def get(self, client_callback, *args, **kwargs):
         # print "GET\n"
         if isinstance(args[0], str):
@@ -382,6 +352,8 @@ class CoAP(DatagramProtocol):
                 del kwargs["Server"]
         else:
             req = args[0]
+            assert(isinstance(req, Request))
+            path = req.uri_path
         for key in kwargs:
             try:
                 o = Option()
@@ -627,6 +599,8 @@ class HelperClient(object):
     def __init__(self, server=("bbbb::2", 5683), forward=False):
         # print "INIT HELPER\n"
         self.protocol = CoAP(server, forward)
+        reactor.listenUDP(0, self.protocol)
+        #reactor.run()
 
     @property
     def starting_mid(self):

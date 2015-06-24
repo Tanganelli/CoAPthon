@@ -1,6 +1,7 @@
 #!/bin/python
 import getopt
 import sys
+from twisted.internet import reactor
 from coapthon.client.coap_protocol import HelperClient
 
 client = None
@@ -167,7 +168,6 @@ def main():
 
     operations = [(function, args, kwargs, callback)]
     client.start(operations)
-
 
 if __name__ == '__main__':
     main()
