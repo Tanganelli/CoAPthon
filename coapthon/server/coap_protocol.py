@@ -66,7 +66,10 @@ class CoAP(DatagramProtocol):
         self.l.start(defines.EXCHANGE_LIFETIME)
 
         self.multicast = multicast
-
+        
+    def setGroup(self,g):
+        self.group = g
+        
     def startProtocol(self):
         """
         Called after protocol has started listening.
@@ -76,7 +79,7 @@ class CoAP(DatagramProtocol):
             # Set the TTL>1 so multicast will cross router hops:
             self.transport.setTTL(5)
             # Join a specific multicast group:
-            self.transport.joinGroup(defines.ALL_COAP_NODES)
+            self.transport.joinGroup(self.group)
             self.transport.setLoopbackMode(True)
 
     def stopProtocol(self):
