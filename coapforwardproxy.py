@@ -19,7 +19,7 @@ def main():
         print "Server Shutdown"
         server.server_close()
         server.stopped.set()
-        server.executor_mid.cancel()
+        server.timer_mid.cancel()
         server.executor.shutdown(False)
         print "Exiting..."
 

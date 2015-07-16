@@ -1,4 +1,6 @@
 #!/bin/python
+import getopt
+import sys
 from coapthon.server.coap_protocol import CoAP
 from example_resources import Storage, Separate, BasicResource, Long, Big
 
@@ -15,17 +17,40 @@ class CoAPServer(CoAP):
         print self.root.with_prefix("/")
 
 
-def main():
-    server = CoAPServer("127.0.0.1", 5683)
+def usage():
+    print "coapserver.py -i <ip address> -p <port>"
+
+
+def main(argv):
+    ip = "127.0.0.1"
+    port = 5683
     try:
-        server.serve_forever(poll_interval=0.01)
+        opts, args = getopt.getopt(argv, "hi:p:", ["ip=", "port="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            usage()
+            sys.exit()
+        elif opt in ("-i", "--ip"):
+            ip = arg
+        elif opt in ("-p", "--port"):
+            port = int(arg)
+
+    server = CoAPServer(ip, port)
+    try:
+        server.listen(timeout=10)
     except KeyboardInterrupt:
         print "Server Shutdown"
-        server.server_close()
+        server.close()
         server.stopped.set()
-        server.executor_mid.cancel()
+        server.timer_mid.cancel()
+        server.executor_req.shutdown(False)
         server.executor.shutdown(False)
         print "Exiting..."
 
-if __name__ == '__main__':
-    main()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
+

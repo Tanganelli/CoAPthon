@@ -34,26 +34,21 @@ if not os.path.exists(home + "/.coapthon/"):
 # application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 
-class CoAP(SocketServer.UDPServer):
+class CoAP(object):
     def __init__(self, server_address, multicast=False):
         """
         Initialize the CoAP protocol
 
         """
+        self.stop = False
         host, port = server_address
         ret = socket.getaddrinfo(host, port)
         family, socktype, proto, canonname, sockaddr = ret[0]
-        if len(sockaddr) == 4:
-            SocketServer.UDPServer.address_family = socket.AF_INET6
-            SocketServer.UDPServer.__init__(self, server_address, None)
-            self.address_family = socket.AF_INET6
-        else:
-            SocketServer.UDPServer.address_family = socket.AF_INET
-            SocketServer.UDPServer.__init__(self, server_address, None)
-            self.address_family = socket.AF_INET
+
         self.stopped = threading.Event()
         self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+        self.executor_req = concurrent.futures.ThreadPoolExecutor(max_workers=20)
         self.received = {}
         self.sent = {}
         self.call_id = {}
@@ -72,9 +67,16 @@ class CoAP(SocketServer.UDPServer):
         self.message_layer = MessageLayer(self)
         self.observe_layer = ObserveLayer(self)
         self.multicast = multicast
-        self.executor_mid = threading.Timer(defines.EXCHANGE_LIFETIME, self.purge_mids)
-        self.executor_mid.setDaemon(True)
-        self.executor_mid.start()
+        self.timer_mid = threading.Timer(defines.EXCHANGE_LIFETIME, self.purge_mids)
+        self.timer_mid.setDaemon(True)
+        self.timer_mid.start()
+        self.server_address = server_address
+        if len(sockaddr) == 4:
+            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            self._socket.bind(self.server_address)
+        else:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket.bind(self.server_address)
 
     def send(self, message, host, port):
         """
@@ -91,9 +93,27 @@ class CoAP(SocketServer.UDPServer):
         serializer = Serializer()
         message = serializer.serialize(message)
 
-        self.socket.sendto(message, (host, port))
+        self._socket.sendto(message, (host, port))
 
-    def finish_request(self, request, client_address):
+    def listen(self, timeout):
+        while not self.stop:
+            self._socket.settimeout(float(timeout))
+            try:
+                data, client_address = self._socket.recvfrom(4096)
+            except socket.timeout:
+                continue
+            future = self.executor_req.submit(self.finish_request, (data, client_address))
+            future.add_done_callback(self.done_callback)
+        self._socket.close()
+
+    def close(self):
+        self.stop = True
+
+    def done_callback(self, future):
+        message, host, port = future.result(timeout=10.0)
+        self.send(message, host, port)
+
+    def finish_request(self, args):
         """
         Handler for received UDP datagram.
 
@@ -101,10 +121,9 @@ class CoAP(SocketServer.UDPServer):
         :param host: source host
         :param port: source port
         """
+        data, client_address = args
         host = client_address[0]
         port = client_address[1]
-        data = request[0]
-        self.socket = request[1]
 
         # log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
@@ -122,13 +141,13 @@ class CoAP(SocketServer.UDPServer):
                 response = ret
             self.schedule_retrasmission(message, response, None)
             # log.msg("Send Response")
-            self.send(response, host, port)
+            return response, host, port
         elif isinstance(message, Response):
             # log.err("Received response")
             rst = Message.new_rst(message)
             rst = self.message_layer.matcher_response(rst)
             # log.msg("Send RST")
-            self.send(rst, host, port)
+            return rst, host, port
         elif isinstance(message, tuple):
             message, error = message
             response = Response()
@@ -137,11 +156,12 @@ class CoAP(SocketServer.UDPServer):
             response = self.message_layer.reliability_response(message, response)
             response = self.message_layer.matcher_response(response)
             # log.msg("Send Error")
-            self.send(response, host, port)
+            return response, host, port
         elif message is not None:
             # ACK or RST
             # log.msg("Received ACK or RST")
             self.message_layer.handle_message(message)
+            return None
 
     def purge_mids(self):
         """
