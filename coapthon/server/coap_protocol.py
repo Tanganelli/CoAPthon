@@ -48,7 +48,7 @@ class CoAP(object):
         self.stopped = threading.Event()
         self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
-        self.executor_req = concurrent.futures.ThreadPoolExecutor(max_workers=20)
+        self.executor_req = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.received = {}
         self.sent = {}
         self.call_id = {}
