@@ -73,9 +73,28 @@ class CoAP(object):
         self.server_address = server_address
         if len(sockaddr) == 4:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-            self._socket.bind(self.server_address)
         else:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        if self.multicast:
+            # Set some options to make it multicast-friendly
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except AttributeError:
+                    pass  # Some systems don't support SO_REUSEPORT
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 20)
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
+
+            # Bind to the port
+            self._socket.bind(self.server_address)
+
+            # Set some more multicast options
+            interface = socket.gethostbyname(socket.gethostname())
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address)
+                                    + socket.inet_aton(interface))
+        else:
             self._socket.bind(self.server_address)
 
     def send(self, message, host, port):
