@@ -13,7 +13,8 @@ def bit_len(int_type):
     while int_type:
         int_type >>= 1
         length += 1
-    length = int(length / 8) + 1
+    if length > 0:
+        length = int(length / 8) + 1
     return length
 
 
