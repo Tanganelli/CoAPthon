@@ -96,7 +96,7 @@ class Serializer(object):
                     tmp = values[pos: pos + option_length]
                     value = 0
                     for b in tmp:
-                        value = (value << 8) | b
+                        value = (value << 8) | struct.unpack("B", b)[0]
                 else:
                     tmp = values[pos: pos + option_length]
                     value = ""

@@ -1,7 +1,8 @@
 import random
+import socket
+import threading
 import time
-from twisted.test import proto_helpers
-from twisted.trial import unittest
+import unittest
 from coapserver import CoAPServer
 from coapthon import defines
 from coapthon.messages.message import Message
@@ -17,16 +18,30 @@ __version__ = "2.0"
 class Tests(unittest.TestCase):
 
     def setUp(self):
-        self.proto = CoAPServer(("127.0.0.1", 5683))
-        self.tr = proto_helpers.FakeDatagramTransport()
-        self.proto.makeConnection(self.tr)
+        self.server_address = ("127.0.0.1", 5683)
+        self.server = CoAPServer("127.0.0.1", 5683)
+        self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
+        self.server_thread.start()
+
         self.current_mid = random.randint(1, 1000)
+
+    def tearDown(self):
+        self.server.close()
+        self.server_thread = None
+        self.server = None
 
     def _test(self, message, expected):
         serializer = Serializer()
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
-        datagram, source = self.tr.written[-1]
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(datagram, message.destination)
+        host, port = message.destination
+        print "Message sent to " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
+
+        datagram, source = sock.recvfrom(4096)
         host, port = source
         message = serializer.deserialize(datagram, host, port)
         self.assertEqual(message.type, expected.type)
@@ -37,20 +52,26 @@ class Tests(unittest.TestCase):
         self.assertEqual(message.payload, expected.payload)
         self.assertEqual(message.options, expected.options)
 
-        self.tr.written = []
+        print "Message received from " + host + ":" + str(port)
+        print "----------------------------------------"
+        print message
+        print "----------------------------------------"
+
+        sock.close()
 
     def _test_modular(self, lst):
         serializer = Serializer()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for t in lst:
             message, expected = t
             send_ack = False
             if message is not None:
                 datagram = serializer.serialize(message)
-                self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
+                sock.sendto(datagram, self.server_address)
             else:
                 send_ack = True
 
-            datagram, source = self.tr.written.pop(0)
+            datagram, source = sock.recvfrom(4096)
             host, port = source
             message = serializer.deserialize(datagram, host, port)
             self.assertEqual(message.type, expected.type)
@@ -64,16 +85,17 @@ class Tests(unittest.TestCase):
             if send_ack:
                 message = Message.new_ack(message)
                 datagram = serializer.serialize(message)
-                self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
+                sock.sendto(datagram, self.server_address)
 
-        self.tr.written = []
+        sock.close()
 
     def _test_separate(self, message, notification):
         serializer = Serializer()
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(datagram, self.server_address)
 
-        datagram, source = self.tr.written[0]
+        datagram, source = sock.recvfrom(4096)
         host, port = source
         message = serializer.deserialize(datagram, host, port)
 
@@ -82,7 +104,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(message.mid, self.current_mid + 4)
         self.assertEqual(message.source, source)
 
-        datagram, source = self.tr.written[1]
+        datagram, source = sock.recvfrom(4096)
         host, port = source
         message = serializer.deserialize(datagram, host, port)
 
@@ -93,17 +115,10 @@ class Tests(unittest.TestCase):
         self.assertEqual(message.payload, notification.payload)
         self.assertEqual(message.options, notification.options)
 
-        self.tr.written = []
-
         message = Message.new_ack(message)
         datagram = serializer.serialize(message)
-        self.proto.datagramReceived(datagram, ("127.0.0.1", 5600))
-        self.tr.written = []
-
-    def tearDown(self):
-        self.proto.stopProtocol()
-        del self.proto
-        del self.tr
+        sock.sendto(datagram, self.server_address)
+        sock.close()
 
     def test_get_storage(self):
         args = ("/storage",)
@@ -120,6 +135,7 @@ class Tests(unittest.TestCase):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
@@ -144,15 +160,17 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid + 1
+        req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["NON"]
-        expected._mid = self.current_mid + 1
+        expected._mid = self.current_mid
         expected.code = defines.responses["NOT_FOUND"]
         expected.token = None
         expected.payload = None
 
+        self.current_mid += 1
         self._test(req, expected)
 
     def test_post_and_get_storage(self):
@@ -169,12 +187,13 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['POST']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid + 2
+        req._mid = self.current_mid
         req.payload = "Created"
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected._mid = self.current_mid + 2
+        expected._mid = self.current_mid
         expected.code = defines.responses["CREATED"]
         expected.token = None
         expected.payload = None
@@ -182,6 +201,8 @@ class Tests(unittest.TestCase):
         option.number = defines.inv_options["Location-Path"]
         option.value = "storage/data1"
         expected.add_option(option)
+
+        self.current_mid += 1
 
         self._test(req, expected)
 
@@ -195,14 +216,19 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid + 3
+        req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
-        expected._mid = self.current_mid + 3
+        expected._mid = self.current_mid
         expected.code = defines.responses["CONTENT"]
         expected.token = None
         expected.payload = "Created"
+
+        self.current_mid += 1
+
+        self._test(req, expected)
 
     def test_long(self):
         args = ("/long",)
@@ -219,6 +245,7 @@ class Tests(unittest.TestCase):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
@@ -233,6 +260,7 @@ class Tests(unittest.TestCase):
         expected2.token = None
         expected2.payload = "Long Time"
 
+        self.current_mid += 1
         self._test_modular([(req, expected), (None, expected2)])
 
     def test_big(self):
@@ -244,6 +272,7 @@ class Tests(unittest.TestCase):
         req.uri_path = path
         req.type = defines.inv_types["CON"]
         req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["ACK"]
@@ -267,11 +296,15 @@ class Tests(unittest.TestCase):
         option.value = 14
         expected.add_option(option)
 
+        self.current_mid += 1
+
         req2 = Request()
         req2.code = defines.inv_codes['GET']
         req2.uri_path = path
         req2.type = defines.inv_types["CON"]
-        req2._mid = self.current_mid + 1
+        req2._mid = self.current_mid
+        req.destination = self.server_address
+
         option = Option()
         option.number = defines.inv_options["Block2"]
         option.value = 22
@@ -280,7 +313,7 @@ class Tests(unittest.TestCase):
         expected2 = Response()
         expected2.type = defines.inv_types["ACK"]
         expected2.code = defines.responses["CONTENT"]
-        expected2._mid = self.current_mid + 1
+        expected2._mid = self.current_mid
         expected2.token = None
         expected2.payload = "cies lorem fermentum at. Vivamus sit amet ornare neque, a imperdiet nisl. Quisque a " \
                             "iaculis libero, id tempus lacus. Aenean convallis est non justo consectetur, a hendrerit " \
@@ -298,6 +331,7 @@ class Tests(unittest.TestCase):
         option.number = defines.inv_options["Block2"]
         option.value = 22
         expected2.add_option(option)
+        self.current_mid += 1
         self._test_modular([(req, expected), (req2, expected2)])
 
     def test_get_separate(self):
@@ -314,7 +348,8 @@ class Tests(unittest.TestCase):
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid + 4
+        req._mid = self.current_mid
+        req.destination = self.server_address
 
         expected = Response()
         expected.type = defines.inv_types["CON"]
@@ -322,6 +357,7 @@ class Tests(unittest.TestCase):
         expected.token = None
         expected.payload = "Separate"
 
+        self.current_mid += 1
         self._test_separate(req, expected)
 
     # def _test_notification(self, lst):

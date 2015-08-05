@@ -40,13 +40,10 @@ def main(argv):
 
     server = CoAPServer(ip, port)
     try:
-        server.serve_forever(poll_interval=0.01)
+        server.listen(10)
     except KeyboardInterrupt:
         print "Server Shutdown"
-        server.server_close()
-        server.stopped.set()
-        server.executor_mid.cancel()
-        server.executor.shutdown(False)
+        server.close()
         print "Exiting..."
 
 

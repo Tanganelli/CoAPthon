@@ -71,10 +71,12 @@ class CoAP(object):
         self.timer_mid.setDaemon(True)
         self.timer_mid.start()
         self.server_address = server_address
+
         if len(sockaddr) == 4:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         else:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 
         if self.multicast:
             # Set some options to make it multicast-friendly
@@ -95,6 +97,8 @@ class CoAP(object):
             self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address)
                                     + socket.inet_aton(interface))
         else:
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
             self._socket.bind(self.server_address)
 
     def send(self, message, host, port):
@@ -127,6 +131,9 @@ class CoAP(object):
 
     def close(self):
         self.stop = True
+        self.executor_req.shutdown(False)
+        self.executor.shutdown(False)
+        self.timer_mid.cancel()
 
     def done_callback(self, future):
         message, host, port = future.result(timeout=10.0)
@@ -144,7 +151,7 @@ class CoAP(object):
         host = client_address[0]
         port = client_address[1]
 
-        # log.msg("Datagram received from " + str(host) + ":" + str(port))
+        # logging.log(logging.INFO, "Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
         # print "Message received from " + host + ":" + str(port)
