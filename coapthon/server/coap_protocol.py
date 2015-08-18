@@ -131,8 +131,8 @@ class CoAP(object):
 
     def close(self):
         self.stop = True
-        self.executor_req.shutdown(False)
-        self.executor.shutdown(False)
+        self.executor_req.shutdown(True)
+        self.executor.shutdown(True)
         self.timer_mid.cancel()
 
     def done_callback(self, future):
