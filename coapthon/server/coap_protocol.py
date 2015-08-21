@@ -40,7 +40,6 @@ class CoAP(object):
         Initialize the CoAP protocol
 
         """
-        self.stop = False
         host, port = server_address
         ret = socket.getaddrinfo(host, port)
         family, socktype, proto, canonname, sockaddr = ret[0]
@@ -48,6 +47,7 @@ class CoAP(object):
         self.stopped = threading.Event()
         self.stopped.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
+        self.pending_futures = []
         self.executor_req = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.received = {}
         self.sent = {}
@@ -68,7 +68,6 @@ class CoAP(object):
         self.observe_layer = ObserveLayer(self)
         self.multicast = multicast
         self.timer_mid = threading.Timer(defines.EXCHANGE_LIFETIME, self.purge_mids)
-        self.timer_mid.setDaemon(True)
         self.timer_mid.start()
         self.server_address = server_address
 
@@ -118,7 +117,7 @@ class CoAP(object):
         self._socket.sendto(message, (host, port))
 
     def listen(self, timeout):
-        while not self.stop:
+        while not self.stopped.isSet():
             self._socket.settimeout(float(timeout))
             try:
                 data, client_address = self._socket.recvfrom(4096)
@@ -129,10 +128,16 @@ class CoAP(object):
         self._socket.close()
 
     def close(self):
-        self.stop = True
+        self.stopped.set()
+        print "Stop Event Set"
         self.executor_req.shutdown(True)
+        print "Stop Executor_req"
+        for future in self.pending_futures:
+            future.cancel()
         self.executor.shutdown(True)
+        print "Stop Executor"
         self.timer_mid.cancel()
+        print "Stop Timer"
 
     def done_callback(self, future):
         message, host, port = future.result(timeout=10.0)
@@ -212,9 +217,7 @@ class CoAP(object):
                 del self.sent[key]
             for key in received_key_to_delete:
                 del self.received[key]
-        print "Exit Purge MIDS"
-
-
+        print "Exit Purge MIDs"
 
     def add_resource(self, path, resource):
         """
@@ -295,7 +298,7 @@ class CoAP(object):
         commands = self.observe_layer.notify_deletion(resource)
         if commands is not None:
             for f, t in commands:
-                self.executor.submit(f, t)
+                self.pending_futures.append(self.executor.submit(f, t))
 
     def remove_observers(self, path):
         """
@@ -306,7 +309,7 @@ class CoAP(object):
         commands = self.observe_layer.remove_observers(path)
         if commands is not None:
             for f, t in commands:
-                self.executor.submit(f, t)
+                self.pending_futures.append(self.executor.submit(f, t))
 
     def prepare_notification(self, t):
         """
@@ -318,7 +321,8 @@ class CoAP(object):
         """
         resource, request, notification = self.observe_layer.prepare_notification(t)
         if notification is not None:
-            self.executor.submit(self.observe_layer.send_notification, (resource, request, notification))
+            self.pending_futures.append(self.executor.submit(self.observe_layer.send_notification,
+                                                             (resource, request, notification)))
 
     def prepare_notification_deletion(self, t):
         """
@@ -331,7 +335,8 @@ class CoAP(object):
         """
         resource, request, notification = self.observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            self.executor.submit(self.observe_layer.send_notification, (resource, request, notification))
+            self.pending_futures.append(self.executor.submit(self.observe_layer.send_notification,
+                                                             (resource, request, notification)))
 
     def schedule_retrasmission(self, request, response, resource):
         """
@@ -346,6 +351,7 @@ class CoAP(object):
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
             key = hash(str(host) + str(port) + str(response.mid))
             self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
+            self.pending_futures.append(self.call_id[key])
 
     def retransmit(self, t):
         """
@@ -369,6 +375,7 @@ class CoAP(object):
             self.send(response, host, port)
             future_time *= 2
             self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
+            self.pending_futures.append(self.call_id[key])
         elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
             print "Give up on Message " + str(response.mid)
             print "----------------------------------------"

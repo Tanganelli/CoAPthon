@@ -127,7 +127,7 @@ class MessageLayer(object):
         :param timer: the timer object
         :return: True
         """
-        # return timer.cancel()
+        timer.cancel()
         return True
 
     def send_separate(self, request):
