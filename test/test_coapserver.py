@@ -37,10 +37,10 @@ class Tests(unittest.TestCase):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.sendto(datagram, message.destination)
         host, port = message.destination
-        print "Message sent to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message sent to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
 
         datagram, source = sock.recvfrom(4096)
         host, port = source
@@ -53,10 +53,10 @@ class Tests(unittest.TestCase):
         self.assertEqual(message.payload, expected.payload)
         self.assertEqual(message.options, expected.options)
 
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
 
         sock.close()
 
