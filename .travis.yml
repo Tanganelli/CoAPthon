@@ -7,4 +7,4 @@ install:
 - pip install .
 
 script:
-- python test/test_coapserver.py
+- python test_coapserver.py
