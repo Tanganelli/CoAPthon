@@ -19,19 +19,22 @@ class Tests(unittest.TestCase):
 
     def setUp(self):
         self.server_address = ("127.0.0.1", 5683)
+        self.current_mid = random.randint(1, 1000)
+    #     self.server = CoAPServer("127.0.0.1", 5683)
+    #     self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
+    #     self.server_thread.start()
+    #     self.current_mid = random.randint(1, 1000)
+    #
+    # def tearDown(self):
+    #     self.server.close()
+    #     self.server_thread = None
+    #     self.server = None
+    #     time.sleep(10)
+
+    def _test(self, message, expected):
         self.server = CoAPServer("127.0.0.1", 5683)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
-
-        self.current_mid = random.randint(1, 1000)
-
-    def tearDown(self):
-        self.server.close()
-        self.server_thread = None
-        self.server = None
-        time.sleep(10)
-
-    def _test(self, message, expected):
         serializer = Serializer()
         datagram = serializer.serialize(message)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -59,8 +62,15 @@ class Tests(unittest.TestCase):
         # print "----------------------------------------"
 
         sock.close()
+        self.server.close()
+        self.server_thread = None
+        self.server = None
+        time.sleep(10)
 
     def _test_modular(self, lst):
+        self.server = CoAPServer("127.0.0.1", 5683)
+        self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
+        self.server_thread.start()
         serializer = Serializer()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for t in lst:
@@ -89,8 +99,15 @@ class Tests(unittest.TestCase):
                 sock.sendto(datagram, self.server_address)
 
         sock.close()
+        self.server.close()
+        self.server_thread = None
+        self.server = None
+        time.sleep(10)
 
     def _test_separate(self, message, notification):
+        self.server = CoAPServer("127.0.0.1", 5683)
+        self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
+        self.server_thread.start()
         serializer = Serializer()
         datagram = serializer.serialize(message)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -120,6 +137,10 @@ class Tests(unittest.TestCase):
         datagram = serializer.serialize(message)
         sock.sendto(datagram, self.server_address)
         sock.close()
+        self.server.close()
+        self.server_thread = None
+        self.server = None
+        time.sleep(10)
 
     def test_get_storage(self):
         args = ("/storage",)
