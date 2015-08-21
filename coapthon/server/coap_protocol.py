@@ -73,12 +73,13 @@ class CoAP(object):
 
         if len(sockaddr) == 4:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         else:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         if self.multicast:
             # Set some options to make it multicast-friendly
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                     self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             except AttributeError:
@@ -129,15 +130,12 @@ class CoAP(object):
 
     def close(self):
         self.stopped.set()
-        print "Stop Event Set"
         self.executor_req.shutdown(True)
-        print "Stop Executor_req"
         for future in self.pending_futures:
             future.cancel()
         self.executor.shutdown(True)
-        print "Stop Executor"
         self.timer_mid.cancel()
-        print "Stop Timer"
+        self._socket.close()
 
     def done_callback(self, future):
         message, host, port = future.result(timeout=10.0)

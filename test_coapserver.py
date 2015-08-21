@@ -1,8 +1,8 @@
 import random
 import socket
 import threading
-import time
 import unittest
+import time
 from coapserver import CoAPServer
 from coapthon import defines
 from coapthon.messages.message import Message
@@ -20,16 +20,15 @@ class Tests(unittest.TestCase):
     def setUp(self):
         self.server_address = ("127.0.0.1", 5683)
         self.current_mid = random.randint(1, 1000)
-
         self.server = CoAPServer("127.0.0.1", 5683)
-        self.server_thread = threading.Thread(target=self.server.listen, args=(100,))
+        self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
 
     def tearDown(self):
         self.server.close()
-        self.server_thread.join()
+        self.server_thread.join(timeout=25)
         self.server = None
-        #time.sleep(10)
+        time.sleep(15)
 
     def _test(self, message, expected):
         serializer = Serializer()
@@ -122,6 +121,7 @@ class Tests(unittest.TestCase):
         sock.close()
 
     def test_get_storage(self):
+        print "\nGET /storage\n"
         args = ("/storage",)
         kwargs = {}
         path = args[0]
@@ -148,6 +148,7 @@ class Tests(unittest.TestCase):
         self._test(req, expected)
 
     def test_get_not_found(self):
+        print "\nGET /not_found\n"
         args = ("/not_found",)
         kwargs = {}
         path = args[0]
@@ -174,64 +175,66 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
         self._test(req, expected)
 
-    def test_post_and_get_storage(self):
-        args = ("/storage/data1",)
-        kwargs = {}
-        path = args[0]
-        req = Request()
-        for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
-
-        req.code = defines.inv_codes['POST']
-        req.uri_path = path
-        req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid
-        req.payload = "Created"
-        req.destination = self.server_address
-
-        expected = Response()
-        expected.type = defines.inv_types["ACK"]
-        expected._mid = self.current_mid
-        expected.code = defines.responses["CREATED"]
-        expected.token = None
-        expected.payload = None
-        option = Option()
-        option.number = defines.inv_options["Location-Path"]
-        option.value = "storage/data1"
-        expected.add_option(option)
-
-        self.current_mid += 1
-
-        self._test(req, expected)
-
-        req = Request()
-        for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
-
-        req.code = defines.inv_codes['GET']
-        req.uri_path = path
-        req.type = defines.inv_types["CON"]
-        req._mid = self.current_mid
-        req.destination = self.server_address
-
-        expected = Response()
-        expected.type = defines.inv_types["ACK"]
-        expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
-        expected.token = None
-        expected.payload = "Created"
-
-        self.current_mid += 1
-
-        self._test(req, expected)
+    # def test_post_and_get_storage(self):
+    #     print "\nPOST /storage/data1 - GET /storage/data1\n"
+    #     args = ("/storage/data1",)
+    #     kwargs = {}
+    #     path = args[0]
+    #     req = Request()
+    #     for key in kwargs:
+    #         o = Option()
+    #         o.number = defines.inv_options[key]
+    #         o.value = kwargs[key]
+    #         req.add_option(o)
+    #
+    #     req.code = defines.inv_codes['POST']
+    #     req.uri_path = path
+    #     req.type = defines.inv_types["CON"]
+    #     req._mid = self.current_mid
+    #     req.payload = "Created"
+    #     req.destination = self.server_address
+    #
+    #     expected = Response()
+    #     expected.type = defines.inv_types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.responses["CREATED"]
+    #     expected.token = None
+    #     expected.payload = None
+    #     option = Option()
+    #     option.number = defines.inv_options["Location-Path"]
+    #     option.value = "storage/data1"
+    #     expected.add_option(option)
+    #
+    #     self.current_mid += 1
+    #
+    #     self._test(req, expected)
+    #
+    #     req = Request()
+    #     for key in kwargs:
+    #         o = Option()
+    #         o.number = defines.inv_options[key]
+    #         o.value = kwargs[key]
+    #         req.add_option(o)
+    #
+    #     req.code = defines.inv_codes['GET']
+    #     req.uri_path = path
+    #     req.type = defines.inv_types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #
+    #     expected = Response()
+    #     expected.type = defines.inv_types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.responses["CONTENT"]
+    #     expected.token = None
+    #     expected.payload = "Created"
+    #
+    #     self.current_mid += 1
+    #
+    #     self._test(req, expected)
 
     def test_long(self):
+        print "\nGET /long\n"
         args = ("/long",)
         kwargs = {}
         path = args[0]
@@ -336,6 +339,7 @@ class Tests(unittest.TestCase):
     #     self._test_modular([(req, expected), (req2, expected2)])
 
     def test_get_separate(self):
+        print "\nGET /separate\n"
         args = ("/separate",)
         kwargs = {}
         path = args[0]
