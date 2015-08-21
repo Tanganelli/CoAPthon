@@ -77,7 +77,6 @@ class CoAP(object):
         else:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-
         if self.multicast:
             # Set some options to make it multicast-friendly
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
