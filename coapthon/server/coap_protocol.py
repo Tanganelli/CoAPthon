@@ -46,6 +46,10 @@ class CoAP(object):
 
         self.stopped = threading.Event()
         self.stopped.clear()
+        self.stopped_mid = threading.Event()
+        self.stopped_mid.clear()
+        self.stopped_ack = threading.Event()
+        self.stopped_ack.clear()
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         self.pending_futures = []
         self.executor_req = concurrent.futures.ThreadPoolExecutor(max_workers=10)
@@ -124,22 +128,36 @@ class CoAP(object):
                 data, client_address = self._socket.recvfrom(4096)
             except socket.timeout:
                 continue
-            future = self.executor_req.submit(self.finish_request, (data, client_address))
-            future.add_done_callback(self.done_callback)
+            try:
+                future = self.executor_req.submit(self.finish_request, (data, client_address))
+                future.add_done_callback(self.done_callback)
+                self.pending_futures.append(future)
+            except RuntimeError:
+                print "Exception with Executor"
+        self.stopped_ack.set()
         self._socket.close()
 
     def close(self):
         self.stopped.set()
-        self.executor_req.shutdown(True)
+        self.stopped_mid.set()
+        while not self.stopped_ack.isSet():
+            pass
         for future in self.pending_futures:
             future.cancel()
+        self.executor_req.shutdown(True)
+        self.executor_req = None
         self.executor.shutdown(True)
+        self.executor = None
         self.timer_mid.cancel()
+        self.timer_mid = None
         self._socket.close()
 
     def done_callback(self, future):
-        message, host, port = future.result(timeout=10.0)
-        self.send(message, host, port)
+        try:
+            message, host, port = future.result(timeout=10.0)
+            self.send(message, host, port)
+        except TypeError:
+            pass
 
     def finish_request(self, args):
         """
@@ -198,7 +216,7 @@ class CoAP(object):
 
         """
         # log.msg("Purge MIDs")
-        while not self.stopped.isSet():
+        while not self.stopped_mid.isSet():
             time.sleep(defines.EXCHANGE_LIFETIME)
             now = time.time()
             sent_key_to_delete = []
@@ -215,6 +233,9 @@ class CoAP(object):
                 del self.sent[key]
             for key in received_key_to_delete:
                 del self.received[key]
+            for future in self.pending_futures:
+                if future.done():
+                    self.pending_futures.remove(future)
         print "Exit Purge MIDs"
 
     def add_resource(self, path, resource):
