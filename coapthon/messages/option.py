@@ -1,4 +1,4 @@
-from coapthon2.utils import bit_len
+from coapthon.utils import bit_len
 from coapthon import defines
 from coapthon.utils import byte_len
 
