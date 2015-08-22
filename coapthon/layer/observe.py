@@ -204,7 +204,7 @@ class ObserveLayer(object):
         """
         commands = []
         #log.msg("Remove observers")
-        t = self._parent.root.with_prefix(path)
+        t = self._parent.root.from_prefix(path)
         for n in t:
             resource = self._parent.root[n]
             observers = self._parent.relation.get(resource)
@@ -214,7 +214,7 @@ class ObserveLayer(object):
                     # send notification
                     commands.append((self._parent.prepare_notification_deletion, [(resource, request, response)], {}))
                     del observers[item]
-            del self._parent.relation[resource]
+                del self._parent.relation[resource]
         return commands
 
     def update_relations(self, path, resource):

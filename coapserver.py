@@ -14,7 +14,7 @@ class CoAPServer(CoAP):
         self.add_resource('long/', Long())
         self.add_resource('big/', Big())
         print "CoAP Server start on " + host + ":" + str(port)
-        print self.root.with_prefix("/")
+        print self.root.dump()
 
 
 def usage():

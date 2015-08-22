@@ -122,8 +122,8 @@ class CoAP(object):
         self._socket.sendto(message, (host, port))
 
     def listen(self, timeout):
+        self._socket.settimeout(float(timeout))
         while not self.stopped.isSet():
-            self._socket.settimeout(float(timeout))
             try:
                 data, client_address = self._socket.recvfrom(4096)
             except socket.timeout:
@@ -407,8 +407,7 @@ class CoAP(object):
                 self.observe_layer.remove_observer(resource, request, response)
             del self.call_id[key]
 
-    @staticmethod
-    def send_error(request, response, error):
+    def send_error(self, request, response, error):
         """
         Send error messages as NON.
 
@@ -417,7 +416,18 @@ class CoAP(object):
         :param error: the error type
         :return: the response
         """
+        if request.type == defines.inv_types['CON'] and not request.acknowledged:
+            return self.send_error_ack(request, response, error)
         response.type = defines.inv_types['NON']
+        response.code = defines.responses[error]
+        response.token = request.token
+        response.mid = self.current_mid
+        self.current_mid += 1
+        return response
+
+    @staticmethod
+    def send_error_ack(request, response, error):
+        response.type = defines.inv_types['ACK']
         response.code = defines.responses[error]
         response.token = request.token
         response.mid = request.mid

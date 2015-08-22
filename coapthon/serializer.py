@@ -92,7 +92,6 @@ class Serializer(object):
                 if option_length == 0:
                     value = None
                 elif option_type == defines.INTEGER:
-
                     tmp = values[pos: pos + option_length]
                     value = 0
                     for b in tmp:
@@ -311,5 +310,7 @@ class Serializer(object):
             value = str(value)
         if isinstance(value, str):
             return bytearray(value, "utf-8")
+        elif isinstance(value, int):
+            return value
         else:
             return bytearray(value)
