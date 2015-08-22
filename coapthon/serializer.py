@@ -225,6 +225,9 @@ class Serializer(object):
             elif optionlength == 2 and opt_type == defines.INTEGER:
                 fmt += "H"
                 values.append(option.value)
+            elif optionlength == 3 and opt_type == defines.INTEGER:
+                fmt += "BBB"
+                values.append(option.value)
             else:
                 for b in str(option.raw_value):
                     fmt += "c"
