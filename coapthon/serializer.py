@@ -80,8 +80,8 @@ class Serializer(object):
                 # the second 4 bits represent the option length
                 # length = self._reader.read(4).uint
                 length = (next_byte & 0x0F)
-                num, pos = self.read_option_value_from_nibble2(delta, pos, values)
-                option_length, pos = self.read_option_value_from_nibble2(length, pos, values)
+                num, pos = self.read_option_value_from_nibble(delta, pos, values)
+                option_length, pos = self.read_option_value_from_nibble(length, pos, values)
                 current_option += num
                 # read option
                 try:
@@ -139,7 +139,8 @@ class Serializer(object):
         """
         return defines.RESPONSE_CODE_LOWER_BOUND <= code <= defines.RESPONSE_CODE_UPPER_BOUND
 
-    def read_option_value_from_nibble2(self, nibble, pos, values):
+    @staticmethod
+    def read_option_value_from_nibble(nibble, pos, values):
         """
         Calculates the value used in the extended option fields.
 
@@ -157,19 +158,7 @@ class Serializer(object):
             pos += 2
             return tmp, pos
         else:
-            raise ValueError("Unsupported option nibble " + nibble)
-
-    def read_option_value_from_nibble(self, nibble):
-        if nibble <= 12:
-            return nibble
-        elif nibble == 13:
-            return self._reader.read_bits(8, "uint") + 13
-
-        elif nibble == 14:
-            return self._reader.read_bits(8, "uint") + 269
-
-        else:
-            raise ValueError("Unsupported option nibble " + nibble)
+            raise ValueError("Unsupported option nibble " + str(nibble))
 
     def serialize(self, message):
         """
