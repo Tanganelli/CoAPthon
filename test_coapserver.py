@@ -57,8 +57,6 @@ class Tests(unittest.TestCase):
         # print message
         # print "----------------------------------------"
 
-        sock.close()
-
     def _test_modular(self, lst):
         serializer = Serializer()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -145,6 +143,7 @@ class Tests(unittest.TestCase):
         expected.token = None
         expected.payload = "Storage Resource for PUT, POST and DELETE"
 
+        self.current_mid += 1
         self._test(req, expected)
 
     def test_get_not_found(self):

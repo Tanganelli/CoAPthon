@@ -88,7 +88,7 @@ class Option(object):
         :return: the len of the option value
         """
         if isinstance(self._value, int):
-            return bit_len(self._value)
+            return byte_len(self._value)
         return len(self._value)
 
     @property
