@@ -14,7 +14,10 @@ def byte_len(int_type):
         int_type >>= 1
         length += 1
     if length > 0:
-        length = int(length / 8) + 1
+        if length % 8 != 0:
+            length = int(length / 8) + 1
+        else:
+            length = int(length / 8)
     return length
 
 

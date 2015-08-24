@@ -1,3 +1,4 @@
+import time
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
@@ -33,3 +34,17 @@ class TestResource(Resource):
 
     def render_DELETE(self, request):
         return True
+
+
+class SeparateResource(Resource):
+
+    def __init__(self, name="Separate", coap_server=None):
+        super(SeparateResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=False)
+        self.payload = "Separate Resource"
+
+    def render_GET(self, request):
+        return self, self.render_GET_separate
+
+    def render_GET_separate(self, request):
+        time.sleep(5)
+        return self

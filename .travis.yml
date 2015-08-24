@@ -7,3 +7,4 @@ install:
 
 script:
 - python test_coapserver.py
+- python plugtest.py

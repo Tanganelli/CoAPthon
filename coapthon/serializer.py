@@ -5,6 +5,7 @@ from coapthon.messages.message import Message
 from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
+from coapthon.utils import byte_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -172,6 +173,8 @@ class Serializer(object):
 
         if message.token is None or message.token == "":
             tkl = 0
+        elif isinstance(message.token, int):
+            tkl = len(str(message.token))
         else:
             tkl = len(message.token)
         tmp = (defines.VERSION << 2)
@@ -180,7 +183,10 @@ class Serializer(object):
         tmp |= tkl
         values = [tmp, message.code, message.mid]
 
-        if message.token is not None and len(message.token) > 0:
+        if message.token is not None and tkl > 0:
+            if isinstance(message.token, int):
+                message.token = str(message.token)
+
             for b in str(message.token):
                 fmt += "c"
                 values.append(b)
@@ -219,15 +225,11 @@ class Serializer(object):
 
             # write option value
             name, opt_type, repeatable, defaults = defines.options[option.number]
-            if optionlength == 1 and opt_type == defines.INTEGER:
-                fmt += "B"
-                values.append(option.value)
-            elif optionlength == 2 and opt_type == defines.INTEGER:
-                fmt += "H"
-                values.append(option.value)
-            elif optionlength == 3 and opt_type == defines.INTEGER:
-                fmt += "BBB"
-                values.append(option.value)
+            if opt_type == defines.INTEGER:
+                words = self.int_to_words(option.value, optionlength, 8)
+                for num in range(0, optionlength):
+                    fmt += "B"
+                    values.append(words[num])
             else:
                 for b in str(option.raw_value):
                     fmt += "c"
@@ -306,3 +308,31 @@ class Serializer(object):
             return value
         else:
             return bytearray(value)
+
+    @staticmethod
+    def int_to_words(int_val, num_words=4, word_size=32):
+        """
+        @param int_val: an arbitrary length Python integer to be split up.
+            Network byte order is assumed. Raises an IndexError if width of
+            integer (in bits) exceeds word_size * num_words.
+
+        @param num_words: number of words expected in return value tuple.
+
+        @param word_size: size/width of individual words (in bits).
+
+        @return: a list of fixed width words based on provided parameters.
+        """
+        max_int = 2 ** (word_size*num_words) - 1
+        max_word_size = 2 ** word_size - 1
+
+        if not 0 <= int_val <= max_int:
+            raise IndexError('integer %r is out of bounds!' % hex(int_val))
+
+        words = []
+        for _ in range(num_words):
+            word = int_val & max_word_size
+            words.append(int(word))
+            int_val >>= word_size
+        words.reverse()
+
+        return words

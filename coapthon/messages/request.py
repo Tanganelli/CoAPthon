@@ -40,12 +40,22 @@ class Request(Message):
         :param path: the Uri-Path
         """
         path = path.strip("/")
+        tmp = path.split("?")
+        path = tmp[0]
         paths = path.split("/")
         for p in paths:
             option = Option()
             option.number = defines.inv_options['Uri-Path']
             option.value = p
             self.add_option(option)
+        if len(tmp) > 1:
+            query = tmp[1]
+            queries = query.split("&")
+            for q in queries:
+                option = Option()
+                option.number = defines.inv_options['Uri-Query']
+                option.value = q
+                self.add_option(option)
 
     @property
     def observe(self):
@@ -98,6 +108,13 @@ class Request(Message):
             if option.number == defines.inv_options['Uri-Query']:
                 value.append(option.value)
         return value
+
+    @query.setter
+    def query(self, q):
+        option = Option()
+        option.number = defines.inv_options['Uri-Query']
+        option.value = str(q)
+        self.add_option(option)
 
     @property
     def accept(self):
