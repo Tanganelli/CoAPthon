@@ -10,12 +10,11 @@ from coapthon.serializer import Serializer
 from coapthon.messages.request import Request
 from twisted.python import log
 
-
 __author__ = 'giacomo'
 
 
 class HelperClientSynchronous(object):
-    def __init__(self):
+    def __init__(self, parent=None):
         self._currentMID = 100
         self.relation = {}
         self.received = {}
@@ -29,6 +28,7 @@ class HelperClientSynchronous(object):
         self._socket = None
         self._receiver_thread = None
         self.stop = False
+        self.parent = parent
 
     def send(self, request, endpoint, resend=False):
 
@@ -182,16 +182,18 @@ class HelperClientSynchronous(object):
             self.condition.notify()
             self.condition.release()
 
-    @staticmethod
-    def parse_path(path):
+    def parse_path(self, path):
         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
             if m is None:
                 m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
-                ip = m.group(2)
-                port = 5683
-                path = ""
+                if m is None:
+                    ip, port, path = self.parse_path_ipv6(path)
+                else:
+                    ip = m.group(2)
+                    port = 5683
+                    path = ""
             else:
                 ip = m.group(2)
                 port = 5683
@@ -223,6 +225,7 @@ class HelperClientSynchronous(object):
             request.uri_path = path
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
+
         self.send(request, endpoint)
         future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
         retransmit_count = 0
@@ -443,3 +446,24 @@ class HelperClientSynchronous(object):
             self.condition.wait()
             message = self._response
         return message
+
+    @staticmethod
+    def parse_path_ipv6(path):
+        m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
+                ip = m.group(2)
+                port = 5683
+                path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path

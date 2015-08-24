@@ -78,13 +78,11 @@ class MessageLayer(object):
         except AttributeError:
             return
         key = hash(str(host) + str(port) + str(message.mid))
-        key = message.mid
+
         t = self._parent.sent.get(key)
         if t is None:
-            t = self._parent.received.get(key)
-            if t is None:
-                log.err(defines.types[message.type] + " received without the corresponding message")
-                return
+            log.err(defines.types[message.type] + " received without the corresponding message")
+            return
         response, timestamp = t
         # Reliability
         if message.type == defines.inv_types['ACK']:
@@ -123,7 +121,7 @@ class MessageLayer(object):
         :param request: the request
         :return: the timer object
         """
-        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request, defines.SEPARATE_TIMEOUT])
         t.start()
         return t
 
@@ -155,8 +153,11 @@ class MessageLayer(object):
         :param request: [request] or request
         """
         if isinstance(request, list):
+            if len(request) == 2:
+                time.sleep(request[1])
             request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source
-        self._parent.send(ack, host, port)
-        request.acknowledged = True
+        if not request.acknowledged:
+            self._parent.send(ack, host, port)
+            request.acknowledged = True

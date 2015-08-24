@@ -1,4 +1,5 @@
 from coapthon import defines
+from coapthon.utils import byte_len, bit_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -93,6 +94,24 @@ class BlockwiseLayer(object):
         :param value: option value
         :return: num, m, size
         """
-        length = value.length - 4
-        num, m, size = value.unpack("uint:" + str(length) + ", bin:1, uint:3")
+
+        length = byte_len(value)
+        if length == 1:
+            num = value & 0xF0
+            num >>= 4
+            m = value & 0x08
+            m >>= 3
+            size = value & 0x07
+        elif length == 2:
+            num = value & 0xFFF0
+            num >>= 4
+            m = value & 0x0008
+            m >>= 3
+            size = value & 0x0007
+        else:
+            num = value & 0xFFFFF0
+            num >>= 4
+            m = value & 0x000008
+            m >>= 3
+            size = value & 0x000007
         return num, int(m), size

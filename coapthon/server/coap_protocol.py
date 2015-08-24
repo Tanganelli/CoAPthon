@@ -46,15 +46,12 @@ class CoAP(DatagramProtocol):
         self.relation = {}
         self.blockwise = {}
         self._currentMID = random.randint(1, 1000)
-
-        # Create the resource Tree
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
         # self.root = trie.trie()
         self.root = Tree()
         self.root["/"] = root
 
-        # Initialize layers
         self.request_layer = RequestLayer(self)
         self.blockwise_layer = BlockwiseLayer(self)
         self.resource_layer = ResourceLayer(self)
@@ -141,10 +138,10 @@ class CoAP(DatagramProtocol):
         :param host: destination host
         :param port: destination port
         """
-        print "Message send to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message send to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         serializer = Serializer()
         message = serializer.serialize(message)
         self.transport.write(message, (host, port))
@@ -164,10 +161,10 @@ class CoAP(DatagramProtocol):
         log.msg("Datagram received from " + str(host) + ":" + str(port))
         serializer = Serializer()
         message = serializer.deserialize(data, host, port)
-        print "Message received from " + host + ":" + str(port)
-        print "----------------------------------------"
-        print message
-        print "----------------------------------------"
+        # print "Message received from " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print message
+        # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
             ret = self.request_layer.handle_request(message)
@@ -224,6 +221,7 @@ class CoAP(DatagramProtocol):
     def add_resource(self, path, resource):
         """
         Helper function to add resources to the resource Tree during server initialization.
+
         :param path: path of the resource to create
         :param resource: the actual resource to create
         :return: True, if successful
@@ -284,7 +282,7 @@ class CoAP(DatagramProtocol):
 
         :param resource: the node resource updated
         """
-        commands = self._observe_layer.notify(resource)
+        commands = self.observe_layer.notify(resource)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
@@ -295,18 +293,17 @@ class CoAP(DatagramProtocol):
 
         :param resource: the node resource deleted
         """
-        commands = self._observe_layer.notify_deletion(resource)
+        commands = self.observe_layer.notify_deletion(resource)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
-    def remove_observers(self, node):
+    def remove_observers(self, path):
         """
         Remove all the observers of a resource and and invoke the notification procedure in different threads.
 
-        :type node: coapthon2.utils.Tree
         :param node: the node which has the deleted resource
         """
-        commands = self._observe_layer.remove_observers(node)
+        commands = self.observe_layer.remove_observers(path)
         if commands is not None:
             threads.callMultipleInThread(commands)
 
@@ -318,9 +315,9 @@ class CoAP(DatagramProtocol):
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        resource, request, notification = self._observe_layer.prepare_notification(t)
+        resource, request, notification = self.observe_layer.prepare_notification(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            reactor.callFromThread(self.observe_layer.send_notification, (resource, request, notification))
 
     def prepare_notification_deletion(self, t):
         """
@@ -331,9 +328,9 @@ class CoAP(DatagramProtocol):
         :param t: the arguments of the notification message
         :return: the notification message
         """
-        resource, request, notification = self._observe_layer.prepare_notification_deletion(t)
+        resource, request, notification = self.observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            reactor.callFromThread(self._observe_layer.send_notification, (resource, request, notification))
+            reactor.callFromThread(self.observe_layer.send_notification, (resource, request, notification))
 
     def schedule_retrasmission(self, request, response, resource):
         """
@@ -381,11 +378,10 @@ class CoAP(DatagramProtocol):
         else:
             response.timeouted = True
             if resource is not None:
-                self._observe_layer.remove_observer(resource, request, response)
+                self.observe_layer.remove_observer(resource, request, response)
             del self.call_id[key]
 
-    @staticmethod
-    def send_error(request, response, error):
+    def send_error(self, request, response, error):
         """
         Send error messages as NON.
 
@@ -394,7 +390,18 @@ class CoAP(DatagramProtocol):
         :param error: the error type
         :return: the response
         """
+        if request.type == defines.inv_types['CON'] and not request.acknowledged:
+            return self.send_error_ack(request, response, error)
         response.type = defines.inv_types['NON']
+        response.code = defines.responses[error]
+        response.token = request.token
+        response.mid = self.current_mid
+        self.current_mid += 1
+        return response
+
+    @staticmethod
+    def send_error_ack(request, response, error):
+        response.type = defines.inv_types['ACK']
         response.code = defines.responses[error]
         response.token = request.token
         response.mid = request.mid

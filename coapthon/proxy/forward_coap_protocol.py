@@ -1,16 +1,18 @@
+import copy
 import hashlib
 import os
 import random
 import re
 from threading import Timer
 import time
+from concurrent.futures import ThreadPoolExecutor
 from twisted.application.service import Application
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.log import ILogObserver, FileLogObserver
 from twisted.python.logfile import DailyLogFile
 from coapthon import defines
-from coapthon.client.coap_protocol import HelperClient
+from coapthon.client.coap_synchronous import HelperClientSynchronous
 from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
@@ -76,15 +78,13 @@ class ProxyCoAP(CoAP):
         # print "----------------------------------------"
         if isinstance(message, Request):
             log.msg("Received request")
-            ret = self._request_layer.handle_request(message)
+            ret = self.request_layer.handle_request(message)
             if isinstance(ret, Request):
                 self.forward_request(ret)
-            else:
-                return
         elif isinstance(message, Response):
             log.err("Received response")
             rst = Message.new_rst(message)
-            rst = self._message_layer.matcher_response(rst)
+            rst = self.message_layer.matcher_response(rst)
             log.msg("Send RST")
             self.send(rst, host, port)
         elif isinstance(message, tuple):
@@ -92,14 +92,14 @@ class ProxyCoAP(CoAP):
             response = Response()
             response.destination = (host, port)
             response.code = defines.responses[error]
-            response = self.reliability_response(message, response)
-            response = self._message_layer.matcher_response(response)
+            response = self.message_layer.reliability_response(message, response)
+            response = self.message_layer.matcher_response(response)
             log.msg("Send Error")
             self.send(response, host, port)
         elif message is not None:
             # ACK or RST
             log.msg("Received ACK or RST")
-            self._message_layer.handle_message(message)
+            self.message_layer.handle_message(message)
 
     def parse_path(self, path):
         return self.parse_path_ipv6(path)
@@ -153,95 +153,81 @@ class ProxyCoAP(CoAP):
         :param request: the request to be forwarded
         :return: None if success, send an error otherwise
         """
-        # print "FORWARD REQUEST\n"
         uri = request.proxy_uri
         response = Response()
         response.destination = request.source
-        token = self.generate_token()
         if uri is None:
             return self.send_error(request, response, "BAD_REQUEST")
         host, port, path = self.parse_path(uri)
+        server = (str(host), int(port))
+        token = self.generate_token()
+        key = hash(str(host) + str(port) + str(token))
+        to_store = copy.deepcopy(request)
+        self._forward[key] = to_store
+        # print request
+        to_delete = []
+        for option in request.options:
+            if option.name == "Proxy-Uri" or not option.safe:
+                to_delete.append(option)
 
-        request.uri_path = path
+        for option in to_delete:
+            request.del_option(option)
+
+        client = HelperClientSynchronous()
         self._currentMID += 1
+        client.starting_mid = self._currentMID % (1 << 16)
         method = defines.codes[request.code]
         if method == 'GET':
-            function = self.client.protocol.get
-            req = Request()
-            req.destination = (str(host), int(port))
-            req.mid = self._currentMID % (1 << 16)
-            req.token = str(token)
+            function = client.get
+            req = copy.deepcopy(request)
+            req.destination = server
             req.uri_path = path
-            req.type = defines.inv_types["CON"]
-            req.code = defines.inv_codes['GET']
-            args = (req,)
-            kwargs = {}
-            callback = self.result_forward
-            err_callback = self.error
+            req.token = str(token)
+
         elif method == 'POST':
-            function = self.client.protocol.post
-            req = Request()
-            req.destination = (str(host), int(port))
-            req.mid = self._currentMID % (1 << 16)
-            req.token = str(token)
+            function = client.post
+            req = copy.deepcopy(request)
+            req.destination = server
             req.uri_path = path
-            req.payload = request.payload
-            req.type = defines.inv_types["CON"]
-            req.code = defines.inv_codes['POST']
-            args = (req,)
-            kwargs = {}
-            callback = self.result_forward
-            err_callback = self.error
+            req.token = str(token)
+
         elif method == 'PUT':
-            function = self.client.protocol.put
-            req = Request()
-            req.destination = (str(host), int(port))
-            req.mid = self._currentMID % (1 << 16)
-            req.token = str(token)
+            function = client.put
+            req = copy.deepcopy(request)
+            req.destination = server
             req.uri_path = path
-            req.payload = request.payload
-            req.type = defines.inv_types["CON"]
-            req.code = defines.inv_codes['PUT']
-            args = (req,)
-            kwargs = {}
-            callback = self.result_forward
-            err_callback = self.error
+            req.token = str(token)
+
         elif method == 'DELETE':
-            function = self.client.protocol.delete
-            req = Request()
-            req.destination = (str(host), int(port))
-            req.mid = self._currentMID % (1 << 16)
-            req.token = str(token)
+            function = client.delete
+            req = copy.deepcopy(request)
+            req.destination = server
             req.uri_path = path
-            req.type = defines.inv_types["CON"]
-            req.code = defines.inv_codes['DELETE']
-            args = (req,)
-            kwargs = {}
-            callback = self.result_forward
-            err_callback = self.error
+            req.token = str(token)
+
         else:
-            return self.send_error(request, response, "BAD_REQUEST")
-        for option in request.options:
-            if option.safe:
-                kwargs[option.name] = option.value
-        self.send_ack([request])
-        operations = [(function, args, kwargs, (callback, err_callback))]
-        key = hash(str(host) + str(port) + str(token))
-        self._forward[key] = request
-        key = hash(str(host) + str(port) + str(self._currentMID % (1 << 16)))
-        self._forward_mid[key] = request
-        # print "************"
-        # print str(host),  str(port), str(self._currentMID % (1 << 16))
-        # print req
-        # print "************"
-        key = req.mid
-        self.sent[key] = (req, time.time())
-        # self.sent[str(self._currentMID % (1 << 16))] = (req, time.time())
-        self.client.start(operations)
+            return self.send_error(to_store, response, "BAD_REQUEST")
+        req.source = None
+        args = (req,)
+
+        key = hash(str(host) + str(port) + str((client.starting_mid + 1) % (1 << 16)))
+        self._forward_mid[key] = req
         # Render_GET
-        # key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
-        # self.timer[key_timer] = reactor.callLater(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            self.timer[request.mid] = executor.submit(self.send_delayed_ack, request)
+        # with ThreadPoolExecutor(max_workers=100) as executor:
+        #     future = executor.submit(client.start, [(function, args, {})])
+        #     future.add_done_callback(self.result_forward)
+        # print req
+        operations = [(function, args, {})]
+        function, args, kwargs = operations[0]
+        response = function(*args, **kwargs)
+        self.result_forward(response=response)
         return None
+
+    def send_delayed_ack(self, request):
+        time.sleep(defines.SEPARATE_TIMEOUT)
+        self.send_ack([request])
 
     def send_ack(self, list_request):
         """
@@ -255,59 +241,48 @@ class ProxyCoAP(CoAP):
             request = list_request[0]
         else:
             request = list_request
-        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
-        if self.timer.get(key_timer) is not None:
-            del self.timer[key_timer]
+        del self.timer[request.mid]
         host, port = request.source
         ack = Message.new_ack(request)
         self.send(ack, host, port)
 
-    def result_forward(self, response, request=None):
+    def result_forward(self, future=None, response=None):
         """
         Forward results to the client.
 
-        :param response: the response sent by the server.
+        :param future: the future object.
         """
-        # print "RESULT FORWARD\n"
-        skip_delete = False
+        if future is not None:
+            print future
+            print future.result()
+            response = future.result()
         host, port = response.source
-        key_mid = hash(str(host) + str(port) + str(response.mid))
-        key = None
-        if request is None:
-            host, port = response.source
-            key = hash(str(host) + str(port) + str(response.token))
-            request = self._forward.get(key)
-        else:
-            skip_delete = True
-
-        # print request
-        if request is None:
-            return
-        key_timer = hash(str(request.source[0]) + str(request.source[1]) + str(request.mid))
-        if self.timer.get(key_timer) is not None:
-            self.timer[key_timer].cancel()
+        key = hash(str(host) + str(port) + str(response.token))
+        request = self._forward.get(key)
+        if request.mid in self.timer and self.timer[request.mid].cancel():
             response.type = defines.inv_types["ACK"]
             response.mid = request.mid
-        elif skip_delete:
-            response.type = defines.inv_types["ACK"]
-            response.mid = request.mid
-        elif request.type == defines.inv_types["CON"]:
-            response.type = defines.inv_types["CON"]
         else:
-            response.type = defines.inv_types["NON"]
+            if request.type == defines.inv_types["CON"]:
+                response.type = defines.inv_types["CON"]
+            else:
+                response.type = defines.inv_types["NON"]
 
-        response.destination = request.source
-        response.token = request.token
-        if not skip_delete:
+        if request is not None:
+            response.destination = request.source
+            response.token = request.token
+
             del self._forward[key]
+            host, port = response.source
+            key = hash(str(host) + str(port) + str(response.mid))
             try:
-                del self._forward_mid[key_mid]
+                del self._forward_mid[key]
             except KeyError:
                 log.err("MID has not been deleted")
-        host, port = request.source
-        if response.mid is None:
-            response.mid = self._currentMID
-        self.send(response, host, port)
+            host, port = request.source
+            if response.mid is None:
+                response.mid = self._currentMID
+            self.send(response, host, port)
 
     def generate_token(self):
         """

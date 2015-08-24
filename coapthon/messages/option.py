@@ -1,6 +1,6 @@
-
-from coapthon import defines
 from coapthon.utils import bit_len
+from coapthon import defines
+from coapthon.utils import byte_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -48,7 +48,7 @@ class Option(object):
             self._value = bytearray()
         name, opt_type, repeatable, defaults = defines.options[self._number]
         if opt_type == defines.INTEGER:
-            if bit_len(self._value) > 0:
+            if byte_len(self._value) > 0:
                 return int(self._value)
             else:
                 return defaults
@@ -63,9 +63,9 @@ class Option(object):
         """
         if type(val) is str:
             val = bytearray(val, "utf-8")
-        if type(val) is int and bit_len(val) != 0:
+        elif type(val) is int and byte_len(val) != 0:
             val = val
-        if type(val) is int and bit_len(val) == 0:
+        elif type(val) is int and byte_len(val) == 0:
             val = bytearray()
         self._value = val
 
@@ -88,7 +88,7 @@ class Option(object):
         :return: the len of the option value
         """
         if isinstance(self._value, int):
-            return bit_len(self._value * 8)
+            return byte_len(self._value)
         return len(self._value)
 
     @property
