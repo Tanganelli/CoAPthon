@@ -1,11 +1,7 @@
 import time
-from twisted.python import log
 from coapthon import defines
 from coapthon.messages.option import Option
-from coapthon.messages.request import Request
 from coapthon.messages.response import Response
-from coapthon.serializer import Serializer
-from coapthon.utils import Tree
 from coapthon.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
@@ -105,9 +101,9 @@ class ObserveLayer(object):
                 del self._parent.blockwise[key]
             # Reliability
             request.acknowledged = True
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
             return resource, request, response
         else:
             response.code = defines.responses['METHOD_NOT_ALLOWED']
@@ -119,9 +115,9 @@ class ObserveLayer(object):
                 del self._parent.blockwise[key]
             # Reliability
             request.acknowledged = True
-            response = self._parent.reliability_response(request, response)
+            response = self._parent.message_layer.reliability_response(request, response)
             # Matcher
-            response = self._parent.matcher_response(response)
+            response = self._parent.message_layer.matcher_response(response)
             return resource, request, response
 
     def prepare_notification_deletion(self, t):
@@ -147,9 +143,9 @@ class ObserveLayer(object):
             del self._parent.blockwise[key]
         # Reliability
         request.acknowledged = True
-        response = self._parent.reliability_response(request, response)
+        response = self._parent.message_layer.reliability_response(request, response)
         # Matcher
-        response = self._parent.matcher_response(response)
+        response = self._parent.message_layer.matcher_response(response)
         return resource, request, response
 
     def send_notification(self, t):
@@ -161,14 +157,8 @@ class ObserveLayer(object):
         assert isinstance(t, tuple)
         resource, request, notification_message = t
         host, port = notification_message.destination
-        serializer = Serializer()
         self._parent.schedule_retrasmission(request, notification_message, resource)
-        print "Notification Message send to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print notification_message
-        print "----------------------------------------"
-        notification_message = serializer.serialize(notification_message)
-        self._parent.transport.write(notification_message, (host, port))
+        self._parent.send(notification_message, host, port)
 
     def add_observing(self, resource, request, response):
         """
@@ -185,16 +175,16 @@ class ObserveLayer(object):
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
         if observers is None:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Initiate an observe relation between " + str(host) + ":" +
+            #        str(port) + " and resource " + str(resource.path))
             observers = {key: (now, request, response)}
         elif key not in observers:
-            log.msg("Initiate an observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Initiate an observe relation between " + str(host) + ":" +
+            #         str(port) + " and resource " + str(resource.path))
             observers[key] = (now, request, response)
         else:
-            log.msg("Update observe relation between " + str(host) + ":" +
-                    str(port) + " and resource " + str(resource.path))
+            # log.msg("Update observe relation between " + str(host) + ":" +
+            #         str(port) + " and resource " + str(resource.path))
             old, request, response = observers[key]
             observers[key] = (now, request, response)
         self._parent.relation[resource] = observers
@@ -204,7 +194,7 @@ class ObserveLayer(object):
         response.add_option(option)
         return response
 
-    def remove_observers(self, node):
+    def remove_observers(self, path):
         """
         Remove all the observers of a resource and notifies the delete of the resource observed.
 
@@ -212,15 +202,11 @@ class ObserveLayer(object):
         :param node: the node which has the deleted resource
         :return: the list of commands that must be executed to notify clients
         """
-        assert isinstance(node, Tree)
         commands = []
-        log.msg("Remove observers")
-        for n in node.children:
-            assert isinstance(n, Tree)
-            if len(n.children) > 0:
-                c = self.remove_observers(n)
-                commands += c
-            resource = n.value
+        #log.msg("Remove observers")
+        t = self._parent.root.from_prefix(path)
+        for n in t:
+            resource = self._parent.root[n]
             observers = self._parent.relation.get(resource)
             if observers is not None:
                 for item in observers.keys():
@@ -228,10 +214,10 @@ class ObserveLayer(object):
                     # send notification
                     commands.append((self._parent.prepare_notification_deletion, [(resource, request, response)], {}))
                     del observers[item]
-            del self._parent.relation[resource]
+                del self._parent.relation[resource]
         return commands
 
-    def update_relations(self, node, resource):
+    def update_relations(self, path, resource):
         """
         Update a relation. It is used when a resource change due a POST request, without changing its path.
 
@@ -239,7 +225,7 @@ class ObserveLayer(object):
         :param node: the node which has the deleted resource
         :param resource: the new resource
         """
-        old_resource = node.value
+        old_resource = self._parent.root[path]
         observers = self._parent.relation.get(old_resource)
         if observers is not None:
             del self._parent.relation[old_resource]
@@ -253,7 +239,7 @@ class ObserveLayer(object):
         :param request: the request
         :param resource: the resource
         """
-        log.msg("Remove observer for the resource")
+        #log.msg("Remove observer for the resource")
         host, port = response.destination
         key = str(host) + str(port) + str(response.token)
         observers = self._parent.relation.get(resource)

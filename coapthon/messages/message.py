@@ -24,7 +24,7 @@ class Message(object):
         # The set of options of this message.
         self._options = []
         # The payload of this message.
-        self.payload = None
+        self._payload = None
         # The destination address of this message.
         self.destination = None
         # The source address of this message.
@@ -64,10 +64,10 @@ class Message(object):
         assert isinstance(option, Option)
         name, type_value, repeatable, defaults = defines.options[option.number]
         if not repeatable:
-            try:
-                self._options.index(option)
+            ret = self.already_in(option)
+            if ret:
                 raise TypeError("Option : %s is not repeatable", name)
-            except ValueError:
+            else:
                 self._options.append(option)
         else:
             self._options.append(option)
@@ -79,7 +79,6 @@ class Message(object):
         :type option: coapthon2.messages.option.Option
         :param option: the option
         """
-        assert isinstance(option, Option)
         try:
             while True:
                 self._options.remove(option)
@@ -140,6 +139,22 @@ class Message(object):
         self._type = t
 
     @property
+    def payload(self):
+        return self._payload
+
+    @payload.setter
+    def payload(self, value):
+        if isinstance(value, tuple):
+            content_type, payload = value
+            option = Option()
+            option.number = defines.inv_options["Content-Type"]
+            option.value = content_type
+            self.add_option(option)
+            self._payload = payload
+        else:
+            self._payload = value
+
+    @property
     def duplicated(self):
         """
         Checks if this message is a duplicate.
@@ -155,7 +170,6 @@ class Message(object):
 
         :param d: if a duplicate
         """
-        assert isinstance(d, bool)
         self._duplicate = d
 
     @property
@@ -174,7 +188,6 @@ class Message(object):
 
         :param a: if acknowledged
         """
-        assert isinstance(a, bool)
         self._acknowledged = a
 
     @property
@@ -193,7 +206,6 @@ class Message(object):
 
         :param r: if rejected
         """
-        assert isinstance(r, bool)
         self._rejected = r
 
     @property
@@ -214,7 +226,6 @@ class Message(object):
 
         :param t: if timeouted
         """
-        assert isinstance(t, bool)
         self._timeouted = t
 
     @property
@@ -233,7 +244,6 @@ class Message(object):
 
         :param c: if canceled
         """
-        assert isinstance(c, bool)
         self._canceled = c
 
     @staticmethod
@@ -290,7 +300,7 @@ class Message(object):
         for opt in self._options:
             msg += str(opt)
         msg += "Payload: " + "\n"
-        msg += str(self.payload) + "\n"
+        msg += str(self._payload) + "\n"
         return msg
 
     @property
@@ -351,3 +361,9 @@ class Message(object):
         option.number = defines.inv_options['Content-Type']
         option.value = int(content_type)
         self.add_option(option)
+
+    def already_in(self, option):
+        for opt in self._options:
+            if option.number == opt.number:
+                return True
+        return False

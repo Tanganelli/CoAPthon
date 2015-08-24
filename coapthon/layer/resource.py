@@ -12,6 +12,7 @@ class ResourceLayer(object):
     def __init__(self, parent):
         """
         Initialize a Resource Layer.
+
         :type parent: coapserver.CoAP
         :param parent: the CoAP server
         """
@@ -20,6 +21,7 @@ class ResourceLayer(object):
     def edit_resource(self, request, response, path):
         """
         Render a POST on an already created resource.
+
         :type node: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
@@ -91,9 +93,10 @@ class ResourceLayer(object):
         else:
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
-    def add_resource(self, request, response, path, lp):
+    def add_resource(self, request, response, parent_resource, lp):
         """
         Render a POST on a new resource.
+
         :type old: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
@@ -102,8 +105,7 @@ class ResourceLayer(object):
         :param p: the local path of the resource (only the last section of the split path)
         :return: the response
         """
-        old_resource = self._parent.root[path]
-        method = getattr(old_resource, "render_POST", None)
+        method = getattr(parent_resource, "render_POST", None)
         if hasattr(method, '__call__'):
             timer = self._parent.message_layer.start_separate_timer(request)
             resource = method(request=request)
@@ -130,7 +132,7 @@ class ResourceLayer(object):
                 if not isinstance(resource, Resource):
                     return self._parent.send_error(request, response, 'INTERNAL_SERVER_ERROR')
 
-            resource.path = path
+            resource.path = lp
 
             if resource.etag is not None:
                 response.etag = resource.etag
@@ -154,7 +156,7 @@ class ResourceLayer(object):
             # Matcher
             response = self._parent.message_layer.matcher_response(response)
 
-            self._parent.root[path] = resource
+            self._parent.root[lp] = resource
 
             return response
 
@@ -164,6 +166,7 @@ class ResourceLayer(object):
     def create_resource(self, path, request, response):
         """
         Render a POST request.
+
         :param path: the path of the request
         :param request: the request
         :param response: the response
@@ -183,13 +186,14 @@ class ResourceLayer(object):
         lp = path
         parent_resource = self._parent.root[imax]
         if parent_resource.allow_children:
-                return self.add_resource(request, response, path, lp)
+                return self.add_resource(request, response, parent_resource, lp)
         else:
             return self._parent.send_error(request, response, 'METHOD_NOT_ALLOWED')
 
     def update_resource(self, request, response, resource):
         """
         Render a PUT request.
+
         :type node: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
@@ -254,6 +258,7 @@ class ResourceLayer(object):
     def delete_resource(self, request, response, path):
         """
         Render a DELETE request.
+
         :param request: the request
         :param response: the response
         :param path: the path
@@ -294,6 +299,7 @@ class ResourceLayer(object):
     def get_resource(self, request, response, resource):
         """
         Render a GET request.
+
         :param request: the request
         :param response: the response
         :param resource: the resource required
@@ -337,7 +343,10 @@ class ResourceLayer(object):
             else:
                 response.code = defines.responses['CONTENT']
 
-            response.payload = resource.payload
+            try:
+                response.payload = resource.payload
+            except KeyError:
+                return self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
 
             # Blockwise
             response, resource = self._parent.blockwise_response(request, response, resource)
@@ -362,18 +371,19 @@ class ResourceLayer(object):
     def discover(self, request, response):
         """
         Render a GET request to the .weel-know/core link.
+
         :param request: the request
         :param response: the response
         :return: the response
         """
-        t = self._parent.root.with_prefix("/")
         response.code = defines.responses['CONTENT']
         payload = ""
-        for i in t:
+        for i in self._parent.root.dump():
             if i == "/":
                 continue
             resource = self._parent.root[i]
             payload += self.corelinkformat(resource)
+
         response.payload = payload
         response.content_type = defines.inv_content_types["application/link-format"]
         response.token = request.token
@@ -387,6 +397,7 @@ class ResourceLayer(object):
     def corelinkformat(resource):
         """
         Return a formatted string representation of the corelinkformat in the tree.
+
         :return: the string
         """
         msg = "<" + resource.path + ">;"

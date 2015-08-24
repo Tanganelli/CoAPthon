@@ -117,14 +117,14 @@ class Resource(object):
                 try:
                     return self._payload[self._required_content_type]
                 except KeyError:
-                    return -2
+                    raise KeyError("Content-Type not available")
         else:
             if isinstance(self._payload, dict):
                 if defines.inv_content_types["text/plain"] in self._payload:
                     return self._payload[defines.inv_content_types["text/plain"]]
                 else:
-                    val = self._payload.values()
-                    return val[0]
+                    val = self._payload.keys()
+                    return val[0], self._payload[val[0]]
 
         return self._payload
 
@@ -139,7 +139,7 @@ class Resource(object):
             self._payload = {}
             for k in p.keys():
                 v = p[k]
-                self._payload[defines.inv_content_types[k]] = v
+                self._payload[k] = v
         else:
             self._payload = {defines.inv_content_types["text/plain"]: p}
 

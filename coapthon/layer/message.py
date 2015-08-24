@@ -1,8 +1,5 @@
 import time
-from twisted.internet.error import AlreadyCancelled
-from twisted.python import log
 from coapthon import defines
-from threading import Timer
 from coapthon.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
@@ -78,13 +75,11 @@ class MessageLayer(object):
         except AttributeError:
             return
         key = hash(str(host) + str(port) + str(message.mid))
-        key = message.mid
+
         t = self._parent.sent.get(key)
         if t is None:
-            t = self._parent.received.get(key)
-            if t is None:
-                log.err(defines.types[message.type] + " received without the corresponding message")
-                return
+            # log.err(defines.types[message.type] + " received without the corresponding message")
+            return
         response, timestamp = t
         # Reliability
         if message.type == defines.inv_types['ACK']:
@@ -105,14 +100,12 @@ class MessageLayer(object):
                         del self._parent.relation[resource]
 
         # cancel retransmission
-        log.msg("Cancel retrasmission to:" + host + ":" + str(port))
+        # log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         try:
             call_id, retrasmission_count = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
-        except AlreadyCancelled:
-            pass
-        except TypeError:
+        except:
             pass
         self._parent.sent[key] = (response, time.time())
 
@@ -123,8 +116,7 @@ class MessageLayer(object):
         :param request: the request
         :return: the timer object
         """
-        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        t.start()
+        t = self._parent.executor.submit(self.send_ack, [request, defines.SEPARATE_TIMEOUT])
         return t
 
     @staticmethod
@@ -155,8 +147,11 @@ class MessageLayer(object):
         :param request: [request] or request
         """
         if isinstance(request, list):
+            if len(request) == 2:
+                time.sleep(request[1])
             request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source
-        self._parent.send(ack, host, port)
-        request.acknowledged = True
+        if not request.acknowledged:
+            self._parent.send(ack, host, port)
+            request.acknowledged = True

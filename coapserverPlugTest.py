@@ -2,23 +2,23 @@
 import getopt
 import sys
 from coapthon.server.coap_protocol import CoAP
-from example_resources import Storage, Separate, BasicResource, Long, Big
+from plugtest_resources import TestResource, SeparateResource
 
 
-class CoAPServer(CoAP):
+class CoAPServerPlugTest(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, (host, port), multicast)
-        self.add_resource('basic/', BasicResource())
-        self.add_resource('storage/', Storage())
-        self.add_resource('separate/', Separate())
-        self.add_resource('long/', Long())
-        self.add_resource('big/', Big())
-        print "CoAP Server start on " + host + ":" + str(port)
-        print self.root.dump()
+        self.add_resource('test/', TestResource())
+        self.add_resource('separate/', SeparateResource())
+        self.add_resource('seg1/', TestResource())
+        self.add_resource('seg1/seg2/', TestResource())
+        self.add_resource('seg1/seg2/seg3/', TestResource())
+        self.add_resource('query/', TestResource())
+        # print self.root.dump()
 
 
 def usage():
-    print "coapserver.py -i <ip address> -p <port>"
+    print "coapserverPlugTest.py -i <ip address> -p <port>"
 
 
 def main(argv):
@@ -38,7 +38,7 @@ def main(argv):
         elif opt in ("-p", "--port"):
             port = int(arg)
 
-    server = CoAPServer(ip, port)
+    server = CoAPServerPlugTest(ip, port)
     try:
         server.listen(10)
     except KeyboardInterrupt:
