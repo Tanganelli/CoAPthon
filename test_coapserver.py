@@ -147,7 +147,7 @@ class Tests(unittest.TestCase):
         req._mid = self.current_mid + 1
 
         expected = Response()
-        expected.type = defines.inv_types["NON"]
+        expected.type = defines.inv_types["ACK"]
         expected._mid = self.current_mid + 1
         expected.code = defines.responses["NOT_FOUND"]
         expected.token = None

@@ -143,7 +143,7 @@ class MessageLayer(object):
         :param request: the request
         """
         if request.type == defines.inv_types["CON"]:
-            self.send_ack(request)
+            self.send_ack([request])
 
     def send_ack(self, request):
         # Handle separate
