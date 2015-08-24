@@ -22,12 +22,9 @@ class ResourceLayer(object):
         """
         Render a POST on an already created resource.
 
-        :type node: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
-        :param node: the node which has the resource
-        :param lp: the location_path attribute of the resource
-        :param p: the local path of the resource (only the last section of the split path)
+        :param path: the path of the resource
         :return: the response
         """
         resource_node = self._parent.root[path]
@@ -71,6 +68,7 @@ class ResourceLayer(object):
 
             self._parent.notify(resource)
 
+            assert(isinstance(resource, Resource))
             if resource.etag is not None:
                 response.etag = resource.etag
 
@@ -97,12 +95,10 @@ class ResourceLayer(object):
         """
         Render a POST on a new resource.
 
-        :type old: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
-        :param old: the node which has the parent of the resource
+        :param parent_resource: the parent of the resource
         :param lp: the location_path attribute of the resource
-        :param p: the local path of the resource (only the last section of the split path)
         :return: the response
         """
         method = getattr(parent_resource, "render_POST", None)
@@ -194,10 +190,9 @@ class ResourceLayer(object):
         """
         Render a PUT request.
 
-        :type node: coapthon2.utils.Tree
         :param request: the request
         :param response: the response
-        :param node: the node which has the resource
+        :param resource: the resource
         :return: the response
         """
         # If-Match
@@ -351,6 +346,7 @@ class ResourceLayer(object):
             # Blockwise
             response, resource = self._parent.blockwise_response(request, response, resource)
 
+            assert(isinstance(resource, Resource))
             response.token = request.token
             if resource.etag is not None:
                 response.etag = resource.etag
@@ -370,7 +366,7 @@ class ResourceLayer(object):
 
     def discover(self, request, response):
         """
-        Render a GET request to the .weel-know/core link.
+        Render a GET request to the .well-know/core link.
 
         :param request: the request
         :param response: the response

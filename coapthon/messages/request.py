@@ -111,10 +111,16 @@ class Request(Message):
 
     @query.setter
     def query(self, q):
-        option = Option()
-        option.number = defines.inv_options['Uri-Query']
-        option.value = str(q)
-        self.add_option(option)
+        """
+        Adds a query.
+        :param q: the query
+        """
+        queries = q.split("&")
+        for q in queries:
+            option = Option()
+            option.number = defines.inv_options['Uri-Query']
+            option.value = str(q)
+            self.add_option(option)
 
     @property
     def accept(self):

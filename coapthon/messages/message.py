@@ -140,10 +140,20 @@ class Message(object):
 
     @property
     def payload(self):
+        """
+        Return the payload.
+
+        :return: the payload
+        """
         return self._payload
 
     @payload.setter
     def payload(self, value):
+        """
+        Sets the payload of the message and eventually the Content-Type
+
+        :param value: the payload
+        """
         if isinstance(value, tuple):
             content_type, payload = value
             option = Option()
@@ -363,6 +373,12 @@ class Message(object):
         self.add_option(option)
 
     def already_in(self, option):
+        """
+        Check if an option is already in the message.
+
+        :param option: the option to be checked
+        :return: True if already present, False otherwise
+        """
         for opt in self._options:
             if option.number == opt.number:
                 return True

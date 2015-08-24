@@ -25,7 +25,7 @@ class ObserveLayer(object):
         """
         Finds the observers that must be notified about the cancellation of the observed resource.
 
-        :type resource: coapthon2.resources.resource.Resource
+        :type resource: coapthon.resources.resource.Resource
         :param resource: the deleted resource
         :return: the list of commands that must be executed to notify clients
         """
@@ -39,7 +39,7 @@ class ObserveLayer(object):
         for item in observers.keys():
             old, request, response = observers[item]
             # send notification
-            commands.append((self._parent.prepare_notification_deletion(), [(resource, request, response)], {}))
+            commands.append((self._parent.prepare_notification_deletion, [(resource, request, response)], {}))
             observers[item] = (now, request, response)
         resource.observe_count += 1
         self._parent.relation[resource] = observers
@@ -49,7 +49,7 @@ class ObserveLayer(object):
         """
         Finds the observers that must be notified about the update of the observed resource.
 
-        :type resource: coapthon2.resources.resource.Resource
+        :type resource: coapthon.resources.resource.Resource
         :param resource: the resource which should be updated
         :return: the list of commands that must be executed to notify clients
         """
@@ -73,12 +73,12 @@ class ObserveLayer(object):
         """
         Create the notification message.
 
-
         :type t: (resource, request, old_response)
         :param t: the arguments of the notification message
         :return: the notification message
         """
         resource, request, old_response = t
+        assert(isinstance(resource, Resource))
         response = Response()
         response.destination = old_response.destination
         response.token = old_response.token
@@ -123,7 +123,6 @@ class ObserveLayer(object):
     def prepare_notification_deletion(self, t):
         """
         Create the notification message for deleted resource.
-
 
         :type t: (resource, request, old_response)
         :param t: the arguments of the notification message
@@ -198,12 +197,11 @@ class ObserveLayer(object):
         """
         Remove all the observers of a resource and notifies the delete of the resource observed.
 
-        :type node: coapthon2.utils.Tree
-        :param node: the node which has the deleted resource
+        :param path: the path of the resource
         :return: the list of commands that must be executed to notify clients
         """
         commands = []
-        #log.msg("Remove observers")
+        # log.msg("Remove observers")
         t = self._parent.root.from_prefix(path)
         for n in t:
             resource = self._parent.root[n]
@@ -239,7 +237,7 @@ class ObserveLayer(object):
         :param request: the request
         :param resource: the resource
         """
-        #log.msg("Remove observer for the resource")
+        # log.msg("Remove observer for the resource")
         host, port = response.destination
         key = str(host) + str(port) + str(response.token)
         observers = self._parent.relation.get(resource)

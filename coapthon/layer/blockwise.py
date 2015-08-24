@@ -14,6 +14,7 @@ class BlockwiseLayer(object):
     def __init__(self, parent):
         """
         Initialize a Blockwise Layer.
+
         :type parent: coapserver.CoAP
         :param parent: the CoAP server
         """
@@ -22,6 +23,7 @@ class BlockwiseLayer(object):
     def handle_request(self, request):
         """
         Store Blockwise parameter required by clients
+
         :param request: the request message
         :return: M bit, request
         """
@@ -50,6 +52,7 @@ class BlockwiseLayer(object):
     def start_block2(self, request):
         """
         Initialize a blockwise response. Used if payload > 1024
+
         :param request: the request message
         """
         host, port = request.source
@@ -59,7 +62,8 @@ class BlockwiseLayer(object):
     def handle_response(self, key, response, resource):
         """
         Handle Blockwise in responses.
-        :param key: key parameter to search inside the disctionary
+
+        :param key: key parameter to search inside the dictionary
         :param response: the response message
         :param resource: the request message
         :return: the new response
@@ -92,6 +96,7 @@ class BlockwiseLayer(object):
     def parse_blockwise(value):
         """
         Parse Blockwise option.
+
         :param value: option value
         :return: num, m, size
         """

@@ -57,22 +57,28 @@ class CoAP(object):
         self.relation = {}
         self.blockwise = {}
         self._currentMID = random.randint(1, 1000)
+
+        # Resource directory
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
         root.path = '/'
-        # self.root = trie.trie()
         self.root = Tree()
         self.root["/"] = root
 
+        # Initialize layers
         self.request_layer = RequestLayer(self)
         self.blockwise_layer = BlockwiseLayer(self)
         self.resource_layer = ResourceLayer(self)
         self.message_layer = MessageLayer(self)
         self.observe_layer = ObserveLayer(self)
-        self.multicast = multicast
+
+        # Clean MIDs
         self.timer_mid = threading.Timer(defines.EXCHANGE_LIFETIME, self.purge_mids)
         self.timer_mid.start()
-        self.server_address = server_address
 
+        self.server_address = server_address
+        self.multicast = multicast
+
+        # IPv4 or IPv6
         if len(sockaddr) == 4:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -119,7 +125,12 @@ class CoAP(object):
 
         self._socket.sendto(message, (host, port))
 
-    def listen(self, timeout):
+    def listen(self, timeout=10):
+        """
+        Listen for incoming messages. Timeout is used to check if the server must be switched off.
+
+        :param timeout: Socket Timeout in seconds
+        """
         self._socket.settimeout(float(timeout))
         while not self.stopped.isSet():
             try:
@@ -136,6 +147,10 @@ class CoAP(object):
         self._socket.close()
 
     def close(self):
+        """
+        Stop the server.
+
+        """
         self.stopped.set()
         self.stopped_mid.set()
         while not self.stopped_ack.isSet():
@@ -151,8 +166,13 @@ class CoAP(object):
         self._socket.close()
 
     def done_callback(self, future):
+        """
+        Callback called at the end of the processing of a request.
+
+        :param future: the future object that collects the results
+        """
         try:
-            message, host, port = future.result(timeout=10.0)
+            message, host, port = future.result()
             self.send(message, host, port)
         except TypeError:
             pass
@@ -161,9 +181,7 @@ class CoAP(object):
         """
         Handler for received UDP datagram.
 
-        :param data: the UDP datagram
-        :param host: source host
-        :param port: source port
+        :param args: (data, (client_ip, client_port)
         """
         data, client_address = args
         host = client_address[0]
@@ -238,7 +256,7 @@ class CoAP(object):
 
     def add_resource(self, path, resource):
         """
-        Helper function to add resources to the resource Tree during server initialization.
+        Helper function to add resources to the resource directory during server initialization.
 
         :param path: path of the resource to create
         :param resource: the actual resource to create
@@ -282,6 +300,15 @@ class CoAP(object):
         self._currentMID = int(mid)
 
     def blockwise_response(self, request, response, resource):
+        """
+        Verify if a blockwise response is needed.
+
+        :rtype : (response, resource)
+        :param request: the request message
+        :param response: the partially filled response message
+        :param resource: the resource to be put into the message
+        :return: the response after blockwise layer and the resource
+        """
         host, port = request.source
         key = hash(str(host) + str(port) + str(request.token))
         if key in self.blockwise:
@@ -298,7 +325,7 @@ class CoAP(object):
         Finds the observers that must be notified about the update of the observed resource
         and invoke the notification procedure in different threads.
 
-        :param resource: the node resource updated
+        :param resource: the resource updated
         """
         commands = self.observe_layer.notify(resource)
         if commands is not None:
@@ -310,7 +337,7 @@ class CoAP(object):
         Finds the observers that must be notified about the delete of the observed resource
         and invoke the notification procedure in different threads.
 
-        :param resource: the node resource deleted
+        :param resource: the resource deleted
         """
         commands = self.observe_layer.notify_deletion(resource)
         if commands is not None:
@@ -374,7 +401,7 @@ class CoAP(object):
         """
         Retransmit the message and schedule retransmission for future if MAX_RETRANSMIT limit is not already reached.
 
-        :param t: ((Response, Resource), host, port, future_time) or (Response, host, port, future_time)
+        :param t: (Request, Response, Resource, future_time)
         """
         # log.msg("Retransmit")
         request, response, resource, future_time = t
@@ -407,7 +434,7 @@ class CoAP(object):
 
     def send_error(self, request, response, error):
         """
-        Send error messages as NON.
+        Send error messages. If request was CON the error will be carried in ACK otherwise NON.
 
         :param request: the request that has generated the error
         :param response: the response message to be filled with the error
@@ -425,6 +452,14 @@ class CoAP(object):
 
     @staticmethod
     def send_error_ack(request, response, error):
+        """
+        Send error messages as CON.
+
+        :param request: the request that has generated the error
+        :param response: the response message to be filled with the error
+        :param error: the error type
+        :return: the response
+        """
         response.type = defines.inv_types['ACK']
         response.code = defines.responses[error]
         response.token = request.token

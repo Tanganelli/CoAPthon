@@ -14,6 +14,7 @@ class RequestLayer(object):
     def __init__(self, parent):
         """
         Initialize a Request Layer.
+
         :type parent: coapserver.CoAP
         :param parent: the CoAP server
         """
@@ -22,6 +23,7 @@ class RequestLayer(object):
     def handle_request(self, request):
         """
         Handles requests.
+
         :param request: the request
         :return: the response
         """
@@ -62,6 +64,7 @@ class RequestLayer(object):
     def process(self, request):
         """
         Processes a request message.
+
         :param request: the request
         :return: the response
         """
@@ -81,6 +84,7 @@ class RequestLayer(object):
     def handle_put(self, request):
         """
         Handles a PUT request
+
         :param request: the request
         :return: the response
         """
@@ -102,6 +106,7 @@ class RequestLayer(object):
     def handle_post(self, request):
         """
         Handles a POST request.
+
         :param request: the request
         :return: the response
         """
@@ -115,6 +120,7 @@ class RequestLayer(object):
     def handle_delete(self, request):
         """
         Handles a DELETE request.
+
         :param request: the request
         :return: the response
         """
@@ -138,6 +144,7 @@ class RequestLayer(object):
     def handle_get(self, request):
         """
         Handles a GET request.
+
         :param request: the request
         :return: the response
         """

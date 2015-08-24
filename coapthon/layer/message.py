@@ -95,7 +95,7 @@ class MessageLayer(object):
                 observers = self._parent.relation.get(resource)
                 if observers is not None:
                     del observers[key]
-                    log.msg("Cancel observing relation")
+                    # log.msg("Cancel observing relation")
                     if len(observers) == 0:
                         del self._parent.relation[resource]
 
@@ -144,7 +144,7 @@ class MessageLayer(object):
         """
         Sends an ACK message for the request.
 
-        :param request: [request] or request
+        :param request: [request, sleep_time] or request
         """
         if isinstance(request, list):
             if len(request) == 2:

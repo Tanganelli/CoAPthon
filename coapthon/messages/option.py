@@ -1,4 +1,3 @@
-from coapthon.utils import bit_len
 from coapthon import defines
 from coapthon.utils import byte_len
 
@@ -111,7 +110,7 @@ class Option(object):
         """
         Gets option name.
 
-        :return: the name of the oprion
+        :return: the name of the option
         """
         return defines.options[self._number][0]
 

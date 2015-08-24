@@ -1,12 +1,10 @@
-from coapthon import defines
-
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
 
 
 def byte_len(int_type):
     """
-    Get the number of bits needed to encode the int passed.
+    Get the number of byte needed to encode the int passed.
 
     :param int_type: the int to be converted
     :return: the number of bits needed to encode the int passed.
@@ -42,6 +40,11 @@ class Tree(object):
         self.tree = {}
 
     def dump(self):
+        """
+        Get all the paths registered in the server.
+
+        :return: registered resources.
+        """
         return self.tree.keys()
 
     def with_prefix(self, path):

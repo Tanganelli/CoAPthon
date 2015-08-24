@@ -112,6 +112,11 @@ class Response(Message):
 
     @property
     def block2(self):
+        """
+        Get the Block2 option of a response.
+
+        :return: the Block2 value
+        """
         value = 0
         for option in self.options:
             if option.number == defines.inv_options['Block2']:
@@ -120,6 +125,11 @@ class Response(Message):
 
     @block2.setter
     def block2(self, value):
+        """
+        Set the Block2 option of a response.
+
+        :param value: the Block2 value
+        """
         option = Option()
         option.number = defines.inv_options['Block2']
         num, m, size = value
@@ -133,6 +143,11 @@ class Response(Message):
 
     @property
     def block1(self):
+        """
+        Get the Block1 option of a response.
+
+        :return: the Block1 value
+        """
         value = 0
         for option in self.options:
             if option.number == defines.inv_options['Block1']:
@@ -141,6 +156,11 @@ class Response(Message):
 
     @block1.setter
     def block1(self, value):
+        """
+        Set the Block1 option of a response.
+
+        :param value: the Block1 value
+        """
         option = Option()
         option.number = defines.inv_options['Block1']
         num, m, size = value
