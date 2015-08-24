@@ -1,3 +1,4 @@
+import struct
 from coapthon import defines
 from coapthon.utils import byte_len, bit_len
 
