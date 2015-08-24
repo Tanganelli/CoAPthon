@@ -1,5 +1,3 @@
-# from Bio import trie
-import SocketServer
 import os
 import random
 import socket
