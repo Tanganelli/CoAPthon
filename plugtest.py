@@ -36,15 +36,20 @@ class Tests(unittest.TestCase):
         datagram, source = sock.recvfrom(4096)
         host, port = source
         message = serializer.deserialize(datagram, host, port)
-
-        print message
-        self.assertEqual(message.type, expected.type)
-        self.assertEqual(message.mid, expected.mid)
-        self.assertEqual(message.code, expected.code)
-        self.assertEqual(message.source, source)
-        self.assertEqual(message.token, expected.token)
-        self.assertEqual(message.payload, expected.payload)
-        self.assertEqual(message.options, expected.options)
+        if expected.type is not None:
+            self.assertEqual(message.type, expected.type)
+        if expected.mid is not None:
+            self.assertEqual(message.mid, expected.mid)
+        if expected.code is not None:
+            self.assertEqual(message.code, expected.code)
+        if expected.source is not None:
+            self.assertEqual(message.source, source)
+        if expected.token is not None:
+            self.assertEqual(message.token, expected.token)
+        if expected.payload is not None:
+            self.assertEqual(message.payload, expected.payload)
+        if expected.options is not None:
+            self.assertEqual(message.options, expected.options)
 
         sock.close()
 
@@ -95,6 +100,122 @@ class Tests(unittest.TestCase):
         option.number = defines.inv_options["Location-Path"]
         option.value = "/test_post"
         expected.add_option(option)
+
+        self.current_mid += 1
+        self._test_plugtest(req, expected)
+
+    def test_td_coap_core_03(self):
+        print "TD_COAP_CORE_03"
+        path = "/test"
+        req = Request()
+
+        req.code = defines.inv_codes['PUT']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        o = Option()
+        o.number = defines.inv_options["Content-Type"]
+        o.value = defines.inv_content_types["application/xml"]
+        req.add_option(o)
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "<value>test</value>"
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CHANGED"]
+        expected.token = None
+        expected.payload = None
+
+        self.current_mid += 1
+        self._test_plugtest(req, expected)
+
+        req = Request()
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "<value>test</value>"
+        option = Option()
+        option.number = defines.inv_options["Content-Type"]
+        option.value = defines.inv_content_types["application/xml"]
+        expected.add_option(option)
+
+        self.current_mid += 1
+        self._test_plugtest(req, expected)
+
+        req = Request()
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        option = Option()
+        option.number = defines.inv_options["Accept"]
+        option.value = defines.inv_content_types["application/xml"]
+        req.add_option(option)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "<value>test</value>"
+        option = Option()
+        option.number = defines.inv_options["Content-Type"]
+        option.value = defines.inv_content_types["application/xml"]
+        expected.add_option(option)
+
+        self.current_mid += 1
+        self._test_plugtest(req, expected)
+
+    def test_td_coap_core_04(self):
+        print "TD_COAP_CORE_04"
+        path = "/test"
+        req = Request()
+
+        req.code = defines.inv_codes['DELETE']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["DELETED"]
+        expected.token = None
+        expected.payload = None
+
+        self.current_mid += 1
+        self._test_plugtest(req, expected)
+
+    def test_td_coap_core_05(self):
+        print "TD_COAP_CORE_05"
+        path = "/test"
+        req = Request()
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["NON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.inv_types["NON"]
+        expected._mid = None
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "Test Resource"
 
         self.current_mid += 1
         self._test_plugtest(req, expected)

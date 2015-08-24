@@ -1,3 +1,4 @@
+from coapthon import defines
 from coapthon.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
@@ -13,12 +14,20 @@ class TestResource(Resource):
         return self
 
     def render_PUT(self, request):
+        for option in request.options:
+            if option.number == defines.inv_options["Content-Type"]:
+                self.payload = {option.value: request.payload}
+                return self
         self.payload = request.payload
         return self
 
     def render_POST(self, request):
         res = TestResource()
         res.location_query = request.query
+        for option in request.options:
+            if option.number == defines.inv_options["Content-Type"]:
+                res.payload = {option.value: request.payload}
+                return res
         res.payload = request.payload
         return res
 

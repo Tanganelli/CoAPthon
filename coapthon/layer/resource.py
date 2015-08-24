@@ -343,7 +343,10 @@ class ResourceLayer(object):
             else:
                 response.code = defines.responses['CONTENT']
 
-            response.payload = resource.payload
+            try:
+                response.payload = resource.payload
+            except KeyError:
+                return self._parent.send_error(request, response, 'NOT_ACCEPTABLE')
 
             # Blockwise
             response, resource = self._parent.blockwise_response(request, response, resource)
@@ -380,6 +383,7 @@ class ResourceLayer(object):
                 continue
             resource = self._parent.root[i]
             payload += self.corelinkformat(resource)
+
         response.payload = payload
         response.content_type = defines.inv_content_types["application/link-format"]
         response.token = request.token

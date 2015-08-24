@@ -24,7 +24,7 @@ class Message(object):
         # The set of options of this message.
         self._options = []
         # The payload of this message.
-        self.payload = None
+        self._payload = None
         # The destination address of this message.
         self.destination = None
         # The source address of this message.
@@ -64,10 +64,10 @@ class Message(object):
         assert isinstance(option, Option)
         name, type_value, repeatable, defaults = defines.options[option.number]
         if not repeatable:
-            try:
-                self._options.index(option)
+            ret = self.already_in(option)
+            if ret:
                 raise TypeError("Option : %s is not repeatable", name)
-            except ValueError:
+            else:
                 self._options.append(option)
         else:
             self._options.append(option)
@@ -137,6 +137,22 @@ class Message(object):
         if not isinstance(t, int) or t not in defines.types:
             raise AttributeError
         self._type = t
+
+    @property
+    def payload(self):
+        return self._payload
+
+    @payload.setter
+    def payload(self, value):
+        if isinstance(value, tuple):
+            content_type, payload = value
+            option = Option()
+            option.number = defines.inv_options["Content-Type"]
+            option.value = content_type
+            self.add_option(option)
+            self._payload = payload
+        else:
+            self._payload = value
 
     @property
     def duplicated(self):
@@ -284,7 +300,7 @@ class Message(object):
         for opt in self._options:
             msg += str(opt)
         msg += "Payload: " + "\n"
-        msg += str(self.payload) + "\n"
+        msg += str(self._payload) + "\n"
         return msg
 
     @property
@@ -345,3 +361,9 @@ class Message(object):
         option.number = defines.inv_options['Content-Type']
         option.value = int(content_type)
         self.add_option(option)
+
+    def already_in(self, option):
+        for opt in self._options:
+            if option.number == opt.number:
+                return True
+        return False
