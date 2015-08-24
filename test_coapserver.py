@@ -180,7 +180,7 @@ class Tests(unittest.TestCase):
         expected.payload = None
         option = Option()
         option.number = defines.inv_options["Location-Path"]
-        option.value = "storage/data1"
+        option.value = "/storage/data1"
         expected.add_option(option)
 
         self._test(req, expected)
