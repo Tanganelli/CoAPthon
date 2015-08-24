@@ -421,6 +421,3 @@ class Tests(unittest.TestCase):
     #
     #     self._test_notification([(req, expected), (req_put, expected_put), (None, notification)])
     #
-
-if __name__ == '__main__':
-    unittest.main()
