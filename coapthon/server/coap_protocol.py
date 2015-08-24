@@ -303,7 +303,7 @@ class CoAP(object):
         commands = self.observe_layer.notify(resource)
         if commands is not None:
             for f, t in commands:
-                self.executor.submit(f, t)
+                self.pending_futures.append(self.executor.submit(f, t))
 
     def notify_deletion(self, resource):
         """
