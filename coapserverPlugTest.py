@@ -7,7 +7,7 @@ from plugtest_resources import TestResource, SeparateResource
 
 class CoAPServerPlugTest(CoAP):
     def __init__(self, host, port, multicast=False):
-        CoAP.__init__(self, (host, port), multicast)
+        CoAP.__init__(self, multicast)
         self.add_resource('test/', TestResource())
         self.add_resource('separate/', SeparateResource())
         self.add_resource('seg1/', TestResource())
