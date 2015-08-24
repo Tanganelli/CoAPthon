@@ -1,2 +1,3 @@
 Sphinx==1.2.2
 futures==2.1.6
+twisted
