@@ -13,7 +13,7 @@ def usage():
     print "\t-o, --operation=\tGET|PUT|POST|DELETE|DISCOVER|OBSERVE"
     print "\t-p, --path=\t\t\tPath of the request"
     print "\t-P, --payload=\t\tPayload of the request"
-
+    print "\t-f, --payload-file=\t\tFile with payload of the request"
 
 def client_callback(response):
     print "Callback"
@@ -66,7 +66,7 @@ def main():
     path = None
     payload = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:", ["help", "operation=", "path=", "payload="])
+        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:f:", ["help", "operation=", "path=", "payload=", "payload_file="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized"
@@ -79,6 +79,9 @@ def main():
             path = a
         elif o in ("-P", "--payload"):
             payload = a
+        elif o in ("-f", "--payload-file"):
+            with open(a, 'r') as f:
+                payload = f.read()
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
