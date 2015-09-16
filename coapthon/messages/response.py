@@ -97,18 +97,18 @@ class Response(Message):
         option.value = int(max_age)
         self.add_option(option)
 
-    @property
-    def observe(self):
-        """
-        Get the Observe option of a response.
-
-        :return: the Observe value
-        """
-        value = 0
-        for option in self.options:
-            if option.number == defines.inv_options['Observe']:
-                value = int(option.value)
-        return value
+    # @property
+    # def observe(self):
+    #     """
+    #     Get the Observe option of a response.
+    #
+    #     :return: the Observe value
+    #     """
+    #     value = 0
+    #     for option in self.options:
+    #         if option.number == defines.inv_options['Observe']:
+    #             value = int(option.value)
+    #     return value
 
     @property
     def block2(self):

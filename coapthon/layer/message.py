@@ -92,17 +92,12 @@ class MessageLayer(object):
             for resource in self._parent.relation.keys():
                 host, port = message.source
                 key = hash(str(host) + str(port) + str(response.token))
-                observers = self._parent.relation.get(resource)
-                if observers is not None:
-                    del observers[key]
-                    # log.msg("Cancel observing relation")
-                    if len(observers) == 0:
-                        del self._parent.relation[resource]
+                self._parent.observe_layer.remove_observer(resource, key)
 
         # cancel retransmission
         # log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         try:
-            call_id, retrasmission_count = self._parent.call_id.get(key)
+            call_id = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
         except:

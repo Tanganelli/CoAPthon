@@ -63,7 +63,7 @@ class ObserveLayer(object):
         for item in observers.keys():
             old, request, response = observers[item]
             # send notification
-            commands.append((self._parent.prepare_notification, [(resource, request, response)], {}))
+            commands.append((self._parent.prepare_notification, (resource, request, response)))
             observers[item] = (now, request, response)
         resource.observe_count += 1
         self._parent.relation[resource] = observers
@@ -156,7 +156,7 @@ class ObserveLayer(object):
         assert isinstance(t, tuple)
         resource, request, notification_message = t
         host, port = notification_message.destination
-        self._parent.schedule_retrasmission(request, notification_message, resource)
+        self._parent.schedule_retrasmission(notification_message)
         self._parent.send(notification_message, host, port)
 
     def add_observing(self, resource, request, response):
@@ -169,7 +169,7 @@ class ObserveLayer(object):
         :return: response
         """
         host, port = response.destination
-        key = str(host) + str(port) + str(response.token)
+        key = hash(str(host) + str(port) + str(response.token))
         observers = self._parent.relation.get(resource)
         now = int(round(time.time() * 1000))
         observe_count = resource.observe_count
@@ -229,7 +229,7 @@ class ObserveLayer(object):
             del self._parent.relation[old_resource]
             self._parent.relation[resource] = observers
 
-    def remove_observer(self, resource, request, response):
+    def remove_observer(self, resource, key):
         """
         Remove an observer for a certain resource.
 
@@ -237,10 +237,11 @@ class ObserveLayer(object):
         :param request: the request
         :param resource: the resource
         """
-        # log.msg("Remove observer for the resource")
-        host, port = response.destination
-        key = str(host) + str(port) + str(response.token)
+        print "Remove observer for the resource"
         observers = self._parent.relation.get(resource)
         if observers is not None and key in observers.keys():
             del observers[key]
             self._parent.relation[resource] = observers
+        observers = self._parent.relation.get(resource)
+        if len(observers) == 0:
+            del self._parent.relation[resource]

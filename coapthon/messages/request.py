@@ -57,32 +57,32 @@ class Request(Message):
                 option.value = q
                 self.add_option(option)
 
-    @property
-    def observe(self):
-        """
-        Check if the request is an observing request.
-
-        :return: 0, if the request is an observing request
-        """
-        for option in self.options:
-            if option.number == defines.inv_options['Observe']:
-                if option.value is None:
-                    return 0
-                return option.value
-        return 1
-
-    @observe.setter
-    def observe(self, ob):
-        """
-        Add the Observe option.
-
-        :param ob: observe count
-        """
-        option = Option()
-        option.number = defines.inv_options['Observe']
-        option.value = ob
-        self.del_option_name("Observe")
-        self.add_option(option)
+    # @property
+    # def observe(self):
+    #     """
+    #     Check if the request is an observing request.
+    #
+    #     :return: 0, if the request is an observing request
+    #     """
+    #     for option in self.options:
+    #         if option.number == defines.inv_options['Observe']:
+    #             if option.value is None:
+    #                 return 0
+    #             return option.value
+    #     return 1
+    #
+    # @observe.setter
+    # def observe(self, ob):
+    #     """
+    #     Add the Observe option.
+    #
+    #     :param ob: observe count
+    #     """
+    #     option = Option()
+    #     option.number = defines.inv_options['Observe']
+    #     option.value = ob
+    #     self.del_option_name("Observe")
+    #     self.add_option(option)
 
     @property
     def blockwise(self):

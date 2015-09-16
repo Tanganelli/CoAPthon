@@ -65,7 +65,7 @@ class Option(object):
         elif type(val) is int and byte_len(val) != 0:
             val = val
         elif type(val) is int and byte_len(val) == 0:
-            val = bytearray()
+            val = 0
         self._value = val
 
     @property

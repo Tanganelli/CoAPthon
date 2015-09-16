@@ -33,7 +33,7 @@ if not os.path.exists(home + "/.coapthon/"):
 
 
 class CoAP(object):
-    def __init__(self, server_address, multicast=False):
+    def __init__(self, server_address, multicast=False, starting_mid=None):
         """
         Initialize the CoAP protocol
 
@@ -56,7 +56,10 @@ class CoAP(object):
         self.call_id = {}
         self.relation = {}
         self.blockwise = {}
-        self._currentMID = random.randint(1, 1000)
+        if starting_mid is None:
+            self._currentMID = random.randint(1, 1000)
+        else:
+            self._currentMID = starting_mid
 
         # Resource directory
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
@@ -157,12 +160,24 @@ class CoAP(object):
             pass
         for future in self.pending_futures:
             future.cancel()
-        self.executor_req.shutdown(True)
-        self.executor_req = None
-        self.executor.shutdown(True)
-        self.executor = None
-        self.timer_mid.cancel()
-        self.timer_mid = None
+        try:
+            self.executor_req.shutdown(True)
+        except AttributeError:
+            pass
+        finally:
+            self.executor_req = None
+        try:
+            self.executor.shutdown(True)
+        except AttributeError:
+            pass
+        finally:
+            self.executor = None
+        try:
+            self.timer_mid.cancel()
+        except AttributeError:
+            pass
+        finally:
+            self.timer_mid = None
         self._socket.close()
 
     def done_callback(self, future):
@@ -201,7 +216,7 @@ class CoAP(object):
                 response = self.request_layer.process(ret)
             else:
                 response = ret
-            self.schedule_retrasmission(message, response, None)
+            self.schedule_retrasmission(response)
             # log.msg("Send Response")
             return response, host, port
         elif isinstance(message, Response):
@@ -330,7 +345,13 @@ class CoAP(object):
         commands = self.observe_layer.notify(resource)
         if commands is not None:
             for f, t in commands:
-                self.pending_futures.append(self.executor.submit(f, t))
+                try:
+                    self.pending_futures.append(self.executor.submit(f, t))
+                    # f(t)
+                except RuntimeError:
+                    self.close()
+                except AttributeError:
+                    self.close()
 
     def notify_deletion(self, resource):
         """
@@ -365,8 +386,7 @@ class CoAP(object):
         """
         resource, request, notification = self.observe_layer.prepare_notification(t)
         if notification is not None:
-            self.pending_futures.append(self.executor.submit(self.observe_layer.send_notification,
-                                                             (resource, request, notification)))
+            self.observe_layer.send_notification((resource, request, notification))
 
     def prepare_notification_deletion(self, t):
         """
@@ -379,22 +399,19 @@ class CoAP(object):
         """
         resource, request, notification = self.observe_layer.prepare_notification_deletion(t)
         if notification is not None:
-            self.pending_futures.append(self.executor.submit(self.observe_layer.send_notification,
-                                                             (resource, request, notification)))
+            self.observe_layer.send_notification((resource, request, notification))
 
-    def schedule_retrasmission(self, request, response, resource):
+    def schedule_retrasmission(self, message):
         """
         Prepare retrasmission message and schedule it for the future.
 
-        :param request:  the request
-        :param response: the response
-        :param resource: the resource
+        :param message:  the message
         """
-        host, port = response.destination
-        if response.type == defines.inv_types['CON']:
+        host, port = message.destination
+        if message.type == defines.inv_types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
-            key = hash(str(host) + str(port) + str(response.mid))
-            self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
+            key = hash(str(host) + str(port) + str(message.mid))
+            self.call_id[key] = self.executor.submit(self.retransmit, (message, future_time, 0))
             self.pending_futures.append(self.call_id[key])
 
     def retransmit(self, t):
@@ -404,32 +421,36 @@ class CoAP(object):
         :param t: (Request, Response, Resource, future_time)
         """
         # log.msg("Retransmit")
-        request, response, resource, future_time = t
+        message, future_time, retransmit_count = t
         time.sleep(future_time)
-        host, port = response.destination
+        host, port = message.destination
 
-        key = hash(str(host) + str(port) + str(response.mid))
-        t = self.call_id.get(key)
-        if t is None:
-            return
-        call_id, retransmit_count = t
-        if retransmit_count < defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
-            retransmit_count += 1
-            self.sent[key] = (response, time.time())
-            self.send(response, host, port)
-            future_time *= 2
-            self.call_id[key] = self.executor.submit(self.retransmit, (request, response, resource, future_time))
-            self.pending_futures.append(self.call_id[key])
-        elif retransmit_count >= defines.MAX_RETRANSMIT and (not response.acknowledged and not response.rejected):
-            print "Give up on Message " + str(response.mid)
-            print "----------------------------------------"
-        elif response.acknowledged:
-            response.timeouted = False
+        key = hash(str(host) + str(port) + str(message.mid))
+
+        if message.acknowledged:
+            message.timeouted = False
+            self.pending_futures.remove(self.call_id[key])
             del self.call_id[key]
-        else:
-            response.timeouted = True
-            if resource is not None:
-                self.observe_layer.remove_observer(resource, request, response)
+            return
+
+        if retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected):
+            retransmit_count += 1
+            self.sent[key] = (message, time.time())
+            self.send(message, host, port)
+            future_time *= 2
+            self.pending_futures.remove(self.call_id[key])
+            self.call_id[key] = self.executor.submit(self.retransmit, (message, future_time, retransmit_count))
+            self.pending_futures.append(self.call_id[key])
+        elif retransmit_count >= defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected):
+            print "Give up on Message " + str(message.mid)
+            print "----------------------------------------"
+            message.timeouted = True
+            if message is not None and message.observe is not None:
+                for resource in self.relation.keys():
+                    host, port = message.destination
+                    key = hash(str(host) + str(port) + str(message.token))
+                    self.observe_layer.remove_observer(resource, key)
+            self.pending_futures.remove(self.call_id[key])
             del self.call_id[key]
 
     def send_error(self, request, response, error):

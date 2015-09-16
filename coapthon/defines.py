@@ -3,13 +3,13 @@ __version__ = "2.0"
 
 ''' CoAP Parameters '''
 
-ACK_TIMEOUT = 6  # standard 2
+ACK_TIMEOUT = 2  # standard 2
 
 SEPARATE_TIMEOUT = ACK_TIMEOUT / 2
 
 ACK_RANDOM_FACTOR = 1.5
 
-MAX_RETRANSMIT = 0
+MAX_RETRANSMIT = 4
 
 MAX_TRANSMIT_SPAN = ACK_TIMEOUT * (pow(2, (MAX_RETRANSMIT + 1)) - 1) * ACK_RANDOM_FACTOR
 

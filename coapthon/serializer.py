@@ -224,16 +224,17 @@ class Serializer(object):
                 values.append(optionlength - 269)
 
             # write option value
-            name, opt_type, repeatable, defaults = defines.options[option.number]
-            if opt_type == defines.INTEGER:
-                words = self.int_to_words(option.value, optionlength, 8)
-                for num in range(0, optionlength):
-                    fmt += "B"
-                    values.append(words[num])
-            else:
-                for b in str(option.raw_value):
-                    fmt += "c"
-                    values.append(b)
+            if optionlength > 0:
+                name, opt_type, repeatable, defaults = defines.options[option.number]
+                if opt_type == defines.INTEGER:
+                    words = self.int_to_words(option.value, optionlength, 8)
+                    for num in range(0, optionlength):
+                        fmt += "B"
+                        values.append(words[num])
+                else:
+                    for b in str(option.raw_value):
+                        fmt += "c"
+                        values.append(b)
 
             # update last option number
             lastoptionnumber = option.number
@@ -253,9 +254,18 @@ class Serializer(object):
                 fmt += "c"
                 values.append(b)
 
-        s = struct.Struct(fmt)
-        self._writer = ctypes.create_string_buffer(s.size)
-        s.pack_into(self._writer, 0, *values)
+        self._writer = None
+        if values[1] is None:
+            values[1] = 0
+        try:
+            s = struct.Struct(fmt)
+            self._writer = ctypes.create_string_buffer(s.size)
+            s.pack_into(self._writer, 0, *values)
+        except struct.error as e:
+            print values
+            print e.args
+            print e.message
+
         return self._writer
 
     @staticmethod
@@ -296,8 +306,13 @@ class Serializer(object):
         :param length: the option length
         :return: the value of an option as a BitArray
         """
-        if length == 0:
+
+        name, opt_type, repeatable, defaults = defines.options[number]
+
+        if length == 0 and opt_type != defines.INTEGER:
             return bytearray()
+        if length == 0 and opt_type == defines.INTEGER:
+            return 0
         if isinstance(value, tuple):
             value = value[0]
         if isinstance(value, unicode):
