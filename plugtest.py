@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import random
 import socket
 import threading
@@ -59,7 +60,6 @@ class Tests(unittest.TestCase):
         print "TD_COAP_CORE_01"
         path = "/test"
         req = Request()
-
         req.code = defines.inv_codes['GET']
         req.uri_path = path
         req.type = defines.inv_types["CON"]
@@ -465,6 +465,161 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
         self.server_mid += 1
         self._test_plugtest([(req, expected), (None, expected2), (rst, None)])
+
+    def test_td_coap_block_01(self):
+        print "TD_COAP_BLOCK_01"
+        path = "/large"
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.add_block2(0, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (0, 1, 1024)
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.add_block2(1, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (1, 0, 1024)
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        self._test_plugtest([exchange1, exchange2])
+
+    def test_td_coap_block_02(self):
+        print "TD_COAP_BLOCK_02"
+        path = "/large"
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (0, 1, 1024)
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.add_block2(1, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (1, 0, 1024)
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        self._test_plugtest([exchange1, exchange2])
+
+    def test_td_coap_block_03(self):
+        print "TD_COAP_BLOCK_03"
+        path = "/large-update"
+
+        req = Request()
+        req.code = defines.inv_codes['PUT']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = """"Me sabbee plenty"—grunted Queequeg, puffing away at his pipe """
+        req.block1 = (1, 1, 64)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTINUE"]
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (1, 1, 64)
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        req = Request()
+        req.code = defines.inv_codes['PUT']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = """and sitting up in bed. "You gettee in," he added, motioning"""
+        req.block1 = (2, 0, 64)
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CHANGED"]
+        expected.token = None
+        expected.payload = None
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+        self.server_mid += 1
+
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = """"Me sabbee plenty"—grunted Queequeg, puffing away at his pipe and sitting up in bed. "You gettee in," he added, motioning"""
+
+        exchange3 = (req, expected)
+        self.current_mid += 1
+
+        self._test_plugtest([exchange1, exchange2, exchange3])
 
 if __name__ == '__main__':
     unittest.main()

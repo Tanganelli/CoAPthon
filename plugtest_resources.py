@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import threading
 import time
 from coapthon import defines
@@ -65,8 +66,62 @@ class ObservableResource(Resource):
     def update(self, first=False):
         timer = threading.Timer(self.period, self.update)
         timer.setDaemon(True)
-        # timer.start()
+        timer.start()
         if not first and self._coap_server is not None:
             self._coap_server.notify(self)
-        else:
-            timer.start()
+
+
+class LargeResource(Resource):
+
+    def __init__(self, name="Large", coap_server=None):
+        super(LargeResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=False)
+        # 2000 bytes
+        self.payload = """"Me sabbee plenty"—grunted Queequeg, puffing away at his pipe and sitting up in bed.
+"You gettee in," he added, motioning to me with his tomahawk, and throwing the clothes to one side. He really did this
+in not only a civil but a really kind and charitable way. I stood looking at him a moment. For all his tattooings
+he was on the whole a clean, comely looking cannibal. What's all this fuss I have been making about, thought I to
+myself—the man's a human being just as I am: he has just as much reason to fear me, as I have to be afraid of him.
+Better sleep with a sober cannibal than a drunken Christian.
+"Landlord," said I, "tell him to stash his tomahawk there, or pipe, or whatever you call it; tell him to stop smoking,
+in short, and I will turn in with him. But I don't fancy having a man smoking in bed with me. It's dangerous. Besides,
+I ain't insured."
+This being told to Queequeg, he at once complied, and again politely motioned me to get into bed—rolling over to one
+side as much as to say—"I won't touch a leg of ye."
+"Good night, landlord," said I, "you may go."
+I turned in, and never slept better in my life.
+Upon waking next morning about daylight, I found Queequeg's arm thrown over me in the most loving and affectionate
+manner. You had almost thought I had been his wife. The counterpane was of patchwork, full of odd little
+parti-coloured squares and triangles; and this arm of his tattooed all over with an interminable Cretan labyrinth
+of a figure, no two parts of which were of one precise shade—owing I suppose to his keeping his arm at sea
+unmethodically in sun and shade, his shirt sleeves irregularly rolled up at various times—this same arm of his,
+I say, looked for all the world like a strip of that same patchwork quilt. Indeed, partly lying on it as the arm did
+ when I first awoke, I could hardly tell it from the quilt, they so blended their hues together; and it was only by
+ the sense of weight and pressure that I could tell that Queequeg was hugging"""
+
+    def render_GET(self, request):
+        return self
+
+
+class LargeUpdateResource(Resource):
+
+    def __init__(self, name="Large", coap_server=None):
+        super(LargeUpdateResource, self).__init__(name, coap_server, visible=True, observable=False,
+                                                  allow_children=False)
+        self.payload = ""
+        self._temp_payload = {}
+
+    def render_GET(self, request):
+        return self
+
+    def render_PUT(self, request):
+        if request.blockwise:
+            key = hash(str(request.source[0]) + str(request.source[1]) + str(request.token))
+            if key in self._temp_payload:
+                old = self._temp_payload[key]
+                old += request.payload
+                self._temp_payload[key] = old
+            else:
+                self._temp_payload[key] = request.payload
+            if request.last_block:
+                self.payload = self._temp_payload[key]
+        return self

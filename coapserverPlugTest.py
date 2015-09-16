@@ -2,7 +2,7 @@
 import getopt
 import sys
 from coapthon.server.coap_protocol import CoAP
-from plugtest_resources import TestResource, SeparateResource, ObservableResource
+from plugtest_resources import TestResource, SeparateResource, ObservableResource, LargeResource, LargeUpdateResource
 
 
 class CoAPServerPlugTest(CoAP):
@@ -15,6 +15,8 @@ class CoAPServerPlugTest(CoAP):
         self.add_resource('seg1/seg2/seg3/', TestResource())
         self.add_resource('query/', TestResource())
         self.add_resource("obs/", ObservableResource(coap_server=self))
+        self.add_resource("large/", LargeResource(coap_server=self))
+        self.add_resource("large-update/", LargeUpdateResource(coap_server=self))
         # print self.root.dump()
 
 
