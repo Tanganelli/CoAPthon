@@ -33,9 +33,8 @@ class RequestLayer(object):
             if request.blockwise:
                 # Blockwise
                 last, request = self._parent.blockwise_layer.handle_request(request)
-                if last:
-                    self._parent.received[key] = (request, time.time())
-                    return request
+                self._parent.received[key] = (request, time.time())
+                return request
             else:
                 self._parent.received[key] = (request, time.time())
                 return request

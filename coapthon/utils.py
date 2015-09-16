@@ -75,3 +75,33 @@ class Tree(object):
 
     def __delitem__(self, key):
         del self.tree[key]
+
+
+def parse_blockwise(value):
+    """
+    Parse Blockwise option.
+
+    :param value: option value
+    :return: num, m, size
+    """
+
+    length = byte_len(value)
+    if length == 1:
+        num = value & 0xF0
+        num >>= 4
+        m = value & 0x08
+        m >>= 3
+        size = value & 0x07
+    elif length == 2:
+        num = value & 0xFFF0
+        num >>= 4
+        m = value & 0x0008
+        m >>= 3
+        size = value & 0x0007
+    else:
+        num = value & 0xFFFFF0
+        num >>= 4
+        m = value & 0x000008
+        m >>= 3
+        size = value & 0x000007
+    return num, int(m), pow(2, (size + 4))

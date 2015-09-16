@@ -112,10 +112,10 @@ class MessageLayer(object):
         :return: the timer object
         """
         t = self._parent.executor.submit(self.send_ack, [request, defines.SEPARATE_TIMEOUT])
+        self._parent.pending_futures.append(t)
         return t
 
-    @staticmethod
-    def stop_separate_timer(timer):
+    def stop_separate_timer(self, timer):
         """
         Stop separate timer.
 
@@ -123,6 +123,7 @@ class MessageLayer(object):
         :return: True
         """
         timer.cancel()
+        self._parent.pending_futures.remove(timer)
         return True
 
     def send_separate(self, request):

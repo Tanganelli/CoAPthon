@@ -68,7 +68,6 @@ class CoAP(DatagramProtocol):
         self.operations = []
         self.l = None
 
-
     @property
     def current_mid(self):
         return self._currentMID

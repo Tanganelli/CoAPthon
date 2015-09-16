@@ -144,6 +144,8 @@ class CoAP(object):
                 future = self.executor_req.submit(self.finish_request, (data, client_address))
                 future.add_done_callback(self.done_callback)
                 self.pending_futures.append(future)
+                # message, host, port = self.finish_request((data, client_address))
+                # self.send(message, host, port)
             except RuntimeError:
                 print "Exception with Executor"
         self.stopped_ack.set()
@@ -160,6 +162,7 @@ class CoAP(object):
             pass
         for future in self.pending_futures:
             future.cancel()
+        self.pending_futures = []
         try:
             self.executor_req.shutdown(True)
         except AttributeError:

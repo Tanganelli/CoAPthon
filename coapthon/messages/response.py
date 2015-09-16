@@ -97,23 +97,10 @@ class Response(Message):
         option.value = int(max_age)
         self.add_option(option)
 
-    # @property
-    # def observe(self):
-    #     """
-    #     Get the Observe option of a response.
-    #
-    #     :return: the Observe value
-    #     """
-    #     value = 0
-    #     for option in self.options:
-    #         if option.number == defines.inv_options['Observe']:
-    #             value = int(option.value)
-    #     return value
-
     @property
     def block2(self):
         """
-        Get the Block2 option of a response.
+        Get the Block2 option.
 
         :return: the Block2 value
         """
@@ -126,46 +113,35 @@ class Response(Message):
     @block2.setter
     def block2(self, value):
         """
-        Set the Block2 option of a response.
+        Set the Block2 option.
 
-        :param value: the Block2 value
+        :param value: the Block2 value, (num, m, size)
         """
         option = Option()
         option.number = defines.inv_options['Block2']
         num, m, size = value
 
+        if size > 1024:
+            szx = 6
+        elif 512 < size <= 1024:
+            szx = 6
+        elif 256 < size <= 512:
+            szx = 5
+        elif 128 < size <= 256:
+            szx = 4
+        elif 64 < size <= 128:
+            szx = 3
+        elif 32 < size <= 64:
+            szx = 2
+        elif 16 < size <= 32:
+            szx = 1
+        else:
+            szx = 0
+
         value = (num << 4)
         value |= (m << 3)
-        value |= size
+        value |= szx
 
         option.value = value
         self.add_option(option)
 
-    @property
-    def block1(self):
-        """
-        Get the Block1 option of a response.
-
-        :return: the Block1 value
-        """
-        value = 0
-        for option in self.options:
-            if option.number == defines.inv_options['Block1']:
-                value = option.raw_value
-        return value
-
-    @block1.setter
-    def block1(self, value):
-        """
-        Set the Block1 option of a response.
-
-        :param value: the Block1 value
-        """
-        option = Option()
-        option.number = defines.inv_options['Block1']
-        num, m, size = value
-        value = (num << 4)
-        value |= (m << 3)
-        value |= size
-
-        option.value = value
