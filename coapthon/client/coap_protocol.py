@@ -413,10 +413,11 @@ class CoAP(DatagramProtocol):
             self.send(rst)
 
     def post(self, client_callback, *args, **kwargs):
-        if isinstance(args[0], tuple):
+        if isinstance(args, tuple):
             path, payload = args
             req = Request()
             req.uri_path = path
+            req._payload = payload
             if "Token" in kwargs.keys():
                 req.token = kwargs.get("Token")
                 del kwargs["Token"]
