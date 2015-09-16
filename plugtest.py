@@ -56,6 +56,55 @@ class Tests(unittest.TestCase):
 
         sock.close()
 
+    # def test_td_coap_link_01(self):
+    #     print "TD_COAP_LINK_01"
+    #     path = "/.well-known/core"
+    #     req = Request()
+    #     req.code = defines.inv_codes['GET']
+    #     req.uri_path = path
+    #     req.type = defines.inv_types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #
+    #     expected = Response()
+    #     expected.type = defines.inv_types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.responses["CONTENT"]
+    #     expected.token = None
+    #     option = Option()
+    #     option.number = defines.inv_options["Content-Type"]
+    #     option.value = defines.inv_content_types["application/link-format"]
+    #     expected.add_option(option)
+    #     expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</seg1>;rt="Type1",</query>;rt="Type1","""
+    #
+    #     self.current_mid += 1
+    #     self._test_plugtest([(req, expected)])
+
+    def test_td_coap_link_02(self):
+        print "TD_COAP_LINK_02"
+        path = "/.well-known/core"
+        req = Request()
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.add_query("rt=Type1")
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        option = Option()
+        option.number = defines.inv_options["Content-Type"]
+        option.value = defines.inv_content_types["application/link-format"]
+        expected.add_option(option)
+        expected.payload = """</seg1/seg2/seg3>;rt="Type1",</seg1/seg2>;rt="Type1",</test>;rt="Type1",</seg1>;rt="Type1",</query>;rt="Type1","""
+
+        self.current_mid += 1
+        self._test_plugtest([(req, expected)])
+
     def test_td_coap_core_01(self):
         print "TD_COAP_CORE_01"
         path = "/test"

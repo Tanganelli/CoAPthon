@@ -378,7 +378,9 @@ class ResourceLayer(object):
             if i == "/":
                 continue
             resource = self._parent.root[i]
-            payload += self.corelinkformat(resource)
+            ret = self.valid(request.query, resource.attributes)
+            if ret:
+                payload += self.corelinkformat(resource)
 
         response.payload = payload
         response.content_type = defines.inv_content_types["application/link-format"]
@@ -388,6 +390,24 @@ class ResourceLayer(object):
         response = self._parent.message_layer.reliability_response(request, response)
         response = self._parent.message_layer.matcher_response(response)
         return response
+
+    @staticmethod
+    def valid(query, attributes):
+        for q in query:
+            q = str(q)
+            assert(isinstance(q, str))
+            tmp = q.split("=")
+            if len(tmp) > 1:
+                k = tmp[0]
+                v = tmp[1]
+                if k in attributes:
+                    if v == attributes[k]:
+                        continue
+                    else:
+                        return False
+                else:
+                    return False
+        return True
 
     @staticmethod
     def corelinkformat(resource):

@@ -125,8 +125,7 @@ class Request(Message):
                 value.append(option.value)
         return value
 
-    @query.setter
-    def query(self, q):
+    def add_query(self, q):
         """
         Adds a query.
         :param q: the query

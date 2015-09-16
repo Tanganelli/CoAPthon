@@ -12,6 +12,7 @@ class TestResource(Resource):
     def __init__(self, name="TestResource", coap_server=None):
         super(TestResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=True)
         self.payload = "Test Resource"
+        self.attributes["rt"] = "Type1"
 
     def render_GET(self, request):
         return self
@@ -31,6 +32,7 @@ class TestResource(Resource):
             if option.number == defines.inv_options["Content-Type"]:
                 res.payload = {option.value: request.payload}
                 return res
+
         res.payload = request.payload
         return res
 
