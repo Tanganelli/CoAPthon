@@ -1,3 +1,4 @@
+import threading
 import time
 from coapthon import defines
 from coapthon.resources.resource import Resource
@@ -48,3 +49,24 @@ class SeparateResource(Resource):
     def render_GET_separate(self, request):
         time.sleep(5)
         return self
+
+
+class ObservableResource(Resource):
+
+    def __init__(self, name="Obs", coap_server=None):
+        super(ObservableResource, self).__init__(name, coap_server, visible=True, observable=True, allow_children=False)
+        self.payload = "Observable Resource"
+        self.period = 5
+        self.update(True)
+
+    def render_GET(self, request):
+        return self
+
+    def update(self, first=False):
+        timer = threading.Timer(self.period, self.update)
+        timer.setDaemon(True)
+        # timer.start()
+        if not first and self._coap_server is not None:
+            self._coap_server.notify(self)
+        else:
+            timer.start()

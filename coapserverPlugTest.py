@@ -2,18 +2,19 @@
 import getopt
 import sys
 from coapthon.server.coap_protocol import CoAP
-from plugtest_resources import TestResource, SeparateResource
+from plugtest_resources import TestResource, SeparateResource, ObservableResource
 
 
 class CoAPServerPlugTest(CoAP):
-    def __init__(self, host, port, multicast=False):
-        CoAP.__init__(self, (host, port), multicast)
+    def __init__(self, host, port, multicast=False, starting_mid=None):
+        CoAP.__init__(self, (host, port), multicast, starting_mid)
         self.add_resource('test/', TestResource())
         self.add_resource('separate/', SeparateResource())
         self.add_resource('seg1/', TestResource())
         self.add_resource('seg1/seg2/', TestResource())
         self.add_resource('seg1/seg2/seg3/', TestResource())
         self.add_resource('query/', TestResource())
+        self.add_resource("obs/", ObservableResource(coap_server=self))
         # print self.root.dump()
 
 

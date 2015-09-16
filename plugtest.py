@@ -18,7 +18,8 @@ class Tests(unittest.TestCase):
     def setUp(self):
         self.server_address = ("127.0.0.1", 5683)
         self.current_mid = random.randint(1, 1000)
-        self.server = CoAPServerPlugTest("127.0.0.1", 5683)
+        self.server_mid = random.randint(1000, 2000)
+        self.server = CoAPServerPlugTest("127.0.0.1", 5683, starting_mid=self.server_mid)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
 
@@ -27,76 +28,30 @@ class Tests(unittest.TestCase):
         self.server_thread.join(timeout=25)
         self.server = None
 
-    def _test_plugtest(self, message, expected):
+    def _test_plugtest(self, message_list):
         serializer = Serializer()
-        datagram = serializer.serialize(message)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.sendto(datagram, message.destination)
-
-        datagram, source = sock.recvfrom(4096)
-        host, port = source
-        message = serializer.deserialize(datagram, host, port)
-        if expected.type is not None:
-            self.assertEqual(message.type, expected.type)
-        if expected.mid is not None:
-            self.assertEqual(message.mid, expected.mid)
-
-        self.assertEqual(message.code, expected.code)
-        if expected.source is not None:
-            self.assertEqual(message.source, source)
-        if expected.token is not None:
-            self.assertEqual(message.token, expected.token)
-        if expected.payload is not None:
-            self.assertEqual(message.payload, expected.payload)
-        if expected.options is not None:
-            self.assertEqual(message.options, expected.options)
-
-        sock.close()
-
-    def _test_plugtest_separate(self, message, expected, expected2):
-        serializer = Serializer()
-        datagram = serializer.serialize(message)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.sendto(datagram, message.destination)
-
-        # expected
-
-        datagram, source = sock.recvfrom(4096)
-        host, port = source
-        message = serializer.deserialize(datagram, host, port)
-        if expected.type is not None:
-            self.assertEqual(message.type, expected.type)
-        if expected.mid is not None:
-            self.assertEqual(message.mid, expected.mid)
-        self.assertEqual(message.code, expected.code)
-        if expected.source is not None:
-            self.assertEqual(message.source, source)
-        if expected.token is not None:
-            self.assertEqual(message.token, expected.token)
-        if expected.payload is not None:
-            self.assertEqual(message.payload, expected.payload)
-        if expected.options is not None:
-            self.assertEqual(message.options, expected.options)
-
-        # expected2
-
-        datagram, source = sock.recvfrom(4096)
-        host, port = source
-        message = serializer.deserialize(datagram, host, port)
-        if expected2.type is not None:
-            self.assertEqual(message.type, expected2.type)
-        if expected2.mid is not None:
-            self.assertEqual(message.mid, expected2.mid)
-        if expected2.code is not None:
-            self.assertEqual(message.code, expected2.code)
-        if expected2.source is not None:
-            self.assertEqual(message.source, source)
-        if expected2.token is not None:
-            self.assertEqual(message.token, expected2.token)
-        if expected2.payload is not None:
-            self.assertEqual(message.payload, expected2.payload)
-        if expected2.options is not None:
-            self.assertEqual(message.options, expected2.options)
+        for message, expected in message_list:
+            if message is not None:
+                datagram = serializer.serialize(message)
+                sock.sendto(datagram, message.destination)
+            if expected is not None:
+                datagram, source = sock.recvfrom(4096)
+                host, port = source
+                received_message = serializer.deserialize(datagram, host, port)
+                if expected.type is not None:
+                    self.assertEqual(received_message.type, expected.type)
+                if expected.mid is not None:
+                    self.assertEqual(received_message.mid, expected.mid)
+                self.assertEqual(received_message.code, expected.code)
+                if expected.source is not None:
+                    self.assertEqual(received_message.source, source)
+                if expected.token is not None:
+                    self.assertEqual(received_message.token, expected.token)
+                if expected.payload is not None:
+                    self.assertEqual(received_message.payload, expected.payload)
+                if expected.options is not None:
+                    self.assertEqual(received_message.options, expected.options)
 
         sock.close()
 
@@ -119,7 +74,7 @@ class Tests(unittest.TestCase):
         expected.payload = "Test Resource"
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_02(self):
         print "TD_COAP_CORE_02"
@@ -149,7 +104,7 @@ class Tests(unittest.TestCase):
         expected.add_option(option)
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_03(self):
         print "TD_COAP_CORE_03"
@@ -175,7 +130,7 @@ class Tests(unittest.TestCase):
         expected.payload = None
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        exchange1 = (req, expected)
 
         req = Request()
 
@@ -197,7 +152,7 @@ class Tests(unittest.TestCase):
         expected.add_option(option)
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        exchange2 = (req, expected)
 
         req = Request()
 
@@ -223,7 +178,8 @@ class Tests(unittest.TestCase):
         expected.add_option(option)
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        exchange3 = (req, expected)
+        self._test_plugtest([exchange1, exchange2, exchange3])
 
     def test_td_coap_core_04(self):
         print "TD_COAP_CORE_04"
@@ -244,7 +200,7 @@ class Tests(unittest.TestCase):
         expected.payload = None
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_05(self):
         print "TD_COAP_CORE_05"
@@ -265,7 +221,7 @@ class Tests(unittest.TestCase):
         expected.payload = "Test Resource"
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_06(self):
         print "TD_COAP_CORE_06"
@@ -295,7 +251,7 @@ class Tests(unittest.TestCase):
         expected.add_option(option)
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_07(self):
         print "TD_COAP_CORE_07"
@@ -321,7 +277,7 @@ class Tests(unittest.TestCase):
         expected.payload = None
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_08(self):
         print "TD_COAP_CORE_08"
@@ -342,7 +298,7 @@ class Tests(unittest.TestCase):
         expected.payload = None
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_09(self):
         print "TD_COAP_CORE_09"
@@ -364,13 +320,13 @@ class Tests(unittest.TestCase):
 
         expected2 = Response()
         expected2.type = defines.inv_types["CON"]
-        expected2._mid = None
+        expected2._mid = self.server_mid
         expected2.code = defines.responses["CONTENT"]
         expected2.token = None
         expected2.payload = "Separate Resource"
 
         self.current_mid += 1
-        self._test_plugtest_separate(req, expected, expected2)
+        self._test_plugtest([(req, expected), (None, expected2)])
 
     def test_td_coap_core_10(self):
         print "TD_COAP_CORE_10"
@@ -393,7 +349,7 @@ class Tests(unittest.TestCase):
         expected.token = "ciao"
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_12(self):
         print "TD_COAP_CORE_12"
@@ -413,7 +369,7 @@ class Tests(unittest.TestCase):
         expected.payload = "Test Resource"
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_core_13(self):
         print "TD_COAP_CORE_13"
@@ -434,7 +390,81 @@ class Tests(unittest.TestCase):
         expected.payload = "Test Resource"
 
         self.current_mid += 1
-        self._test_plugtest(req, expected)
+        self._test_plugtest([(req, expected)])
+
+    def test_td_coap_obs_01(self):
+        print "TD_COAP_OBS_01"
+        path = "/obs"
+        req = Request()
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.observe = 0
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "Observable Resource"
+        expected.observe = 1
+
+        expected2 = Response()
+        expected2.type = defines.inv_types["CON"]
+        expected2._mid = self.server_mid
+        expected2.code = defines.responses["CONTENT"]
+        expected2.token = None
+        expected2.payload = "Observable Resource"
+        expected2.observe = 2
+
+        self.current_mid += 1
+        self.server_mid += 1
+        self._test_plugtest([(req, expected), (None, expected2)])
+
+    def test_td_coap_obs_03(self):
+        print "TD_COAP_OBS_03"
+        path = "/obs"
+        req = Request()
+
+        req.code = defines.inv_codes['GET']
+        req.uri_path = path
+        req.type = defines.inv_types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.observe = 0
+
+        expected = Response()
+        expected.type = defines.inv_types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.responses["CONTENT"]
+        expected.token = None
+        expected.payload = "Observable Resource"
+        expected.observe = 1
+
+        self.current_mid += 1
+
+        expected2 = Response()
+        expected2.type = defines.inv_types["CON"]
+        expected2._mid = self.server_mid
+        expected2.code = defines.responses["CONTENT"]
+        expected2.token = None
+        expected2.payload = "Observable Resource"
+        expected2.observe = 2
+
+        rst = Response()
+        rst.type = defines.inv_types["RST"]
+        rst._mid = self.server_mid
+        rst.code = defines.inv_codes["EMPTY"]
+        rst.destination = self.server_address
+        rst.token = None
+        rst.payload = None
+
+        self.current_mid += 1
+        self.server_mid += 1
+        self._test_plugtest([(req, expected), (None, expected2), (rst, None)])
 
 if __name__ == '__main__':
     unittest.main()
