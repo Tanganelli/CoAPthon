@@ -1,2 +1,1 @@
-__author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
+__author__ = 'giacomo'

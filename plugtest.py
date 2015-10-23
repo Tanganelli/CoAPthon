@@ -3,12 +3,11 @@ import random
 import socket
 import threading
 import unittest
-from coapserverPlugTest import CoAPServerPlugTest
-from coapthon import defines
-from coapthon.messages.option import Option
-from coapthon.messages.request import Request
 from coapthon.messages.response import Response
+from coapthon.messages.request import Request
+from coapthon import defines
 from coapthon.serializer import Serializer
+from plugtest_coapserver import CoAPServerPlugTest
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -38,8 +37,7 @@ class Tests(unittest.TestCase):
                 sock.sendto(datagram, message.destination)
             if expected is not None:
                 datagram, source = sock.recvfrom(4096)
-                host, port = source
-                received_message = serializer.deserialize(datagram, host, port)
+                received_message = serializer.deserialize(datagram, source)
                 if expected.type is not None:
                     self.assertEqual(received_message.type, expected.type)
                 if expected.mid is not None:
@@ -56,50 +54,44 @@ class Tests(unittest.TestCase):
 
         sock.close()
 
-    # def test_td_coap_link_01(self):
-    #     print "TD_COAP_LINK_01"
-    #     path = "/.well-known/core"
-    #     req = Request()
-    #     req.code = defines.inv_codes['GET']
-    #     req.uri_path = path
-    #     req.type = defines.inv_types["CON"]
-    #     req._mid = self.current_mid
-    #     req.destination = self.server_address
-    #
-    #     expected = Response()
-    #     expected.type = defines.inv_types["ACK"]
-    #     expected._mid = self.current_mid
-    #     expected.code = defines.responses["CONTENT"]
-    #     expected.token = None
-    #     option = Option()
-    #     option.number = defines.inv_options["Content-Type"]
-    #     option.value = defines.inv_content_types["application/link-format"]
-    #     expected.add_option(option)
-    #     expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</seg1>;rt="Type1",</query>;rt="Type1","""
-    #
-    #     self.current_mid += 1
-    #     self._test_plugtest([(req, expected)])
+    def test_td_coap_link_01(self):
+        print "TD_COAP_LINK_01"
+        path = "/.well-known/core"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.content_type = defines.Content_types["application/link-format"]
+        expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</seg1>;rt="Type1",</query>;rt="Type1","""
+
+        self.current_mid += 1
+        self._test_plugtest([(req, expected)])
 
     def test_td_coap_link_02(self):
         print "TD_COAP_LINK_02"
         path = "/.well-known/core"
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        req.add_query("rt=Type1")
+        req.uri_query = "rt=Type1"
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
-        option = Option()
-        option.number = defines.inv_options["Content-Type"]
-        option.value = defines.inv_content_types["application/link-format"]
-        expected.add_option(option)
+        expected.content_type = defines.Content_types["application/link-format"]
         expected.payload = """</seg1/seg2/seg3>;rt="Type1",</seg1/seg2>;rt="Type1",</test>;rt="Type1",</seg1>;rt="Type1",</query>;rt="Type1","""
 
         self.current_mid += 1
@@ -109,16 +101,16 @@ class Tests(unittest.TestCase):
         print "TD_COAP_CORE_01"
         path = "/test"
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Test Resource"
 
@@ -130,27 +122,21 @@ class Tests(unittest.TestCase):
         path = "/test_post"
         req = Request()
 
-        req.code = defines.inv_codes['POST']
+        req.code = defines.Codes.POST.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
-        o = Option()
-        o.number = defines.inv_options["Content-Type"]
-        o.value = defines.inv_content_types["application/xml"]
-        req.add_option(o)
+        req.type = defines.Types["CON"]
+        req.content_type = defines.Content_types["application/xml"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = "<value>test</value>"
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CREATED"]
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
-        option = Option()
-        option.number = defines.inv_options["Location-Path"]
-        option.value = "/test_post"
-        expected.add_option(option)
+        expected.location_path = "/test_post"
 
         self.current_mid += 1
         self._test_plugtest([(req, expected)])
@@ -160,21 +146,18 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['PUT']
+        req.code = defines.Codes.PUT.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
-        o = Option()
-        o.number = defines.inv_options["Content-Type"]
-        o.value = defines.inv_content_types["application/xml"]
-        req.add_option(o)
+        req.type = defines.Types["CON"]
+        req.content_type = defines.Content_types["application/xml"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = "<value>test</value>"
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CHANGED"]
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
 
@@ -183,48 +166,39 @@ class Tests(unittest.TestCase):
 
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "<value>test</value>"
-        option = Option()
-        option.number = defines.inv_options["Content-Type"]
-        option.value = defines.inv_content_types["application/xml"]
-        expected.add_option(option)
+        expected.content_type = defines.Content_types["application/xml"]
 
         self.current_mid += 1
         exchange2 = (req, expected)
 
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        option = Option()
-        option.number = defines.inv_options["Accept"]
-        option.value = defines.inv_content_types["application/xml"]
-        req.add_option(option)
+        req.accept = defines.Content_types["application/xml"]
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "<value>test</value>"
-        option = Option()
-        option.number = defines.inv_options["Content-Type"]
-        option.value = defines.inv_content_types["application/xml"]
-        expected.add_option(option)
+        expected.content_type = defines.Content_types["application/xml"]
 
         self.current_mid += 1
         exchange3 = (req, expected)
@@ -235,16 +209,16 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['DELETE']
+        req.code = defines.Codes.DELETE.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["DELETED"]
+        expected.code = defines.Codes.DELETED.number
         expected.token = None
         expected.payload = None
 
@@ -256,16 +230,16 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["NON"]
+        req.type = defines.Types["NON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["NON"]
+        expected.type = defines.Types["NON"]
         expected._mid = None
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Test Resource"
 
@@ -277,27 +251,21 @@ class Tests(unittest.TestCase):
         path = "/test_post"
         req = Request()
 
-        req.code = defines.inv_codes['POST']
+        req.code = defines.Codes.POST.number
         req.uri_path = path
-        req.type = defines.inv_types["NON"]
-        o = Option()
-        o.number = defines.inv_options["Content-Type"]
-        o.value = defines.inv_content_types["application/xml"]
-        req.add_option(o)
+        req.type = defines.Types["NON"]
+        req.content_type = defines.Content_types["application/xml"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = "<value>test</value>"
 
         expected = Response()
-        expected.type = defines.inv_types["NON"]
+        expected.type = defines.Types["NON"]
         expected._mid = None
-        expected.code = defines.responses["CREATED"]
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
-        option = Option()
-        option.number = defines.inv_options["Location-Path"]
-        option.value = "/test_post"
-        expected.add_option(option)
+        expected.location_path = "/test_post"
 
         self.current_mid += 1
         self._test_plugtest([(req, expected)])
@@ -307,21 +275,18 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['PUT']
+        req.code = defines.Codes.PUT.number
         req.uri_path = path
-        req.type = defines.inv_types["NON"]
-        o = Option()
-        o.number = defines.inv_options["Content-Type"]
-        o.value = defines.inv_content_types["application/xml"]
-        req.add_option(o)
+        req.type = defines.Types["NON"]
+        req.content_type = defines.Content_types["application/xml"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = "<value>test</value>"
 
         expected = Response()
-        expected.type = defines.inv_types["NON"]
+        expected.type = defines.Types["NON"]
         expected._mid = None
-        expected.code = defines.responses["CHANGED"]
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
 
@@ -333,16 +298,16 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['DELETE']
+        req.code = defines.Codes.DELETE.number
         req.uri_path = path
-        req.type = defines.inv_types["NON"]
+        req.type = defines.Types["NON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["NON"]
+        expected.type = defines.Types["NON"]
         expected._mid = None
-        expected.code = defines.responses["DELETED"]
+        expected.code = defines.Codes.DELETED.number
         expected.token = None
         expected.payload = None
 
@@ -354,23 +319,23 @@ class Tests(unittest.TestCase):
         path = "/separate"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
         expected.code = None
         expected.token = None
         expected.payload = None
 
         expected2 = Response()
-        expected2.type = defines.inv_types["CON"]
+        expected2.type = defines.Types["CON"]
         expected2._mid = self.server_mid
-        expected2.code = defines.responses["CONTENT"]
+        expected2.code = defines.Codes.CONTENT.number
         expected2.token = None
         expected2.payload = "Separate Resource"
 
@@ -382,17 +347,17 @@ class Tests(unittest.TestCase):
         path = "/test"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.token = "ciao"
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Test Resource"
         expected.token = "ciao"
@@ -405,16 +370,16 @@ class Tests(unittest.TestCase):
         path = "/seg1/seg2/seg3"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.payload = "Test Resource"
 
         self.current_mid += 1
@@ -425,16 +390,16 @@ class Tests(unittest.TestCase):
         path = "/query?first=1&second=2&third=3"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Test Resource"
 
@@ -446,28 +411,28 @@ class Tests(unittest.TestCase):
         path = "/obs"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.observe = 0
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Observable Resource"
         expected.observe = 1
 
         expected2 = Response()
-        expected2.type = defines.inv_types["CON"]
+        expected2.type = defines.Types["CON"]
         expected2._mid = self.server_mid
-        expected2.code = defines.responses["CONTENT"]
+        expected2.code = defines.Codes.CONTENT.number
         expected2.token = None
         expected2.payload = "Observable Resource"
-        expected2.observe = 2
+        expected2.observe = 1
 
         self.current_mid += 1
         self.server_mid += 1
@@ -478,17 +443,17 @@ class Tests(unittest.TestCase):
         path = "/obs"
         req = Request()
 
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.observe = 0
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Observable Resource"
         expected.observe = 1
@@ -496,17 +461,17 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         expected2 = Response()
-        expected2.type = defines.inv_types["CON"]
+        expected2.type = defines.Types["CON"]
         expected2._mid = self.server_mid
-        expected2.code = defines.responses["CONTENT"]
+        expected2.code = defines.Codes.CONTENT.number
         expected2.token = None
         expected2.payload = "Observable Resource"
-        expected2.observe = 2
+        expected2.observe = 1
 
         rst = Response()
-        rst.type = defines.inv_types["RST"]
+        rst.type = defines.Types["RST"]
         rst._mid = self.server_mid
-        rst.code = defines.inv_codes["EMPTY"]
+        rst.code = defines.Codes.EMPTY.number
         rst.destination = self.server_address
         rst.token = None
         rst.payload = None
@@ -520,17 +485,17 @@ class Tests(unittest.TestCase):
         path = "/large"
 
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        req.add_block2(0, 0, 1024)
+        req.block2 = (0, 0, 1024)
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = None
         expected.block2 = (0, 1, 1024)
@@ -540,17 +505,17 @@ class Tests(unittest.TestCase):
         self.server_mid += 1
 
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        req.add_block2(1, 0, 1024)
+        req.block2 = (1, 0, 1024)
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = None
         expected.block2 = (1, 0, 1024)
@@ -566,16 +531,16 @@ class Tests(unittest.TestCase):
         path = "/large"
 
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = None
         expected.block2 = (0, 1, 1024)
@@ -585,17 +550,17 @@ class Tests(unittest.TestCase):
         self.server_mid += 1
 
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        req.add_block2(1, 0, 1024)
+        req.block2 = (1, 0, 1024)
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = None
         expected.block2 = (1, 0, 1024)
@@ -611,39 +576,39 @@ class Tests(unittest.TestCase):
         path = "/large-update"
 
         req = Request()
-        req.code = defines.inv_codes['PUT']
+        req.code = defines.Codes.PUT.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = """"Me sabbee plenty"—grunted Queequeg, puffing away at his pipe """
-        req.block1 = (1, 1, 64)
+        req.block1 = (0, 1, 64)
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTINUE"]
+        expected.code = defines.Codes.CONTINUE.number
         expected.token = None
         expected.payload = None
-        expected.block1 = (1, 1, 64)
+        expected.block1 = (0, 1, 64)
 
         exchange1 = (req, expected)
         self.current_mid += 1
         self.server_mid += 1
 
         req = Request()
-        req.code = defines.inv_codes['PUT']
+        req.code = defines.Codes.PUT.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
         req.payload = """and sitting up in bed. "You gettee in," he added, motioning"""
-        req.block1 = (2, 0, 64)
+        req.block1 = (1, 0, 64)
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CHANGED"]
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
 
@@ -652,16 +617,16 @@ class Tests(unittest.TestCase):
         self.server_mid += 1
 
         req = Request()
-        req.code = defines.inv_codes['GET']
+        req.code = defines.Codes.GET.number
         req.uri_path = path
-        req.type = defines.inv_types["CON"]
+        req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
 
         expected = Response()
-        expected.type = defines.inv_types["ACK"]
+        expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.responses["CONTENT"]
+        expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = """"Me sabbee plenty"—grunted Queequeg, puffing away at his pipe and sitting up in bed. "You gettee in," he added, motioning"""
 

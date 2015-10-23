@@ -2,14 +2,8 @@ from coapthon import defines
 from coapthon.messages.message import Message
 from coapthon.messages.option import Option
 
-__author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
-
 
 class Request(Message):
-    """
-    Represent a Request message.
-    """
     def __init__(self):
         """
         Initialize a Request message.
@@ -20,13 +14,12 @@ class Request(Message):
     @property
     def uri_path(self):
         """
-        Get the Uri-Path of a request.
 
-        :return: the Uri-Path
+        :rtype : String
         """
         value = []
         for option in self.options:
-            if option.number == defines.inv_options['Uri-Path']:
+            if option.number == defines.OptionRegistry.URI_PATH.number:
                 value.append(str(option.value) + '/')
         value = "".join(value)
         value = value[:-1]
@@ -45,97 +38,61 @@ class Request(Message):
         paths = path.split("/")
         for p in paths:
             option = Option()
-            option.number = defines.inv_options['Uri-Path']
+            option.number = defines.OptionRegistry.URI_PATH.number
             option.value = p
             self.add_option(option)
         if len(tmp) > 1:
             query = tmp[1]
-            queries = query.split("&")
-            for q in queries:
-                option = Option()
-                option.number = defines.inv_options['Uri-Query']
-                option.value = q
-                self.add_option(option)
+            self.uri_query = query
+
+    @uri_path.deleter
+    def uri_path(self):
+        self.del_option_by_number(defines.OptionRegistry.URI_PATH.number)
 
     @property
     def blockwise(self):
         """
-        Check if the request is a blockwise request.
 
-        :return: 1, if the request is an blockwise request
+        :rtype : Boolean
         """
         for option in self.options:
-            if option.number == defines.inv_options['Block1'] or option.number == defines.inv_options['Block2']:
-                return 1
-        return 0
-
-    @property
-    def last_block(self):
-        if not self.blockwise:
-            return True
-        else:
-            num, m, size = self.block1
-            if m == 0:
+            if option.number == defines.OptionRegistry.BLOCK1.number or \
+                            option.number == defines.OptionRegistry.BLOCK2.number:
                 return True
         return False
 
-    def add_block2(self, num, m, size):
-        """
-        Add and format a Block2 option to a request.
-
-        :param num: num
-        :param m: more blocks
-        :param size: size in byte
-        """
-        option = Option()
-        option.number = defines.inv_options['Block2']
-        if size > 1024:
-            szx = 6
-        elif 512 < size <= 1024:
-            szx = 6
-        elif 256 < size <= 512:
-            szx = 5
-        elif 128 < size <= 256:
-            szx = 4
-        elif 64 < size <= 128:
-            szx = 3
-        elif 32 < size <= 64:
-            szx = 2
-        elif 16 < size <= 32:
-            szx = 1
-        else:
-            szx = 0
-        value = (num << 4)
-        value |= (m << 3)
-        value |= szx
-
-        option.value = value
-        self.add_option(option)
-
     @property
-    def query(self):
+    def uri_query(self):
         """
         Get the Uri-Query of a request.
 
         :return: the Uri-Query
+        :rtype : String
         """
         value = []
         for option in self.options:
-            if option.number == defines.inv_options['Uri-Query']:
+            if option.number == defines.OptionRegistry.URI_QUERY.number:
                 value.append(option.value)
         return value
 
-    def add_query(self, q):
+    @uri_query.setter
+    def uri_query(self, value):
         """
         Adds a query.
-        :param q: the query
+
+        :param value: the query
         """
-        queries = q.split("&")
+        del self.uri_query
+        queries = value.split("&")
         for q in queries:
             option = Option()
-            option.number = defines.inv_options['Uri-Query']
+            option.number = defines.OptionRegistry.URI_QUERY.number
             option.value = str(q)
             self.add_option(option)
+
+    @uri_query.deleter
+    def uri_query(self):
+        self.del_option_by_number(defines.OptionRegistry.URI_QUERY.number)
 
     @property
     def accept(self):
@@ -143,48 +100,75 @@ class Request(Message):
         Get the Accept option of a request.
 
         :return: the Accept value or None if not specified by the request
+        :rtype : String
         """
         for option in self.options:
-            if option.number == defines.inv_options['Accept']:
+            if option.number == defines.OptionRegistry.ACCEPT.number:
                 return option.value
         return None
+
+    @accept.setter
+    def accept(self, value):
+        if value in defines.Content_types.values():
+            option = Option()
+            option.number = defines.OptionRegistry.ACCEPT.number
+            option.value = value
+            self.add_option(option)
+
+    @accept.deleter
+    def accept(self):
+        self.del_option_by_number(defines.OptionRegistry.ACCEPT.number)
 
     @property
     def if_match(self):
         """
-        Get the If-Match option of a request.
+         Get the If-Match option of a request.
 
         :return: the If-Match values or [] if not specified by the request
+        :rtype : list
         """
         value = []
         for option in self.options:
-            if option.number == defines.inv_options['If-Match']:
+            if option.number == defines.OptionRegistry.IF_MATCH.number:
                 value.append(option.value)
         return value
 
-    @property
-    def has_if_match(self):
-        """
-        Check if the request has the If-Match option.
+    @if_match.setter
+    def if_match(self, values):
+        assert isinstance(values, list)
+        for v in values:
+            option = Option()
+            option.number = defines.OptionRegistry.IF_MATCH.number
+            option.value = v
+            self.add_option(option)
 
-        :return: True, if the request has the If-Match option.
+    @if_match.deleter
+    def if_match(self):
+        self.del_option_by_number(defines.OptionRegistry.IF_MATCH.number)
+
+    @property
+    def if_none_match(self):
+        """
+        Get the if-none-match option of a request.
+
+        :return: the if-none-match value or None if not specified by the request
+        :rtype : String
         """
         for option in self.options:
-            if option.number == defines.inv_options['If-Match']:
-                return True
-        return False
+            if option.number == defines.OptionRegistry.IF_NONE_MATCH.number:
+                return option.value
+        return None
 
-    @property
-    def has_if_none_match(self):
-        """
-        Check if the request has the If-None-Match option.
+    @if_none_match.setter
+    def if_none_match(self, value):
+        option = Option()
+        option.number = defines.OptionRegistry.IF_NONE_MATCH.number
+        option.value = value
+        self.add_option(option)
 
-        :return: True, if the request has the If-None-Match option.
-        """
-        for option in self.options:
-            if option.number == defines.inv_options['If-None-Match']:
-                return True
-        return False
+    @if_none_match.deleter
+    def if_none_match(self):
+        self.del_option_by_number(defines.OptionRegistry.IF_NONE_MATCH.number)
 
     @property
     def proxy_uri(self):
@@ -192,21 +176,53 @@ class Request(Message):
         Get the Proxy-Uri option of a request.
 
         :return: the Proxy-Uri values or None if not specified by the request
+        :rtype : String
         """
-        value = None
         for option in self.options:
-            if option.number == defines.inv_options['Proxy-Uri']:
-                value = option.value
-        return value
+            if option.number == defines.OptionRegistry.PROXY_URI.number:
+                return option.value
+        return None
 
     @proxy_uri.setter
-    def proxy_uri(self, uri):
+    def proxy_uri(self, value):
         """
         Set the Proxy-Uri option of a request.
 
-        :param uri: the Proxy-Uri values
+        :param value: the Proxy-Uri value
         """
         option = Option()
-        option.number = defines.inv_options['Proxy-Uri']
-        option.value = str(uri)
+        option.number = defines.OptionRegistry.PROXY_URI.number
+        option.value = str(value)
         self.add_option(option)
+
+    @proxy_uri.deleter
+    def proxy_uri(self):
+        self.del_option_by_number(defines.OptionRegistry.PROXY_URI.number)
+
+    @property
+    def proxy_schema(self):
+        """
+
+        :rtype : String
+        """
+        for option in self.options:
+            if option.number == defines.OptionRegistry.PROXY_SCHEME.number:
+                return option.value
+        return None
+
+    @proxy_schema.setter
+    def proxy_schema(self, value):
+        """
+        Set the Proxy-Uri option of a request.
+
+        :param value: the Proxy-Uri value
+        """
+        option = Option()
+        option.number = defines.OptionRegistry.PROXY_SCHEME.number
+        option.value = str(value)
+        self.add_option(option)
+
+    @proxy_schema.deleter
+    def proxy_schema(self):
+        self.del_option_by_number(defines.OptionRegistry.PROXY_SCHEME.number)
+

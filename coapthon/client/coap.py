@@ -1,0 +1,100 @@
+import logging
+import logging.config
+import socket
+import threading
+from coapthon.messages.response import Response
+from coapthon import defines
+from coapthon.layers.blocklayer import BlockLayer
+from coapthon.layers.messagelayer import MessageLayer
+from coapthon.layers.observelayer import ObserveLayer
+from coapthon.layers.requestlayer import RequestLayer
+from coapthon.messages.request import Request
+from coapthon.serializer import Serializer
+
+__author__ = 'giacomo'
+
+logger = logging.getLogger(__name__)
+logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
+
+
+class CoAP(object):
+    def __init__(self, server):
+        self._currentMID = 1
+        self._server = server
+
+        self._messageLayer = MessageLayer(self._currentMID)
+        self._blockLayer = BlockLayer()
+        self._observeLayer = ObserveLayer()
+        self._requestLayer = RequestLayer(self)
+
+        try:
+            # legal
+            socket.inet_aton(server[0])
+        except socket.error:
+            # Not legal
+            data = socket.getaddrinfo(server[0], server[1])
+            self._server = (data[0], data[1])
+
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._receiver_thread = threading.Thread(target=self.receive_datagram)
+        self._receiver_thread.start()
+
+    @property
+    def current_mid(self):
+        return self._currentMID
+
+    @current_mid.setter
+    def current_mid(self, c):
+        assert isinstance(c, int)
+        self._currentMID = c
+
+    def send_datagram(self, message):
+
+        if isinstance(message, Request):
+            request = self._requestLayer.send_request(message)
+            request = self._observeLayer.send_request(request)
+            request = self._blockLayer.send_request(request)
+            transaction = self._messageLayer.send_request(request)
+            message = transaction.request
+
+        host, port = message.destination
+        logger.debug("send_datagram - " + str(message))
+        serializer = Serializer()
+        message = serializer.serialize(message)
+
+        self._socket.sendto(message, (host, port))
+
+    def receive_datagram(self):
+        while not self.stop:
+            self._socket.settimeout(2 * defines.ACK_TIMEOUT)
+            try:
+                datagram, addr = self._socket.recvfrom(1152)
+            except socket.timeout, e:
+                err = e.args[0]
+                # this next if/else is a bit redundant, but illustrates how the
+                # timeout exception is setup
+                if err == 'timed out':
+                    print 'recv timed out, retry later'
+                    continue
+                else:
+                    print e
+                    return
+            except socket.error, e:
+                # Something else happened, handle error, exit, etc.
+                print e
+                return
+            else:
+                if len(datagram) == 0:
+                    print 'orderly shutdown on server end'
+                    return
+
+            serializer = Serializer()
+            try:
+                host, port = addr
+            except ValueError:
+                host, port, tmp1, tmp2 = addr
+
+            message = serializer.deserialize(datagram, (host, port))
+            if isinstance(message, Response):
+                transaction = self._messageLayer.receive_response(message)
+                transaction = self._blockLayer.receive_response(transaction)

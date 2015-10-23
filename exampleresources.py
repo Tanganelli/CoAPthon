@@ -1,5 +1,5 @@
 import time
-from coapthon.resources.resource import Resource
+from coapthon.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -20,7 +20,7 @@ class BasicResource(Resource):
 
     def render_POST(self, request):
         res = BasicResource()
-        res.location_query = request.query
+        res.location_query = request.uri_query
         res.payload = request.payload
         return res
 
@@ -39,7 +39,7 @@ class Storage(Resource):
     def render_POST(self, request):
         res = BasicResource()
         res.payload = request.payload
-        res.location_query = request.query
+        res.location_query = request.uri_query
         return res
 
 

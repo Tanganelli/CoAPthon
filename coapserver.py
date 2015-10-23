@@ -1,8 +1,10 @@
-#!/bin/python
 import getopt
+import logging
 import sys
-from coapthon.server.coap_protocol import CoAP
-from example_resources import Storage, Separate, BasicResource, Long, Big
+from coapthon.server.coap import CoAP
+from exampleresources import BasicResource, Long, Separate, Storage, Big
+
+__author__ = 'giacomo'
 
 
 class CoAPServer(CoAP):

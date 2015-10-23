@@ -1,122 +1,27 @@
+from coapthon.utils import parse_blockwise
 from coapthon import defines
 from coapthon.messages.option import Option
-from coapthon.utils import parse_blockwise
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
+__version__ = "3.0"
 
 
 class Message(object):
-    """
-    Manage messages.
-    """
     def __init__(self):
-
-        """
-        Initialize a CoAP Message.
-
-        """
-        # The type. One of {CON, NON, ACK or RST}.
         self._type = None
-        # The 16-bit Message Identification.
         self._mid = None
-        # The token, a 0-8 byte array.
-        self.token = None
-        # The set of options of this message.
+        self._token = None
         self._options = []
-        # The payload of this message.
         self._payload = None
-        # The destination address of this message.
-        self.destination = None
-        # The source address of this message.
-        self.source = None
-        # Indicates if the message has been acknowledged.
-        self._acknowledged = False
-        # Indicates if the message has been rejected.
-        self._rejected = False
-        # Indicates if the message has timeouted.
-        self._timeouted = False
-        # Indicates if the message has been canceled.
-        self._canceled = False
-        # Indicates if the message is a duplicate.
-        self._duplicate = False
-        # The timestamp
+        self._destination = None
+        self._source = None
+        self._code = None
+        self._acknowledged = None
+        self._rejected = None
+        self._timeouted = None
+        self._cancelled = None
+        self._duplicated = None
         self._timestamp = None
-        # The code
-        self.code = None
-
-    @property
-    def options(self):
-        """
-        Property for retrieving the options of the message.
-
-        :return: the options
-        """
-        return self._options
-
-    def add_option(self, option):
-        """
-        Add an option to the message.
-
-        :type option: coapthon2.messages.option.Option
-        :param option: the option
-        :raise TypeError: if the option is not repeatable and such option is already present in the message
-        """
-        assert isinstance(option, Option)
-        name, type_value, repeatable, defaults = defines.options[option.number]
-        if not repeatable:
-            ret = self.already_in(option)
-            if ret:
-                raise TypeError("Option : %s is not repeatable", name)
-            else:
-                self._options.append(option)
-        else:
-            self._options.append(option)
-
-    def del_option(self, option):
-        """
-        Delete an option from the message
-
-        :type option: coapthon2.messages.option.Option
-        :param option: the option
-        """
-        try:
-            while True:
-                self._options.remove(option)
-        except ValueError:
-            pass
-
-    def del_option_name(self, name):
-        """
-        Delete an option from the message by name
-
-        :param name: option name
-        """
-        for o in self._options:
-            assert isinstance(o, Option)
-            if o.number == defines.inv_options[name]:
-                self._options.remove(o)
-
-    @property
-    def mid(self):
-        """
-        Return the mid of the message.
-
-        :return: the MID
-        """
-        return self._mid
-
-    @mid.setter
-    def mid(self, m):
-        """
-        Sets the MID of the message.
-
-        :param m: the MID
-        :raise AttributeError: if m is not int or cannot be represented on 16 bits.
-        """
-        if not isinstance(m, int) or m > 65536:
-            raise AttributeError
-        self._mid = m
 
     @property
     def type(self):
@@ -128,16 +33,84 @@ class Message(object):
         return self._type
 
     @type.setter
-    def type(self, t):
+    def type(self, value):
         """
         Sets the type of the message.
 
-        :param t: the type
-        :raise AttributeError: if t is not a valid type
+        :type value: Types
+        :param value: the type
+        :raise AttributeError: if value is not a valid type
         """
-        if not isinstance(t, int) or t not in defines.types:
+        if value not in defines.Types.values():
             raise AttributeError
-        self._type = t
+        self._type = value
+
+    @property
+    def mid(self):
+        """
+        Return the mid of the message.
+
+        :return: the MID
+        """
+        return self._mid
+
+    @mid.setter
+    def mid(self, value):
+        """
+        Sets the MID of the message.
+
+        :type value: Integer
+        :param value: the MID
+        :raise AttributeError: if value is not int or cannot be represented on 16 bits.
+        """
+        if not isinstance(value, int) or value > 65536:
+            raise AttributeError
+        self._mid = value
+
+    @mid.deleter
+    def mid(self):
+        self._mid = None
+
+    @property
+    def token(self):
+        """
+        Get the Token of the message.
+
+        :return: the Token
+        """
+        return self._token
+
+    @token.setter
+    def token(self, value):
+        """
+        Set the Token of the message.
+
+        :type value: String
+        :param value: the Token
+        """
+        # TODO check if longer that acceptable
+        self._token = value
+
+    @token.deleter
+    def token(self):
+        self._token = None
+
+    @property
+    def options(self):
+        """
+
+        """
+        return self._options
+
+    @options.setter
+    def options(self, value):
+        """
+
+        :type value: list
+        :param value: list of options
+        """
+        assert isinstance(value, list)
+        self._options = value
 
     @property
     def payload(self):
@@ -157,31 +130,67 @@ class Message(object):
         """
         if isinstance(value, tuple):
             content_type, payload = value
-            option = Option()
-            option.number = defines.inv_options["Content-Type"]
-            option.value = content_type
-            self.add_option(option)
+            self.content_type = content_type
             self._payload = payload
         else:
             self._payload = value
 
     @property
-    def duplicated(self):
+    def destination(self):
         """
-        Checks if this message is a duplicate.
 
-        :return: True, if is a duplicate
         """
-        return self._duplicate
+        return self._destination
 
-    @duplicated.setter
-    def duplicated(self, d):
+    @destination.setter
+    def destination(self, value):
         """
-        Marks this message as a duplicate.
 
-        :param d: if a duplicate
+        :type value: tuple
+        :param value: (ip, port)
+        :raise AttributeError: if value is not a ip and a port.
         """
-        self._duplicate = d
+        if value is not None and (not isinstance(value, tuple) or len(value)) != 2:
+            raise AttributeError
+        self._destination = value
+
+    @property
+    def source(self):
+        """
+
+        """
+        return self._source
+
+    @source.setter
+    def source(self, value):
+        """
+
+        :type value: tuple
+        :param value: (ip, port)
+        :raise AttributeError: if value is not a ip and a port.
+        """
+        if not isinstance(value, tuple) or len(value) != 2:
+            raise AttributeError
+        self._source = value
+
+    @property
+    def code(self):
+        """
+
+        """
+        return self._code
+
+    @code.setter
+    def code(self, value):
+        """
+
+        :type value: Codes
+        :param value: the code
+        :raise AttributeError: if value is not a valid code
+        """
+        if value not in defines.Codes.LIST.keys() and value is not None:
+            raise AttributeError
+        self._code = value
 
     @property
     def acknowledged(self):
@@ -193,13 +202,19 @@ class Message(object):
         return self._acknowledged
 
     @acknowledged.setter
-    def acknowledged(self, a):
+    def acknowledged(self, value):
         """
         Marks this message as acknowledged.
 
-        :param a: if acknowledged
+        :type value: Boolean
+        :param value: if acknowledged
         """
-        self._acknowledged = a
+        assert (isinstance(value, bool))
+        self._acknowledged = value
+        if value:
+            self._timeouted = False
+            self._rejected = False
+            self._cancelled = False
 
     @property
     def rejected(self):
@@ -211,13 +226,19 @@ class Message(object):
         return self._rejected
 
     @rejected.setter
-    def rejected(self, r):
+    def rejected(self, value):
         """
         Marks this message as rejected.
 
-        :param r: if rejected
+        :type value: Boolean
+        :param value: if rejected
         """
-        self._rejected = r
+        assert (isinstance(value, bool))
+        self._rejected = value
+        if value:
+            self._timeouted = False
+            self._acknowledged = False
+            self._cancelled = True
 
     @property
     def timeouted(self):
@@ -230,14 +251,20 @@ class Message(object):
         return self._timeouted
 
     @timeouted.setter
-    def timeouted(self, t):
+    def timeouted(self, value):
         """
         Marks this message as timeouted. Confirmable messages in particular might
         timeout.
 
-        :param t: if timeouted
+        :type value: Boolean
+        :param value:
         """
-        self._timeouted = t
+        assert (isinstance(value, bool))
+        self._timeouted = value
+        if value:
+            self._acknowledged = False
+            self._rejected = False
+            self._cancelled = True
 
     @property
     def cancelled(self):
@@ -246,73 +273,125 @@ class Message(object):
 
         :return: True, if is canceled
         """
-        return self._canceled
+        return self._cancelled
 
     @cancelled.setter
-    def cancelled(self, c):
+    def cancelled(self, value):
         """
         Marks this message as canceled.
 
-        :param c: if canceled
+        :type value: Boolean
+        :param value: if canceled
         """
-        self._canceled = c
+        assert (isinstance(value, bool))
+        self._cancelled = value
+        if value:
+            self._timeouted = False
+            self._acknowledged = False
+            self._rejected = False
 
-    @staticmethod
-    def new_ack(message):
+    @property
+    def duplicated(self):
         """
-        Create a new acknowledgment for the specified message.
+        Checks if this message is a duplicate.
 
-        :param message: the message to acknowledge
-        :return: the acknowledgment
+        :return: True, if is a duplicate
         """
-        ack = Message()
-        types = {v: k for k, v in defines.types.iteritems()}
-        ack.type = types['ACK']
-        ack._mid = message.mid
-        ack.code = 0
-        ack.token = None
-        ack.destination = message.source
-        return ack
+        return self._duplicated
 
-    @staticmethod
-    def new_rst(message):
+    @duplicated.setter
+    def duplicated(self, value):
         """
-        Create a new reset message for the specified message.
+        Marks this message as a duplicate.
 
-        :param message: the message to reject
-        :return: the rst message
+        :type value: Boolean
+        :param value: if a duplicate
         """
-        rst = Message()
-        types = {v: k for k, v in defines.types.iteritems()}
-        rst.type = types['RST']
-        rst._mid = message.mid
-        rst.token = None
-        rst.code = 0
-        rst.destination = message.source
-        return rst
+        assert (isinstance(value, bool))
+        self._duplicated = value
 
-    def __str__(self):
+    @property
+    def timestamp(self):
         """
-        Return the message as a formatted string.
 
-        :return: the string representing the message
         """
-        msg = "Source: " + str(self.source) + "\n"
-        msg += "Destination: " + str(self.destination) + "\n"
-        msg += "Type: " + str(defines.types[self.type]) + "\n"
-        msg += "MID: " + str(self._mid) + "\n"
-        if self.code is None:
-            self.code = 0
-        try:
-            msg += "Code: " + str(defines.inv_responses[self.code]) + "\n"
-        except KeyError:
-            msg += "Code: " + str(defines.codes[self.code]) + "\n"
-        msg += "Token: " + str(self.token) + "\n"
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, value):
+        """
+
+        :type value: Message
+        :param value:
+        """
+        self._timestamp = value
+
+    def _already_in(self, option):
+        """
+        Check if an option is already in the message.
+
+        :type option: Option
+        :param option: the option to be checked
+        :return: True if already present, False otherwise
+        """
         for opt in self._options:
-            msg += str(opt)
-        msg += "Payload: " + "\n"
-        msg += str(self._payload) + "\n"
-        return msg
+            if option.number == opt.number:
+                return True
+        return False
+
+    def add_option(self, option):
+        """
+        Add an option to the message.
+
+        :type option: Option
+        :param option: the option
+        :raise TypeError: if the option is not repeatable and such option is already present in the message
+        """
+        assert isinstance(option, Option)
+        repeatable = defines.OptionRegistry.LIST[option.number].repeatable
+        if not repeatable:
+            ret = self._already_in(option)
+            if ret:
+                raise TypeError("Option : %s is not repeatable", option.name)
+            else:
+                self._options.append(option)
+        else:
+            self._options.append(option)
+
+    def del_option(self, option):
+        """
+        Delete an option from the message
+
+        :type option: Option
+        :param option: the option
+        """
+        assert isinstance(option, Option)
+        while option in self._options:
+            self._options.remove(option)
+
+    def del_option_by_name(self, name):
+        """
+        Delete an option from the message by name
+
+        :type name: String
+        :param name: option name
+        """
+        for o in self._options:
+            assert isinstance(o, Option)
+            if o.name == name:
+                self._options.remove(o)
+
+    def del_option_by_number(self, number):
+        """
+        Delete an option from the message by number
+
+        :type number: Integer
+        :param number: option naumber
+        """
+        for o in self._options:
+            assert isinstance(o, Option)
+            if o.number == number:
+                self._options.remove(o)
 
     @property
     def etag(self):
@@ -323,7 +402,7 @@ class Message(object):
         """
         value = []
         for option in self.options:
-            if option.number == defines.inv_options['ETag']:
+            if option.number == defines.OptionRegistry.ETAG.number:
                 value.append(option.value)
         return value
 
@@ -335,7 +414,7 @@ class Message(object):
         :param etag: the etag
         """
         option = Option()
-        option.number = defines.inv_options['ETag']
+        option.number = defines.OptionRegistry.ETAG.number
         option.value = etag
         self.add_option(option)
 
@@ -345,7 +424,7 @@ class Message(object):
         Delete an ETag from a message.
 
         """
-        self.del_option_name("ETag")
+        self.del_option_by_number(defines.OptionRegistry.ETAG.number)
 
     @property
     def content_type(self):
@@ -356,7 +435,7 @@ class Message(object):
         """
         value = 0
         for option in self.options:
-            if option.number == defines.inv_options['Content-Type']:
+            if option.number == defines.OptionRegistry.CONTENT_TYPE.number:
                 value = int(option.value)
         return value
 
@@ -369,21 +448,13 @@ class Message(object):
         :param content_type: the Content-Type
         """
         option = Option()
-        option.number = defines.inv_options['Content-Type']
+        option.number = defines.OptionRegistry.CONTENT_TYPE.number
         option.value = int(content_type)
         self.add_option(option)
 
-    def already_in(self, option):
-        """
-        Check if an option is already in the message.
-
-        :param option: the option to be checked
-        :return: True if already present, False otherwise
-        """
-        for opt in self._options:
-            if option.number == opt.number:
-                return True
-        return False
+    @content_type.deleter
+    def content_type(self):
+        self.del_option_by_number(defines.OptionRegistry.CONTENT_TYPE.number)
 
     @property
     def observe(self):
@@ -393,7 +464,7 @@ class Message(object):
         :return: 0, if the request is an observing request
         """
         for option in self.options:
-            if option.number == defines.inv_options['Observe']:
+            if option.number == defines.OptionRegistry.OBSERVE.number:
                 # if option.value is None:
                 #    return 0
                 if option.value is None:
@@ -409,9 +480,9 @@ class Message(object):
         :param ob: observe count
         """
         option = Option()
-        option.number = defines.inv_options['Observe']
+        option.number = defines.OptionRegistry.OBSERVE.number
         option.value = ob
-        self.del_option_name("Observe")
+        self.del_option_by_number(defines.OptionRegistry.OBSERVE.number)
         self.add_option(option)
 
     @property
@@ -421,11 +492,10 @@ class Message(object):
 
         :return: the Block1 value
         """
-        value = 0
+        value = None
         for option in self.options:
-            if option.number == defines.inv_options['Block1']:
-                value = option.raw_value
-                value = parse_blockwise(value)
+            if option.number == defines.OptionRegistry.BLOCK1.number:
+                value = parse_blockwise(option.value)
         return value
 
     @block1.setter
@@ -436,7 +506,7 @@ class Message(object):
         :param value: the Block1 value
         """
         option = Option()
-        option.number = defines.inv_options['Block1']
+        option.number = defines.OptionRegistry.BLOCK1.number
         num, m, size = value
         if size > 1024:
             szx = 6
@@ -461,3 +531,95 @@ class Message(object):
 
         option.value = value
         self.add_option(option)
+
+    @block1.deleter
+    def block1(self):
+        self.del_option_by_number(defines.OptionRegistry.BLOCK1.number)
+
+    @property
+    def block2(self):
+        """
+
+        :rtype : String
+        """
+        value = None
+        for option in self.options:
+            if option.number == defines.OptionRegistry.BLOCK2.number:
+                value = parse_blockwise(option.value)
+        return value
+
+    @block2.setter
+    def block2(self, value):
+        option = Option()
+        option.number = defines.OptionRegistry.BLOCK2.number
+        num, m, size = value
+        if size > 1024:
+            szx = 6
+        elif 512 < size <= 1024:
+            szx = 6
+        elif 256 < size <= 512:
+            szx = 5
+        elif 128 < size <= 256:
+            szx = 4
+        elif 64 < size <= 128:
+            szx = 3
+        elif 32 < size <= 64:
+            szx = 2
+        elif 16 < size <= 32:
+            szx = 1
+        else:
+            szx = 0
+
+        value = (num << 4)
+        value |= (m << 3)
+        value |= szx
+
+        option.value = value
+        self.add_option(option)
+
+    @block2.deleter
+    def block2(self):
+        self.del_option_by_number(defines.OptionRegistry.BLOCK2.number)
+
+    @property
+    def line_print(self):
+        inv_types = {v: k for k, v in defines.Types.iteritems()}
+
+        if self._code is None:
+            self._code = defines.Codes.EMPTY.number
+        msg = "From {source}, To {destination}, {type}-{mid}, {code}-{token}, ["\
+            .format(source=self._source, destination=self._destination, type=inv_types[self._type], mid=self._mid,
+                    code=defines.Codes.LIST[self._code].name, token=self._token)
+        for opt in self._options:
+            msg += "{name}: {value}, ".format(name=opt.name, value=opt.value)
+        msg += "]"
+        if self.payload is not None:
+            msg += " {payload}...{length} bytes".format(payload=self.payload[0:20], length=len(self.payload))
+        else:
+            msg += " No payload"
+        return msg
+
+    def __str__(self):
+        return self.line_print
+
+    def pretty_print(self):
+        """
+        Return the message as a formatted string.
+
+        :return: the string representing the message
+        """
+        msg = "Source: " + str(self._source) + "\n"
+        msg += "Destination: " + str(self._destination) + "\n"
+        inv_types = {v: k for k, v in defines.Types.iteritems()}
+        msg += "Type: " + str(inv_types[self._type]) + "\n"
+        msg += "MID: " + str(self._mid) + "\n"
+        if self._code is None:
+            self._code = 0
+
+        msg += "Code: " + str(defines.Codes.LIST[self._code].name) + "\n"
+        msg += "Token: " + str(self._token) + "\n"
+        for opt in self._options:
+            msg += str(opt)
+        msg += "Payload: " + "\n"
+        msg += str(self._payload) + "\n"
+        return msg

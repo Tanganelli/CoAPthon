@@ -1,30 +1,23 @@
-import ctypes
 import struct
-from coapthon import defines
-from coapthon.messages.message import Message
-from coapthon.messages.option import Option
+import ctypes
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
-from coapthon.utils import byte_len
-
-__author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
+from coapthon.messages.option import Option
+from coapthon import defines
+from coapthon.messages.message import Message
 
 
 class Serializer(object):
-    """
-    Class for serialize and de-serialize messages.
-    """
 
-    def __init__(self):
+    @staticmethod
+    def deserialize(datagram, source):
         """
-        Initialize a Serializer.
 
+        :type datagram: String
+        :param datagram:
+        :type source: String
+        :param source:
         """
-        self._reader = None
-        self._writer = None
-
-    def deserialize(self, raw, host, port):
         """
         De-serialize a stream of byte to a message.
 
@@ -36,28 +29,27 @@ class Serializer(object):
 
         fmt = "!BBH"
         pos = 4
-        length = len(raw)
+        length = len(datagram)
         while pos < length:
             fmt += "c"
             pos += 1
         s = struct.Struct(fmt)
-        self._reader = raw
-        values = s.unpack_from(self._reader)
+        values = s.unpack_from(datagram)
         first = values[0]
         code = values[1]
         mid = values[2]
         version = (first & 0xC0) >> 6
         message_type = (first & 0x30) >> 4
         token_length = (first & 0x0F)
-        if self.is_response(code):
+        if Serializer.is_response(code):
             message = Response()
             message.code = code
-        elif self.is_request(code):
+        elif Serializer.is_request(code):
             message = Request()
             message.code = code
         else:
             message = Message()
-        message.source = (host, port)
+        message.source = source
         message.destination = None
         message.version = version
         message.type = message_type
@@ -81,18 +73,18 @@ class Serializer(object):
                 # the second 4 bits represent the option length
                 # length = self._reader.read(4).uint
                 length = (next_byte & 0x0F)
-                num, pos = self.read_option_value_from_nibble(delta, pos, values)
-                option_length, pos = self.read_option_value_from_nibble(length, pos, values)
+                num, pos = Serializer.read_option_value_from_nibble(delta, pos, values)
+                option_length, pos = Serializer.read_option_value_from_nibble(length, pos, values)
                 current_option += num
                 # read option
                 try:
-                    option_name, option_type, option_repeatable, default = defines.options[current_option]
+                    option_item = defines.OptionRegistry.LIST[current_option]
                 except KeyError:
                     # log.err("unrecognized option")
                     return message, "BAD_OPTION"
                 if option_length == 0:
                     value = None
-                elif option_type == defines.INTEGER:
+                elif option_item.value_type == defines.INTEGER:
                     tmp = values[pos: pos + option_length]
                     value = 0
                     for b in tmp:
@@ -106,7 +98,7 @@ class Serializer(object):
                 pos += option_length
                 option = Option()
                 option.number = current_option
-                option.value = self.convert_to_raw(current_option, value, option_length)
+                option.value = Serializer.convert_to_raw(current_option, value, option_length)
 
                 message.add_option(option)
             else:
@@ -121,6 +113,111 @@ class Serializer(object):
                     pos += 1
         return message
 
+    @staticmethod
+    def serialize(message):
+        """
+
+        :type message: Message
+        :param message:
+        """
+        fmt = "!BBH"
+
+        if message.token is None or message.token == "":
+            tkl = 0
+        elif isinstance(message.token, int):
+            tkl = len(str(message.token))
+        else:
+            tkl = len(message.token)
+        tmp = (defines.VERSION << 2)
+        tmp |= message.type
+        tmp <<= 4
+        tmp |= tkl
+        values = [tmp, message.code, message.mid]
+
+        if message.token is not None and tkl > 0:
+            if isinstance(message.token, int):
+                message.token = str(message.token)
+
+            for b in str(message.token):
+                fmt += "c"
+                values.append(b)
+
+        options = Serializer.as_sorted_list(message.options)  # already sorted
+        lastoptionnumber = 0
+        for option in options:
+
+            # write 4-bit option delta
+            optiondelta = option.number - lastoptionnumber
+            optiondeltanibble = Serializer.get_option_nibble(optiondelta)
+            tmp = (optiondeltanibble << defines.OPTION_DELTA_BITS)
+
+            # write 4-bit option length
+            optionlength = option.length
+            optionlengthnibble = Serializer.get_option_nibble(optionlength)
+            tmp |= optionlengthnibble
+            fmt += "B"
+            values.append(tmp)
+
+            # write extended option delta field (0 - 2 bytes)
+            if optiondeltanibble == 13:
+                fmt += "B"
+                values.append(optiondelta - 13)
+            elif optiondeltanibble == 14:
+                fmt += "B"
+                values.append(optiondelta - 296)
+
+            # write extended option length field (0 - 2 bytes)
+            if optionlengthnibble == 13:
+                fmt += "B"
+                values.append(optionlength - 13)
+            elif optionlengthnibble == 14:
+                fmt += "B"
+                values.append(optionlength - 269)
+
+            # write option value
+            if optionlength > 0:
+                opt_type = defines.OptionRegistry.LIST[option.number].value_type
+                if opt_type == defines.INTEGER:
+                    words = Serializer.int_to_words(option.value, optionlength, 8)
+                    for num in range(0, optionlength):
+                        fmt += "B"
+                        values.append(words[num])
+                else:
+                    for b in str(option.value):
+                        fmt += "c"
+                        values.append(b)
+
+            # update last option number
+            lastoptionnumber = option.number
+
+        payload = message.payload
+        if isinstance(payload, dict):
+            payload = payload.get("Payload")
+        if payload is not None and len(payload) > 0:
+            # if payload is present and of non-zero length, it is prefixed by
+            # an one-byte Payload Marker (0xFF) which indicates the end of
+            # options and the start of the payload
+
+            fmt += "B"
+            values.append(defines.PAYLOAD_MARKER)
+
+            for b in str(payload):
+                fmt += "c"
+                values.append(b)
+
+        datagram = None
+        if values[1] is None:
+            values[1] = 0
+        try:
+            s = struct.Struct(fmt)
+            datagram = ctypes.create_string_buffer(s.size)
+            s.pack_into(datagram, 0, *values)
+        except struct.error as e:
+            print values
+            print e.args
+            print e.message
+
+        return datagram
 
     @staticmethod
     def is_request(code):
@@ -161,112 +258,44 @@ class Serializer(object):
         else:
             raise ValueError("Unsupported option nibble " + str(nibble))
 
-    def serialize(self, message):
+    @staticmethod
+    def convert_to_raw(number, value, length):
         """
-        Serialize message to a stream of byte.
+        Get the value of an option as a ByteArray.
 
-        :param message: the message
-        :return: the stream of bytes
+        :param number: the option number
+        :param value: the option value
+        :param length: the option length
+        :return: the value of an option as a BitArray
         """
-        # print message
-        fmt = "!BBH"
 
-        if message.token is None or message.token == "":
-            tkl = 0
-        elif isinstance(message.token, int):
-            tkl = len(str(message.token))
+        opt_type = defines.OptionRegistry.LIST[number].value_type
+
+        if length == 0 and opt_type != defines.INTEGER:
+            return bytearray()
+        if length == 0 and opt_type == defines.INTEGER:
+            return 0
+        if isinstance(value, tuple):
+            value = value[0]
+        if isinstance(value, unicode):
+            value = str(value)
+        if isinstance(value, str):
+            return bytearray(value, "utf-8")
+        elif isinstance(value, int):
+            return value
         else:
-            tkl = len(message.token)
-        tmp = (defines.VERSION << 2)
-        tmp |= message.type
-        tmp <<= 4
-        tmp |= tkl
-        values = [tmp, message.code, message.mid]
+            return bytearray(value)
 
-        if message.token is not None and tkl > 0:
-            if isinstance(message.token, int):
-                message.token = str(message.token)
+    @staticmethod
+    def as_sorted_list(options):
+        """
+        Returns all options in a list sorted according to their option numbers.
 
-            for b in str(message.token):
-                fmt += "c"
-                values.append(b)
-
-        options = self.as_sorted_list(message.options)  # already sorted
-        lastoptionnumber = 0
-        for option in options:
-
-            # write 4-bit option delta
-            optiondelta = option.number - lastoptionnumber
-            optiondeltanibble = self.get_option_nibble(optiondelta)
-            tmp = (optiondeltanibble << defines.OPTION_DELTA_BITS)
-
-            # write 4-bit option length
-            optionlength = option.length
-            optionlengthnibble = self.get_option_nibble(optionlength)
-            tmp |= optionlengthnibble
-            fmt += "B"
-            values.append(tmp)
-
-            # write extended option delta field (0 - 2 bytes)
-            if optiondeltanibble == 13:
-                fmt += "B"
-                values.append(optiondelta - 13)
-            elif optiondeltanibble == 14:
-                fmt += "B"
-                values.append(optiondelta - 296)
-
-            # write extended option length field (0 - 2 bytes)
-            if optionlengthnibble == 13:
-                fmt += "B"
-                values.append(optionlength - 13)
-            elif optionlengthnibble == 14:
-                fmt += "B"
-                values.append(optionlength - 269)
-
-            # write option value
-            if optionlength > 0:
-                name, opt_type, repeatable, defaults = defines.options[option.number]
-                if opt_type == defines.INTEGER:
-                    words = self.int_to_words(option.value, optionlength, 8)
-                    for num in range(0, optionlength):
-                        fmt += "B"
-                        values.append(words[num])
-                else:
-                    for b in str(option.raw_value):
-                        fmt += "c"
-                        values.append(b)
-
-            # update last option number
-            lastoptionnumber = option.number
-
-        payload = message.payload
-        if isinstance(payload, dict):
-            payload = payload.get("Payload")
-        if payload is not None and len(payload) > 0:
-            # if payload is present and of non-zero length, it is prefixed by
-            # an one-byte Payload Marker (0xFF) which indicates the end of
-            # options and the start of the payload
-
-            fmt += "B"
-            values.append(defines.PAYLOAD_MARKER)
-
-            for b in str(payload):
-                fmt += "c"
-                values.append(b)
-
-        self._writer = None
-        if values[1] is None:
-            values[1] = 0
-        try:
-            s = struct.Struct(fmt)
-            self._writer = ctypes.create_string_buffer(s.size)
-            s.pack_into(self._writer, 0, *values)
-        except struct.error as e:
-            print values
-            print e.args
-            print e.message
-
-        return self._writer
+        :return: the sorted list
+        """
+        if len(options) > 0:
+            options.sort(None, key=lambda o: o.number)
+        return options
 
     @staticmethod
     def get_option_nibble(optionvalue):
@@ -284,45 +313,6 @@ class Serializer(object):
             return 14
         else:
             raise ValueError("Unsupported option delta " + optionvalue)
-
-    @staticmethod
-    def as_sorted_list(options):
-        """
-        Returns all options in a list sorted according to their option numbers.
-
-        :return: the sorted list
-        """
-        if len(options) > 0:
-            options.sort(None, key=lambda o: o.number)
-        return options
-
-    @staticmethod
-    def convert_to_raw(number, value, length):
-        """
-        Get the value of an option as a ByteArray.
-
-        :param number: the option number
-        :param value: the option value
-        :param length: the option length
-        :return: the value of an option as a BitArray
-        """
-
-        name, opt_type, repeatable, defaults = defines.options[number]
-
-        if length == 0 and opt_type != defines.INTEGER:
-            return bytearray()
-        if length == 0 and opt_type == defines.INTEGER:
-            return 0
-        if isinstance(value, tuple):
-            value = value[0]
-        if isinstance(value, unicode):
-            value = str(value)
-        if isinstance(value, str):
-            return bytearray(value, "utf-8")
-        elif isinstance(value, int):
-            return value
-        else:
-            return bytearray(value)
 
     @staticmethod
     def int_to_words(int_val, num_words=4, word_size=32):

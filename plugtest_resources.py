@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
 import threading
 import time
 from coapthon import defines
-from coapthon.resources.resource import Resource
+from coapthon.resource import Resource
 
-__author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
+__author__ = 'giacomo'
 
 
 class TestResource(Resource):
@@ -19,7 +18,7 @@ class TestResource(Resource):
 
     def render_PUT(self, request):
         for option in request.options:
-            if option.number == defines.inv_options["Content-Type"]:
+            if option.number == defines.OptionRegistry.CONTENT_TYPE.number:
                 self.payload = {option.value: request.payload}
                 return self
         self.payload = request.payload
@@ -27,9 +26,9 @@ class TestResource(Resource):
 
     def render_POST(self, request):
         res = TestResource()
-        res.location_query = request.query
+        res.location_query = request.uri_query
         for option in request.options:
-            if option.number == defines.inv_options["Content-Type"]:
+            if option.number == defines.OptionRegistry.CONTENT_TYPE.number:
                 res.payload = {option.value: request.payload}
                 return res
 
@@ -110,20 +109,10 @@ class LargeUpdateResource(Resource):
         super(LargeUpdateResource, self).__init__(name, coap_server, visible=True, observable=False,
                                                   allow_children=False)
         self.payload = ""
-        self._temp_payload = {}
 
     def render_GET(self, request):
         return self
 
     def render_PUT(self, request):
-        if request.blockwise:
-            key = hash(str(request.source[0]) + str(request.source[1]) + str(request.token))
-            if key in self._temp_payload:
-                old = self._temp_payload[key]
-                old += request.payload
-                self._temp_payload[key] = old
-            else:
-                self._temp_payload[key] = request.payload
-            if request.last_block:
-                self.payload = self._temp_payload[key]
+        self.payload = request.payload
         return self

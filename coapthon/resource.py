@@ -1,8 +1,5 @@
 from coapthon import defines
 
-__author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
-
 
 class Resource(object):
     """
@@ -31,6 +28,8 @@ class Resource(object):
             self._location_query = name.location_query
             self._max_age = name.max_age
             self._coap_server = name._coap_server
+            self._deleted = False
+            self._changed = False
         else:
             # The attributes of this resource.
             self._attributes = {}
@@ -62,6 +61,25 @@ class Resource(object):
             self._max_age = None
 
             self._coap_server = coap_server
+
+            self._deleted = False
+            self._changed = False
+
+    @property
+    def deleted(self):
+        return self._deleted
+
+    @deleted.setter
+    def deleted(self, b):
+        self._deleted = b
+
+    @property
+    def changed(self):
+        return self._changed
+
+    @changed.setter
+    def changed(self, b):
+        self._changed = b
 
     @property
     def etag(self):
@@ -144,8 +162,8 @@ class Resource(object):
                     raise KeyError("Content-Type not available")
         else:
             if isinstance(self._payload, dict):
-                if defines.inv_content_types["text/plain"] in self._payload:
-                    return self._payload[defines.inv_content_types["text/plain"]]
+                if defines.Content_types["text/plain"] in self._payload:
+                    return self._payload[defines.Content_types["text/plain"]]
                 else:
                     val = self._payload.keys()
                     return val[0], self._payload[val[0]]
@@ -165,7 +183,7 @@ class Resource(object):
                 v = p[k]
                 self._payload[k] = v
         else:
-            self._payload = {defines.inv_content_types["text/plain"]: p}
+            self._payload = {defines.Content_types["text/plain"]: p}
 
     @property
     def raw_payload(self):
@@ -288,7 +306,7 @@ class Resource(object):
         :param act: the actual required Content-Type.
         """
         if isinstance(act, str):
-            self._required_content_type = defines.inv_content_types[act]
+            self._required_content_type = defines.Content_types[act]
         else:
             self._required_content_type = act
 
@@ -318,11 +336,11 @@ class Resource(object):
         """
         value = []
         if isinstance(lst, str):
-            ct = defines.inv_content_types[lst]
+            ct = defines.Content_types[lst]
             value.append(ct)
         else:
             for ct in lst:
-                ct = defines.inv_content_types[ct]
+                ct = defines.Content_types[ct]
                 value.append(ct)
         if len(value) > 0:
             self._attributes["ct"] = value
@@ -336,7 +354,7 @@ class Resource(object):
         lst = self._attributes.get("ct")
         if lst is None:
             lst = []
-        ct = defines.inv_content_types[ct]
+        ct = defines.Content_types[ct]
         lst.append(ct)
         self._attributes["ct"] = lst
 
@@ -446,4 +464,5 @@ class Resource(object):
         :param request: the request
         """
         return -1
+
 
