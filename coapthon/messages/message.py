@@ -587,6 +587,7 @@ class Message(object):
 
         if self._code is None:
             self._code = defines.Codes.EMPTY.number
+
         msg = "From {source}, To {destination}, {type}-{mid}, {code}-{token}, ["\
             .format(source=self._source, destination=self._destination, type=inv_types[self._type], mid=self._mid,
                     code=defines.Codes.LIST[self._code].name, token=self._token)

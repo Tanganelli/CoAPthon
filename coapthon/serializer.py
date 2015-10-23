@@ -12,19 +12,11 @@ class Serializer(object):
     @staticmethod
     def deserialize(datagram, source):
         """
+        De-serialize a stream of byte to a message.
 
         :type datagram: String
         :param datagram:
-        :type source: String
         :param source:
-        """
-        """
-        De-serialize a stream of byte to a message.
-
-        :param raw: received bytes
-        :param host: source host
-        :param port: source port
-        :return: the message
         """
 
         fmt = "!BBH"

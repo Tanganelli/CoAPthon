@@ -18,9 +18,11 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server):
+    def __init__(self, server, callback):
         self._currentMID = 1
         self._server = server
+        self._callback = callback
+        self.stopped = False
 
         self._messageLayer = MessageLayer(self._currentMID)
         self._blockLayer = BlockLayer()
@@ -48,15 +50,16 @@ class CoAP(object):
         assert isinstance(c, int)
         self._currentMID = c
 
-    def send_datagram(self, message):
+    def send_message(self, message):
 
         if isinstance(message, Request):
             request = self._requestLayer.send_request(message)
             request = self._observeLayer.send_request(request)
             request = self._blockLayer.send_request(request)
             transaction = self._messageLayer.send_request(request)
-            message = transaction.request
+            self.send_datagram(transaction.request)
 
+    def send_datagram(self, message):
         host, port = message.destination
         logger.debug("send_datagram - " + str(message))
         serializer = Serializer()
@@ -65,7 +68,8 @@ class CoAP(object):
         self._socket.sendto(message, (host, port))
 
     def receive_datagram(self):
-        while not self.stop:
+        logger.debug("Start receiver Thread")
+        while not self.stopped:
             self._socket.settimeout(2 * defines.ACK_TIMEOUT)
             try:
                 datagram, addr = self._socket.recvfrom(1152)
@@ -89,12 +93,21 @@ class CoAP(object):
                     return
 
             serializer = Serializer()
+
             try:
                 host, port = addr
             except ValueError:
                 host, port, tmp1, tmp2 = addr
 
-            message = serializer.deserialize(datagram, (host, port))
+            source = (host, port)
+
+            message = serializer.deserialize(datagram, source)
+
             if isinstance(message, Response):
                 transaction = self._messageLayer.receive_response(message)
                 transaction = self._blockLayer.receive_response(transaction)
+                if transaction.block_transfer:
+                    transaction = self._messageLayer.send_request(transaction.request)
+                    self.send_datagram(transaction.request)
+                    return
+                self._callback(transaction.response)

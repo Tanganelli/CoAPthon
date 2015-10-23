@@ -2,6 +2,7 @@ import logging
 import time
 from coapthon.messages.message import Message
 from coapthon import defines
+from coapthon.messages.request import Request
 from coapthon.transaction import Transaction
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class MessageLayer(object):
                 del self._transactions[k]
 
     def receive_request(self, request):
+        logger.debug("receive_request - " + str(request))
         """
 
         :type request: Request
@@ -53,6 +55,7 @@ class MessageLayer(object):
         :param response:
         :rtype : Transaction
         """
+        logger.debug("receive_response - " + str(response))
         try:
             host, port = response.source
         except AttributeError:
@@ -61,6 +64,7 @@ class MessageLayer(object):
         if key_mid in self._transactions.keys():
             self._transactions[key_mid].request.acknowledged = True
             self._transactions[key_mid].completed = True
+            self._transactions[key_mid].response = response
             if self._transactions[key_mid].retransmit_stop is not None:
                 self._transactions[key_mid].retransmit_stop.set()
         else:
@@ -75,7 +79,7 @@ class MessageLayer(object):
         :param message:
         :rtype : Transaction
         """
-
+        logger.debug("receive_empty - " + str(message))
         try:
             host, port = message.source
         except AttributeError:
@@ -104,16 +108,16 @@ class MessageLayer(object):
     def send_request(self, request):
         """
 
-        :type transaction: Transaction
-        :param transaction:
         :type request: Request
         :param request:
         """
+        logger.debug("send_request - " + str(request))
+        assert isinstance(request, Request)
         try:
-            host, port = request.source
+            host, port = request.destination
         except AttributeError:
             return
-        key_mid = hash(str(host) + str(port) + str(request.mid))
+
         request.timestamp = time.time()
         transaction = Transaction(request=request, timestamp=request.timestamp)
         if transaction.request.type is None:
@@ -123,6 +127,7 @@ class MessageLayer(object):
             transaction.request.mid = self._current_mid
             self._current_mid += 1 % 65535
 
+        key_mid = hash(str(host) + str(port) + str(request.mid))
         self._transactions[key_mid] = transaction
 
         return self._transactions[key_mid]
@@ -133,7 +138,7 @@ class MessageLayer(object):
         :type transaction: Transaction
         :param transaction:
         """
-
+        logger.debug("send_response - " + str(transaction.response))
         if transaction.response.type is None:
             if transaction.request.type == defines.Types["CON"] and not transaction.request.acknowledged:
                 transaction.response.type = defines.Types["ACK"]
@@ -166,6 +171,7 @@ class MessageLayer(object):
         :type message: Message
         :param message:
         """
+        logger.debug("send_empty - " + str(message))
         if message.type == defines.Types["ACK"]:
             if transaction.request == related:
                 transaction.request.acknowledged = True

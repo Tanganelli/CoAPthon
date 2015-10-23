@@ -1,5 +1,9 @@
+import logging
 from coapthon import defines
+from coapthon.messages.request import Request
 from coapthon.messages.response import Response
+
+logger = logging.getLogger(__name__)
 
 
 class BlockItem(object):
@@ -104,7 +108,35 @@ class BlockLayer(object):
         :param transaction:
         :rtype : Transaction
         """
-        raise NotImplementedError
+        host, port = transaction.response.source
+        key_token = hash(str(host) + str(port) + str(transaction.response.token))
+        if key_token in self._block1_sent and transaction.response.block1 is not None:
+            item = self._block1_sent[key_token]
+
+            n_num, n_m, n_size = transaction.response.block1
+            if n_num != item.num:
+                logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received " + str(n_num))
+                return None
+            if n_size < item.size:
+                logger.debug("Scale down size, was " + str(item.size) + " become " + str(n_size))
+                item.size = n_size
+            request = transaction.request
+            del request.mid
+            del request.block1
+            request.payload = item.payload[item.byte: item.byte+item.size]
+            item.num += 1
+            item.byte += item.size
+            if len(item.payload) <= item.byte:
+                m = 0
+                transaction.block_transaction = False
+            else:
+                m = 1
+                transaction.block_transaction = True
+            request.block1 = (item.num, m, item.size)
+        elif key_token in self._block2_sent and transaction.response.block2 is not None:
+            # TODO
+            pass
+        return transaction
 
     def receive_empty(self, empty, transaction):
         """
@@ -174,6 +206,7 @@ class BlockLayer(object):
         :type request: Request
         :param request:
         """
+        assert isinstance(request, Request)
         if request.block1 or (request.payload is not None and len(request.payload) > defines.MAX_PAYLOAD):
             host, port = request.source
             key_token = hash(str(host) + str(port) + str(request.token))
@@ -184,11 +217,12 @@ class BlockLayer(object):
                 m = 1
                 size = defines.MAX_PAYLOAD
 
-            self._block1_sent[key_token] = BlockItem(0, num, m, size, request.payload, request.content_type)
+            self._block1_sent[key_token] = BlockItem(size, num, m, size, request.payload, request.content_type)
             # TODO check that the payload inside the dict doesn't change
             request.payload = request.payload[0:size]
         elif request.block2:
             # TODO
-            pass
+            return request
+        return request
 
 

@@ -129,12 +129,14 @@ class CoAP(object):
             transaction = self._messageLayer.receive_request(message)
 
             if transaction.request.duplicated and transaction.completed:
+                logger.debug("message duplicated,transaction completed")
                 transaction = self._observeLayer.send_response(transaction)
                 transaction = self._blockLayer.send_response(transaction)
                 transaction = self._messageLayer.send_response(transaction)
                 self.send_datagram(transaction.response)
                 return
             elif transaction.request.duplicated and not transaction.completed:
+                logger.debug("message duplicated,transaction NOT completed")
                 self._send_ack(transaction)
                 return
 
@@ -170,6 +172,7 @@ class CoAP(object):
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
                     self._start_retrasmission(transaction, transaction.response)
+                self.send_datagram(transaction.response)
 
         elif isinstance(message, Message):
             transaction = self._messageLayer.receive_empty(message)

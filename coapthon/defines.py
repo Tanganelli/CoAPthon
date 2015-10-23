@@ -147,7 +147,8 @@ Types = {
     'CON': 0,
     'NON': 1,
     'ACK': 2,
-    'RST': 3
+    'RST': 3,
+    'None': None
 }
 
 CodeItem = collections.namedtuple('CodeItem', 'number name')
