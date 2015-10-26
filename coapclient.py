@@ -6,10 +6,10 @@ import sys
 import threading
 from coapthon import defines
 from coapthon.client.coap import CoAP
+from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 
 client = None
-notification_count = 0
 
 
 def usage():
@@ -22,15 +22,11 @@ def usage():
 
 
 def client_callback(response):
-    global notification_count
-    global client
     print "Callback"
-    notification_count += 1
-    if notification_count == 3:
-        client.stop()
 
 
 def client_callback_observe(response):
+    global client
     print "Callback_observe"
     check = True
     while check:
@@ -45,9 +41,9 @@ def client_callback_observe(response):
                     print "Unrecognized choose."
                     continue
                 elif rst == "" or rst == "y" or rst == "Y":
-                    client.protocol.cancel_observing(response, True)
+                    client.cancel_observing(response, True)
                 else:
-                    client.protocol.cancel_observing(response, False)
+                    client.cancel_observing(response, False)
                 check = False
                 break
         else:
@@ -90,6 +86,17 @@ class HelperClient(object):
         while not self.protocol.stopped.isSet():
             response = self.queue.get(block=True)
             callback(response)
+
+    def cancel_observing(self, response, send_rst):
+        if send_rst:
+            message = Message()
+            message.destination = self.server
+            message.code = defines.Codes.EMPTY.number
+            message.type = defines.Types["RST"]
+            message.token = response.token
+            message.mid = response.mid
+            self.protocol.send_message(message)
+        self.stop()
 
     def get(self, path, callback=None):
         request = Request()
@@ -247,7 +254,7 @@ def main():
             print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        client.observe(path, client_callback)
+        client.observe(path, client_callback_observe)
         
     elif op == "DELETE":
         if path is None:

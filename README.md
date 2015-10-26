@@ -56,7 +56,7 @@ Once you have the pip program issue the following commands:
 ```sh
 $ cd CoAPthon
 $ python setup.py sdist
-$ sudo pip install dist/CoAPthon-2.0.0.tar.gz -r requirements.txt
+$ sudo pip install dist/CoAPthon-4.0.0.tar.gz -r requirements.txt
 ```
 
 The library is installed in the default path as well as the bins that you can use and customize. In order to start
