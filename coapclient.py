@@ -186,6 +186,7 @@ class HelperClient(object):
     def send_empty(self, empty):
         self.protocol.send_message(empty)
 
+
 def main():
     global client
     op = None
