@@ -4,6 +4,13 @@ CoAPthon
 CoAPthon is a python library to the CoAP protocol compliant with the RFC.
 It is based on the Twisted Framework.
 
+Citation
+========
+
+If you use CoAPthon software in your research, please cite: 
+G.Tanganelli, C. Vallati, E.Mingozzi, "CoAPthon: Easy Development of CoAP-based IoT Applications with Python", IEEE World Forum on Internet of Things (WF-IoT 2015)
+Software available at https://github.com/Tanganelli/CoAPthon
+
 What is implemented
 ===================
 
