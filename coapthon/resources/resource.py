@@ -86,22 +86,46 @@ class Resource(object):
 
     @property
     def location_query(self):
+        """
+        Get the Location-Query of a resource.
+
+        :return: the Location-Query
+        """
         return self._location_query
 
     @location_query.setter
     def location_query(self, lq):
+        """
+        Set the Location-Query.
+
+        :param lq: the Location-Query
+        """
         self._location_query = lq
 
     @location_query.deleter
     def location_query(self):
+        """
+        Delete the Location-Query.
+
+        """
         self.location_query = []
 
     @property
     def max_age(self):
+        """
+        Get the Max-Age.
+
+        :return: the Max-Age
+        """
         return self._max_age
 
     @max_age.setter
     def max_age(self, ma):
+        """
+        Set the Max-Age.
+
+        :param ma: the Max-Age
+        """
         self._max_age = ma
 
     @property
@@ -117,14 +141,14 @@ class Resource(object):
                 try:
                     return self._payload[self._required_content_type]
                 except KeyError:
-                    return -2
+                    raise KeyError("Content-Type not available")
         else:
             if isinstance(self._payload, dict):
                 if defines.inv_content_types["text/plain"] in self._payload:
                     return self._payload[defines.inv_content_types["text/plain"]]
                 else:
-                    val = self._payload.values()
-                    return val[0]
+                    val = self._payload.keys()
+                    return val[0], self._payload[val[0]]
 
         return self._payload
 
@@ -139,7 +163,7 @@ class Resource(object):
             self._payload = {}
             for k in p.keys():
                 v = p[k]
-                self._payload[defines.inv_content_types[k]] = v
+                self._payload[k] = v
         else:
             self._payload = {defines.inv_content_types["text/plain"]: p}
 
@@ -422,7 +446,4 @@ class Resource(object):
         :param request: the request
         """
         return -1
-
-    def notify_clients(self):
-        self._coap_server.notify(self)
 

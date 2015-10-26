@@ -37,6 +37,7 @@ application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 class CoAP(DatagramProtocol):
     def __init__(self, server, forward):
+        # print "INIT CLIENT\n"
         self._forward = forward
         self.received = {}
         self.sent = {}
@@ -52,8 +53,9 @@ class CoAP(DatagramProtocol):
             # legal
         except socket.error:
             # Not legal
-            data = socket.gethostbyname(server[0])
-            self.server = (data, server[1])
+            data = socket.getaddrinfo(server[0], server[1])
+
+            self.server = (server[0], server[1])
 
         # defer = reactor.resolve('coap.me')
         # defer.addCallback(self.start)
@@ -61,10 +63,10 @@ class CoAP(DatagramProtocol):
 
         root = Resource('root', visible=False, observable=False, allow_children=True)
         root.path = '/'
-        self.root = Tree(root)
+        self.root = Tree()
+        self.root["/"] = root
         self.operations = []
         self.l = None
-        self.transport = None
 
     @property
     def current_mid(self):
@@ -78,14 +80,17 @@ class CoAP(DatagramProtocol):
         for op in operations:
             function, args, kwargs, client_callback = op
             self.operations.append((function, args, kwargs, client_callback))
+        host, port = self.server
+
+        if host is not None:
+            self.start(host)
 
     def startProtocol(self):
+        # print "STARTPROTOCOL\n"
+        # self.transport.connect(self.server)
         if self.server is None:
             log.err("Server address for the client is not initialized")
             exit()
-        host, port = self.server
-        if host is not None:
-            self.start(host)
         self.l = task.LoopingCall(self.purge_mids)
         self.l.start(defines.EXCHANGE_LIFETIME)
 
@@ -121,14 +126,15 @@ class CoAP(DatagramProtocol):
                 pass
 
     def start(self, host):
+        # print "START\n"
         # self.transport.connect(host, self.server[1])
         function, args, kwargs, client_callback = self.get_operation()
         function(client_callback, *args, **kwargs)
 
-    def start_test(self, transport):
-        self.transport = transport
-        function, args, kwargs, client_callback = self.get_operation()
-        function(client_callback, *args, **kwargs)
+    # def start_test(self, transport):
+    #     self.transport = transport
+    #     function, args, kwargs, client_callback = self.get_operation()
+    #     function(client_callback, *args, **kwargs)
 
     def get_operation(self):
         try:
@@ -148,8 +154,10 @@ class CoAP(DatagramProtocol):
             return None, None, None, None
 
     def send(self, message):
+        # print "SEND\n"
         serializer = Serializer()
-        message.destination = self.server
+        if message.destination is None:
+            message.destination = self.server
         host, port = message.destination
         print "Message sent to " + host + ":" + str(port)
         print "----------------------------------------"
@@ -157,11 +165,12 @@ class CoAP(DatagramProtocol):
         print "----------------------------------------"
         datagram = serializer.serialize(message)
         log.msg("Send datagram")
-        self.transport.write(datagram, self.server)
+        self.transport.write(datagram, message.destination)
 
     def send_callback(self, req, callback, client_callback):
-        self._currentMID += 1
-        req.mid = self._currentMID
+        if req.mid is None:
+            self._currentMID += 1
+            req.mid = self._currentMID
         key = hash(str(self.server[0]) + str(self.server[1]) + str(req.mid))
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(req.token))
         self.sent[key] = (req, time.time(), callback, client_callback)
@@ -174,9 +183,14 @@ class CoAP(DatagramProtocol):
         self.send(req)
 
     def datagramReceived(self, datagram, host):
+        # print "RECEIVED\n"
         serializer = Serializer()
-        host, port = host
+        try:
+            host, port = host
+        except ValueError:
+            host, port, tmp1, tmp2 = host
         message = serializer.deserialize(datagram, host, port)
+
         print "Message received from " + host + ":" + str(port)
         print "----------------------------------------"
         print message
@@ -206,7 +220,8 @@ class CoAP(DatagramProtocol):
                 function(client_callback, *args, **kwargs)
 
     def handle_message(self, message):
-        key = hash(str(self.server[0]) + str(self.server[1]) + str(message.mid))
+        host, port = message.source
+        key = hash(str(host) + str(port) + str(message.mid))
         if message.type == defines.inv_types["ACK"] and message.code == defines.inv_codes["EMPTY"] \
            and key in self.sent.keys():
             return None
@@ -223,6 +238,7 @@ class CoAP(DatagramProtocol):
             ack = Message.new_ack(response)
             self.send(ack)
         key_token = hash(str(self.server[0]) + str(self.server[1]) + str(response.token))
+
         if key_token in self.sent_token.keys():
             self.received_token[key_token] = response
             req, timestamp, callback, client_callback = self.sent_token[key_token]
@@ -234,6 +250,11 @@ class CoAP(DatagramProtocol):
         req = Request()
         if "Token" in kwargs.keys():
             req.token = kwargs.get("Token")
+        if "MID" in kwargs.keys():
+            req.mid = kwargs.get("MID")
+        if "Server" in kwargs.keys():
+            req.destination = kwargs.get("Server")
+            del kwargs["Server"]
         req.code = defines.inv_codes['GET']
         req.uri_path = ".well-known/core"
         req.type = defines.inv_types["CON"]
@@ -261,52 +282,33 @@ class CoAP(DatagramProtocol):
         elif err_callback is not None:
             err_callback(mid, self.server[0], self.server[1])
 
-    def parse_core_link_format(self, link_format):
-        while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
-            result = re.match(pattern, link_format)
-            path = result.group(1)
-            path = path.split("/")
-            path = path[1:]
-            link_format = link_format[result.end(1) + 2:]
-            pattern = "([^<,])*"
-            result = re.match(pattern, link_format)
-            attributes = result.group(0)
-            dict_att = {}
-            if len(attributes) > 0:
-                attributes = attributes.split(";")
-                for att in attributes:
-                    a = att.split("=")
-                    # TODO check correctness
-                    dict_att[a[0]] = a[1]
-                link_format = link_format[result.end(0) + 1:]
-
-            while True:
-                last, p = self.root.find_complete_last(path)
-                if p is not None:
-                    resource = Resource("/".join(path))
-                    resource.path = p
-                    if p == "".join(path):
-                        resource.attributes = dict_att
-                    last.add_child(resource)
-                else:
-                    break
-        log.msg(self.root.dump())
-
     def get(self, client_callback, *args, **kwargs):
-        path = args[0]
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
+        # print "GET\n"
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
 
         req.code = defines.inv_codes['GET']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
         self.send_callback(req, self.get_results, client_callback)
 
@@ -334,16 +336,31 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def observe(self, client_callback, *args, **kwargs):
-        path = args[0]
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
+            assert(isinstance(req, Request))
+            path = req.uri_path
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
 
         req.code = defines.inv_codes['GET']
         req.uri_path = path
@@ -395,20 +412,32 @@ class CoAP(DatagramProtocol):
             self.send(rst)
 
     def post(self, client_callback, *args, **kwargs):
-        path, payload = args
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
+        if isinstance(args, tuple):
+            path, payload = args
+            req = Request()
+            req.uri_path = path
+            req._payload = payload
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['POST']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.payload = payload
         self.send_callback(req, self.post_results, client_callback)
 
     def post_results(self, mid, client_callback):
@@ -434,20 +463,31 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def put(self, client_callback, *args, **kwargs):
-        path, payload = args
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
+        if isinstance(args[0], tuple):
+            path, payload = args
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['PUT']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
-        req.payload = payload
         self.send_callback(req, self.put_results, client_callback)
 
     def put_results(self, mid, client_callback):
@@ -473,18 +513,30 @@ class CoAP(DatagramProtocol):
             err_callback(mid, self.server[0], self.server[1])
 
     def delete(self, client_callback, *args, **kwargs):
-        path = args[0]
-        req = Request()
-        if "Token" in kwargs.keys():
-            req.token = kwargs.get("Token")
-            del kwargs["Token"]
+        if isinstance(args[0], str):
+            path = str(args[0])
+            req = Request()
+            req.uri_path = path
+            if "Token" in kwargs.keys():
+                req.token = kwargs.get("Token")
+                del kwargs["Token"]
+            if "MID" in kwargs.keys():
+                req.mid = kwargs.get("MID")
+                del kwargs["MID"]
+            if "Server" in kwargs.keys():
+                req.destination = kwargs.get("Server")
+                del kwargs["Server"]
+        else:
+            req = args[0]
         for key in kwargs:
-            o = Option()
-            o.number = defines.inv_options[key]
-            o.value = kwargs[key]
-            req.add_option(o)
+            try:
+                o = Option()
+                o.number = defines.inv_options[key]
+                o.value = kwargs[key]
+                req.add_option(o)
+            except KeyError:
+                pass
         req.code = defines.inv_codes['DELETE']
-        req.uri_path = path
         req.type = defines.inv_types["CON"]
         self.send_callback(req, self.delete_results, client_callback)
 
@@ -544,8 +596,11 @@ class CoAP(DatagramProtocol):
 
 
 class HelperClient(object):
-    def __init__(self, server=("127.0.0.1", 5683), forward=False):
+    def __init__(self, server=("bbbb::2", 5683), forward=False):
+        # print "INIT HELPER\n"
         self.protocol = CoAP(server, forward)
+        reactor.listenUDP(0, self.protocol)
+        #reactor.run()
 
     @property
     def starting_mid(self):
@@ -556,9 +611,5 @@ class HelperClient(object):
         self.protocol.current_mid = mid
 
     def start(self, operations):
+        # print "START HELPER\n"
         self.protocol.set_operations(operations)
-        reactor.listenUDP(0, self.protocol)
-        try:
-            reactor.run()
-        except twisted.internet.error.ReactorAlreadyRunning:
-            log.msg("Reactor already started")

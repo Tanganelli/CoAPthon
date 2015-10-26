@@ -8,14 +8,13 @@ from coapthon.messages.response import Response
 from coapthon import defines
 from coapthon.serializer import Serializer
 from coapthon.messages.request import Request
-from twisted.python import log
-
+# import logging as log
 
 __author__ = 'giacomo'
 
 
 class HelperClientSynchronous(object):
-    def __init__(self):
+    def __init__(self, parent=None):
         self._currentMID = 100
         self.relation = {}
         self.received = {}
@@ -29,11 +28,18 @@ class HelperClientSynchronous(object):
         self._socket = None
         self._receiver_thread = None
         self.stop = False
+        self.parent = parent
+
+    @staticmethod
+    def start(operations):
+        # self.transport.connect(host, self.server[1])
+        function, args, kwargs = operations[0]
+        function(*args, **kwargs)
 
     def send(self, request, endpoint, resend=False):
 
         self._endpoint = endpoint
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         self._receiver_thread = threading.Thread(target=self.datagram_received)
         self._receiver_thread.start()
         if not resend:
@@ -48,13 +54,13 @@ class HelperClientSynchronous(object):
             request.type = defines.inv_types["CON"]
         serializer = Serializer()
         request.destination = self._endpoint
-        host, port = request.destination
-        print "Message sent to " + host + ":" + str(port)
-        print "----------------------------------------"
-        print request
-        print "----------------------------------------"
+        # host, port = request.destination
+        # print "Message sent to " + host + ":" + str(port)
+        # print "----------------------------------------"
+        # print request
+        # print "----------------------------------------"
         datagram = serializer.serialize(request)
-        log.msg("Send datagram")
+        # log.info("Send datagram")
         self._socket.sendto(datagram, self._endpoint)
 
     def schedule_retrasmission(self, request):
@@ -65,7 +71,7 @@ class HelperClientSynchronous(object):
             self.call_id[key] = (threading.Timer(future_time, self.retransmit, (request, host, port, future_time)), 0)
 
     def retransmit(self, t):
-        log.msg("Retransmit")
+        # log.info("Retransmit")
         request, host, port, future_time = t
         key = hash(str(host) + str(port) + str(request.mid))
         call_id, retransmit_count = self.call_id[key]
@@ -82,7 +88,7 @@ class HelperClientSynchronous(object):
             del self.call_id[key]
         else:
             request.timeouted = True
-            log.err("Request timeouted")
+            # log.error("Request timeouted")
             del self.call_id[key]
             # notify timeout
             self.condition.acquire()
@@ -116,16 +122,20 @@ class HelperClientSynchronous(object):
                     return
 
             serializer = Serializer()
-            host, port = addr
+            try:
+                host, port = addr
+            except ValueError:
+                host, port, tmp1, tmp2 = addr
             message = serializer.deserialize(datagram, host, port)
-            print "Message received from " + host + ":" + str(port)
-            print "----------------------------------------"
-            print message
-            print "----------------------------------------"
+            # print "Message received from " + host + ":" + str(port)
+            # print "----------------------------------------"
+            # print message
+            # print "----------------------------------------"
             if isinstance(message, Response):
                 self.handle_response(message)
             elif isinstance(message, Request):
-                log.err("Received request")
+                # log.error("Received request")
+                pass
             else:
                 self.handle_message(message)
             key = hash(str(host) + str(port) + str(message.mid))
@@ -175,23 +185,25 @@ class HelperClientSynchronous(object):
             if message.type == defines.inv_types["RST"]:
                 self._response = message
             else:
-                log.err("Received unattended message")
+                # log.error("Received unattended message")
                 # handle error
                 self._response = "Received unattended message"
             self.condition.acquire()
             self.condition.notify()
             self.condition.release()
 
-    @staticmethod
-    def parse_path(path):
+    def parse_path(self, path):
         m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*):([0-9]*)/(\S*)", path)
         if m is None:
             m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)/(\S*)", path)
             if m is None:
                 m = re.match("([a-zA-Z]{4,5})://([a-zA-Z0-9.]*)", path)
-                ip = m.group(2)
-                port = 5683
-                path = ""
+                if m is None:
+                    ip, port, path = self.parse_path_ipv6(path)
+                else:
+                    ip = m.group(2)
+                    port = 5683
+                    path = ""
             else:
                 ip = m.group(2)
                 port = 5683
@@ -223,6 +235,7 @@ class HelperClientSynchronous(object):
             request.uri_path = path
             endpoint = (ip, port)
         request.code = defines.inv_codes["GET"]
+
         self.send(request, endpoint)
         future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
         retransmit_count = 0
@@ -443,3 +456,24 @@ class HelperClientSynchronous(object):
             self.condition.wait()
             message = self._response
         return message
+
+    @staticmethod
+    def parse_path_ipv6(path):
+        m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]:([0-9]*)/(\S*)", path)
+        if m is None:
+            m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]/(\S*)", path)
+            if m is None:
+                m = re.match("([a-zA-Z]{4,5})://\[([a-fA-F0-9:]*)\]", path)
+                ip = m.group(2)
+                port = 5683
+                path = ""
+            else:
+                ip = m.group(2)
+                port = 5683
+                path = m.group(3)
+        else:
+            ip = m.group(2)
+            port = int(m.group(3))
+            path = m.group(4)
+
+        return ip, port, path

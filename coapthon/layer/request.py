@@ -1,5 +1,4 @@
 import time
-from twisted.python import log
 from coapthon import defines
 from coapthon.messages.message import Message
 from coapthon.messages.response import Response
@@ -33,10 +32,9 @@ class RequestLayer(object):
         if key not in self._parent.received:
             if request.blockwise:
                 # Blockwise
-                last, request = self._parent.blockwise_transfer(request)
-                if last:
-                    self._parent.received[key] = (request, time.time())
-                    return request
+                last, request = self._parent.blockwise_layer.handle_request(request)
+                self._parent.received[key] = (request, time.time())
+                return request
             else:
                 self._parent.received[key] = (request, time.time())
                 return request
@@ -91,15 +89,17 @@ class RequestLayer(object):
         """
         response = Response()
         response.destination = request.source
-        path = request.uri_path
-        path = path.strip("/")
-        node = self._parent.root.find_complete(path)
-        if node is None:
+        path = str("/" + request.uri_path)
+        try:
+            resource = self._parent.root[path]
+        except KeyError:
+            resource = None
+        if resource is None:
             response = self._parent.send_error(request, response, 'NOT_FOUND')
             return response
 
         # Update request
-        response = self._parent.update_resource(request, response, node)
+        response = self._parent.resource_layer.update_resource(request, response, resource)
         return response
 
     def handle_post(self, request):
@@ -109,12 +109,11 @@ class RequestLayer(object):
         :param request: the request
         :return: the response
         """
-        path = request.uri_path
-        path = path.strip("/")
+        path = str("/" + request.uri_path)
         response = Response()
         response.destination = request.source
         # Create request
-        response = self._parent.create_resource(path, request, response)
+        response = self._parent.resource_layer.create_resource(path, request, response)
         return response
 
     def handle_delete(self, request):
@@ -124,23 +123,21 @@ class RequestLayer(object):
         :param request: the request
         :return: the response
         """
-        path = request.uri_path
-        path = path.strip("/")
-        node = self._parent.root.find_complete(path)
-        if node is not None:
-            resource = node.value
-        else:
+        path = str("/" + request.uri_path)
+        try:
+            resource = self._parent.root[path]
+        except KeyError:
             resource = None
+
         response = Response()
         response.destination = request.source
         if resource is None:
             # Create request
             response = self._parent.send_error(request, response, 'NOT_FOUND')
-            log.msg("Resource Not Found")
             return response
         else:
             # Delete
-            response = self._parent.delete_resource(request, response, node)
+            response = self._parent.resource_layer.delete_resource(request, response, path)
             return response
 
     def handle_get(self, request):
@@ -150,21 +147,19 @@ class RequestLayer(object):
         :param request: the request
         :return: the response
         """
-        path = request.uri_path
+        path = str("/" + request.uri_path)
         response = Response()
         response.destination = request.source
         if path == defines.DISCOVERY_URL:
-            response = self._parent.discover(request, response)
+            response = self._parent.resource_layer.discover(request, response)
         else:
-            path = path.strip("/")
-            node = self._parent.root.find_complete(path)
-            if node is not None:
-                resource = node.value
-            else:
+            try:
+                resource = self._parent.root[path]
+            except KeyError:
                 resource = None
             if resource is None:
                 # Not Found
                 response = self._parent.send_error(request, response, 'NOT_FOUND')
             else:
-                response = self._parent.get_resource(request, response, resource)
+                response = self._parent.resource_layer.get_resource(request, response, resource)
         return response

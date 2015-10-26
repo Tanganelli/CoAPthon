@@ -24,10 +24,11 @@ class Request(Message):
 
         :return: the Uri-Path
         """
-        value = ""
+        value = []
         for option in self.options:
             if option.number == defines.inv_options['Uri-Path']:
-                value += option.value + '/'
+                value.append(str(option.value) + '/')
+        value = "".join(value)
         value = value[:-1]
         return value
 
@@ -39,39 +40,22 @@ class Request(Message):
         :param path: the Uri-Path
         """
         path = path.strip("/")
+        tmp = path.split("?")
+        path = tmp[0]
         paths = path.split("/")
         for p in paths:
             option = Option()
             option.number = defines.inv_options['Uri-Path']
             option.value = p
             self.add_option(option)
-
-    @property
-    def observe(self):
-        """
-        Check if the request is an observing request.
-
-        :return: 0, if the request is an observing request
-        """
-        for option in self.options:
-            if option.number == defines.inv_options['Observe']:
-                if option.value is None:
-                    return 0
-                return option.value
-        return 1
-
-    @observe.setter
-    def observe(self, ob):
-        """
-        Add the Observe option.
-
-        :param ob: observe count
-        """
-        option = Option()
-        option.number = defines.inv_options['Observe']
-        option.value = ob
-        self.del_option_name("Observe")
-        self.add_option(option)
+        if len(tmp) > 1:
+            query = tmp[1]
+            queries = query.split("&")
+            for q in queries:
+                option = Option()
+                option.number = defines.inv_options['Uri-Query']
+                option.value = q
+                self.add_option(option)
 
     @property
     def blockwise(self):
@@ -86,6 +70,49 @@ class Request(Message):
         return 0
 
     @property
+    def last_block(self):
+        if not self.blockwise:
+            return True
+        else:
+            num, m, size = self.block1
+            if m == 0:
+                return True
+        return False
+
+    def add_block2(self, num, m, size):
+        """
+        Add and format a Block2 option to a request.
+
+        :param num: num
+        :param m: more blocks
+        :param size: size in byte
+        """
+        option = Option()
+        option.number = defines.inv_options['Block2']
+        if size > 1024:
+            szx = 6
+        elif 512 < size <= 1024:
+            szx = 6
+        elif 256 < size <= 512:
+            szx = 5
+        elif 128 < size <= 256:
+            szx = 4
+        elif 64 < size <= 128:
+            szx = 3
+        elif 32 < size <= 64:
+            szx = 2
+        elif 16 < size <= 32:
+            szx = 1
+        else:
+            szx = 0
+        value = (num << 4)
+        value |= (m << 3)
+        value |= szx
+
+        option.value = value
+        self.add_option(option)
+
+    @property
     def query(self):
         """
         Get the Uri-Query of a request.
@@ -97,6 +124,18 @@ class Request(Message):
             if option.number == defines.inv_options['Uri-Query']:
                 value.append(option.value)
         return value
+
+    def add_query(self, q):
+        """
+        Adds a query.
+        :param q: the query
+        """
+        queries = q.split("&")
+        for q in queries:
+            option = Option()
+            option.number = defines.inv_options['Uri-Query']
+            option.value = str(q)
+            self.add_option(option)
 
     @property
     def accept(self):

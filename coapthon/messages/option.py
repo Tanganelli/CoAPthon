@@ -1,6 +1,5 @@
-from bitstring import BitArray
 from coapthon import defines
-from coapthon.utils import bit_len
+from coapthon.utils import byte_len
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -45,14 +44,14 @@ class Option(object):
         :return: the option value as bytes
         """
         if type(self._value) is None:
-            self._value = BitArray()
+            self._value = bytearray()
         name, opt_type, repeatable, defaults = defines.options[self._number]
         if opt_type == defines.INTEGER:
-            if self._value.len > 0:
-                return self._value.uint
+            if byte_len(self._value) > 0:
+                return int(self._value)
             else:
                 return defaults
-        return self._value.tobytes()
+        return self._value
 
     @value.setter
     def value(self, val):
@@ -62,12 +61,11 @@ class Option(object):
         :param val: the value
         """
         if type(val) is str:
-            val = BitArray(bytes=val, length=len(val) * 8)
-        if type(val) is int and bit_len(val) != 0:
-            val = BitArray(uint=val, length=bit_len(val) * 8)
-        if type(val) is int and bit_len(val) == 0:
-            val = BitArray()
-        assert(type(val) is BitArray)
+            val = bytearray(val, "utf-8")
+        elif type(val) is int and byte_len(val) != 0:
+            val = val
+        elif type(val) is int and byte_len(val) == 0:
+            val = 0
         self._value = val
 
     @property
@@ -78,7 +76,7 @@ class Option(object):
         :return: the option value as BitArray
         """
         if type(self._value) is None:
-            self._value = BitArray()
+            self._value = bytearray()
         return self._value
 
     @property
@@ -88,8 +86,9 @@ class Option(object):
 
         :return: the len of the option value
         """
-        assert(type(self._value) is BitArray)
-        return len(self._value.tobytes())
+        if isinstance(self._value, int):
+            return byte_len(self._value)
+        return len(self._value)
 
     @property
     def safe(self):
@@ -111,7 +110,7 @@ class Option(object):
         """
         Gets option name.
 
-        :return: the name of the oprion
+        :return: the name of the option
         """
         return defines.options[self._number][0]
 

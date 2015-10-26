@@ -1,4 +1,3 @@
-from bitstring import Bits, BitArray
 from coapthon import defines
 from coapthon.messages.message import Message
 from coapthon.messages.option import Option
@@ -99,20 +98,12 @@ class Response(Message):
         self.add_option(option)
 
     @property
-    def observe(self):
-        """
-        Get the Observe option of a response.
-
-        :return: the Observe value
-        """
-        value = 0
-        for option in self.options:
-            if option.number == defines.inv_options['Observe']:
-                value = int(option.value)
-        return value
-
-    @property
     def block2(self):
+        """
+        Get the Block2 option.
+
+        :return: the Block2 value
+        """
         value = 0
         for option in self.options:
             if option.number == defines.inv_options['Block2']:
@@ -121,48 +112,36 @@ class Response(Message):
 
     @block2.setter
     def block2(self, value):
+        """
+        Set the Block2 option.
+
+        :param value: the Block2 value, (num, m, size)
+        """
         option = Option()
         option.number = defines.inv_options['Block2']
         num, m, size = value
-        m = Bits(uint=m, length=1)
-        size = Bits(uint=size, length=3)
-        if num <= 15:
-            num = Bits(uint=num, length=4)
-        elif num <= pow(2, 12) - 1:
-            num = Bits(uint=num, length=12)
+
+        if size > 1024:
+            szx = 6
+        elif 512 < size <= 1024:
+            szx = 6
+        elif 256 < size <= 512:
+            szx = 5
+        elif 128 < size <= 256:
+            szx = 4
+        elif 64 < size <= 128:
+            szx = 3
+        elif 32 < size <= 64:
+            szx = 2
+        elif 16 < size <= 32:
+            szx = 1
         else:
-            num = Bits(uint=num, length=20)
-        value = BitArray()
-        value.append(num)
-        value.append(m)
-        value.append(size)
-        option.value = value.tobytes()
+            szx = 0
+
+        value = (num << 4)
+        value |= (m << 3)
+        value |= szx
+
+        option.value = value
         self.add_option(option)
 
-    @property
-    def block1(self):
-        value = 0
-        for option in self.options:
-            if option.number == defines.inv_options['Block1']:
-                value = option.raw_value
-        return value
-
-    @block1.setter
-    def block1(self, value):
-        option = Option()
-        option.number = defines.inv_options['Block1']
-        num, m, size = value
-        m = Bits(uint=m, length=1)
-        size = Bits(uint=size, length=3)
-        if num <= 15:
-            num = Bits(uint=num, length=4)
-        elif num <= pow(2, 12) - 1:
-            num = Bits(uint=num, length=12)
-        else:
-            num = Bits(uint=num, length=20)
-        value = BitArray()
-        value.append(num)
-        value.append(m)
-        value.append(size)
-        option.value = value.tobytes()
-        self.add_option(option)

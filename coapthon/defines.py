@@ -3,7 +3,7 @@ __version__ = "2.0"
 
 ''' CoAP Parameters '''
 
-ACK_TIMEOUT = 2
+ACK_TIMEOUT = 2  # standard 2
 
 SEPARATE_TIMEOUT = ACK_TIMEOUT / 2
 
@@ -21,7 +21,7 @@ MAX_RTT = (2 * MAX_LATENCY) + PROCESSING_DELAY
 
 EXCHANGE_LIFETIME = MAX_TRANSMIT_SPAN + (2 * MAX_LATENCY) + PROCESSING_DELAY
 
-DISCOVERY_URL = ".well-known/core"
+DISCOVERY_URL = "/.well-known/core"
 
 ALL_COAP_NODES = "224.0.1.187"
 

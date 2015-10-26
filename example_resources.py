@@ -21,6 +21,7 @@ class BasicResource(Resource):
     def render_POST(self, request):
         res = BasicResource()
         res.location_query = request.query
+        res.payload = request.payload
         return res
 
     def render_DELETE(self, request):
@@ -37,6 +38,7 @@ class Storage(Resource):
 
     def render_POST(self, request):
         res = BasicResource()
+        res.payload = request.payload
         res.location_query = request.query
         return res
 
@@ -56,6 +58,7 @@ class Child(Resource):
     def render_POST(self, request):
         res = BasicResource()
         res.location_query = request.query
+        res.payload = request.payload
         return res
 
     def render_DELETE(self, request):

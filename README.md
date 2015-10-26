@@ -2,7 +2,7 @@ CoAPthon
 ========
 
 CoAPthon is a python library to the CoAP protocol compliant with the RFC.
-It is based on the Twisted Framework.
+Branch is available for the Twisted framework.
 
 Citation
 ========
@@ -33,8 +33,20 @@ Install instructions
 =============
 To install the library you need the pip program:
 
+Debian/Ubuntu
+
 ```sh
-$ sudo apt-get install pip
+$ sudo apt-get install python-pip
+```
+
+Fedora/CentOS
+
+```sh
+$ sudo yum install python-pip
+```
+Archlinux
+```sh
+$ sudo pacman -S python-pip
 ```
 
 Once you have the pip program issue the following commands:

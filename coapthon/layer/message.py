@@ -1,8 +1,5 @@
 import time
-from twisted.internet.error import AlreadyCancelled
-from twisted.python import log
 from coapthon import defines
-from threading import Timer
 from coapthon.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
@@ -81,7 +78,7 @@ class MessageLayer(object):
 
         t = self._parent.sent.get(key)
         if t is None:
-            log.err(defines.types[message.type] + " received without the corresponding message")
+            # log.err(defines.types[message.type] + " received without the corresponding message")
             return
         response, timestamp = t
         # Reliability
@@ -95,22 +92,15 @@ class MessageLayer(object):
             for resource in self._parent.relation.keys():
                 host, port = message.source
                 key = hash(str(host) + str(port) + str(response.token))
-                observers = self._parent.relation.get(resource)
-                if observers is not None:
-                    del observers[key]
-                    log.msg("Cancel observing relation")
-                    if len(observers) == 0:
-                        del self._parent.relation[resource]
+                self._parent.observe_layer.remove_observer(resource, key)
 
         # cancel retransmission
-        log.msg("Cancel retrasmission to:" + host + ":" + str(port))
+        # log.msg("Cancel retrasmission to:" + host + ":" + str(port))
         try:
-            call_id, retrasmission_count = self._parent.call_id.get(key)
+            call_id = self._parent.call_id.get(key)
             if call_id is not None:
                 call_id.cancel()
-        except AlreadyCancelled:
-            pass
-        except TypeError:
+        except:
             pass
         self._parent.sent[key] = (response, time.time())
 
@@ -121,12 +111,11 @@ class MessageLayer(object):
         :param request: the request
         :return: the timer object
         """
-        t = Timer(defines.SEPARATE_TIMEOUT, self.send_ack, [request])
-        t.start()
+        t = self._parent.executor.submit(self.send_ack, [request, defines.SEPARATE_TIMEOUT])
+        self._parent.pending_futures.append(t)
         return t
 
-    @staticmethod
-    def stop_separate_timer(timer):
+    def stop_separate_timer(self, timer):
         """
         Stop separate timer.
 
@@ -134,6 +123,7 @@ class MessageLayer(object):
         :return: True
         """
         timer.cancel()
+        self._parent.pending_futures.remove(timer)
         return True
 
     def send_separate(self, request):
@@ -150,11 +140,14 @@ class MessageLayer(object):
         """
         Sends an ACK message for the request.
 
-        :param request: [request] or request
+        :param request: [request, sleep_time] or request
         """
         if isinstance(request, list):
+            if len(request) == 2:
+                time.sleep(request[1])
             request = request[0]
         ack = Message.new_ack(request)
         host, port = request.source
-        self._parent.send(ack, host, port)
-        request.acknowledged = True
+        if not request.acknowledged:
+            self._parent.send(ack, host, port)
+            request.acknowledged = True

@@ -6,14 +6,22 @@ __author__ = 'giacomo'
 
 class CoAPForwardProxy(ProxyCoAP):
     def __init__(self, host, port):
-        ProxyCoAP.__init__(self)
+        ProxyCoAP.__init__(self, (host, port))
         print "CoAP Forward Proxy start on " + host + ":" + str(port)
 
 
 def main():
-    reactor.listenUDP(5684, CoAPForwardProxy("127.0.0.1", 5684), "127.0.0.1")
-    reactor.run()
 
+    server = CoAPForwardProxy("bbbb::2", 5683)
+    try:
+        server.serve_forever(poll_interval=0.01)
+    except KeyboardInterrupt:
+        print "Server Shutdown"
+        server.server_close()
+        server.stopped.set()
+        server.timer_mid.cancel()
+        server.executor.shutdown(False)
+        print "Exiting..."
 
 if __name__ == '__main__':
     main()

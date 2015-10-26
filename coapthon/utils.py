@@ -1,7 +1,24 @@
-from coapthon import defines
-
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
+
+
+def byte_len(int_type):
+    """
+    Get the number of byte needed to encode the int passed.
+
+    :param int_type: the int to be converted
+    :return: the number of bits needed to encode the int passed.
+    """
+    length = 0
+    while int_type:
+        int_type >>= 1
+        length += 1
+    if length > 0:
+        if length % 8 != 0:
+            length = int(length / 8) + 1
+        else:
+            length = int(length / 8)
+    return length
 
 
 def bit_len(int_type):
@@ -15,162 +32,76 @@ def bit_len(int_type):
     while int_type:
         int_type >>= 1
         length += 1
-    length = int(length / 8) + 1
     return length
 
-
+   
 class Tree(object):
-    def __init__(self, value, parent=None, children=None):
-        """
-        Create a node.
+    def __init__(self):
+        self.tree = {}
 
-        :param value: the node value
-        :param parent: the parent of the node
-        :param children: the children of the node
+    def dump(self):
         """
-        self.value = value
-        self.parent = parent
-        if children is None:
-            self.children = {}
-        else:
-            self.children = children
+        Get all the paths registered in the server.
 
-    def find_path(self, msg=""):
+        :return: registered resources.
         """
-        Find the absolute path of a node
+        return self.tree.keys()
 
-        :return : path
-        """
-        msg = self.value.path + "/" + msg
-        if self.parent is not None:
-            return self.parent.find_path(msg)
-        return msg[1:]
+    def with_prefix(self, path):
+        ret = []
+        for key in self.tree.keys():
+            if path.startswith(key):
+                ret.append(key)
 
-    def find_complete_last(self, paths):
-        """
-        Find a node and its last path
+        if len(ret) > 0:
+            return ret
+        raise KeyError
 
-        :type paths: list of string
-        :param paths: the path as list of string item
-        :return: the node and its last path
-        """
-        start = self
-        res = None
-        for p in paths:
-            res = self.find(p, start)
-            if res is None:
-                return start, p
-            else:
-                start = res
-        return res, None
+    def from_prefix(self, path):
+        ret = []
+        for key in self.tree.keys():
+            if key.startswith(path):
+                ret.append(key)
 
-    def find_complete(self, path):
-        """
-        Find a node based on a path.
+        if len(ret) > 0:
+            return ret
+        raise KeyError
 
-        :type path: sting
-        :param path: the path to search for
-        :return: the node or None
-        """
-        paths = path.split("/")
-        start = self
-        res = None
-        for p in paths:
-            res = self.find(p, start)
-            if res is None:
-                return None
-            else:
-                start = res
-        return res
+    def __getitem__(self, item):
+        return self.tree[item]
 
-    def find(self, path, tree=None):
-        """
-        Search path in the children
+    def __setitem__(self, key, value):
+        self.tree[key] = value
 
-        :param path: the path to search for
-        :param tree: the starting node, if None then tree=self
-        :return: the children or None
-        """
-        if tree is None:
-            i = self
-        else:
-            i = tree
-        assert isinstance(i, Tree)
-        return i.children.get(path, None)
+    def __delitem__(self, key):
+        del self.tree[key]
 
-    def add_child(self, resource):
-        """
-        Add a child to the children of the node.
 
-        :param resource: the resource to add
-        :return:the new node
-        """
-        if resource.path not in self.children:
-            new = Tree(resource, self)
-            self.children[resource.path] = new
-        else:
-            new = self.children.get(resource.path)
-            new.value = resource
-        return new
+def parse_blockwise(value):
+    """
+    Parse Blockwise option.
 
-    def dump(self, msg="", tab=""):
-        """
-        Recursive function, return a formatted string representation of the tree.
+    :param value: option value
+    :return: num, m, size
+    """
 
-        :param msg: the message to be printed
-        :param tab: the tab
-        :return: the string representation
-        """
-        msg += tab + "[" + self.value.path + " Name: " + self.value.name + "]\n"
-        for i in self.children:
-            v = self.children.get(i, None)
-            if v is not None:
-                assert isinstance(v, Tree)
-                tab = "\t"
-                msg += v.dump("", tab)
-        return msg
-
-    def corelinkformat(self, msg="", parent=""):
-        """
-        Recursive function, return a formatted string representation of the corelinkformat in the tree.
-
-        :param msg: the message to be printed
-        :param parent: the parent node
-        :return: the string
-        """
-        if self.value.name != "root":
-            parent += self.value.path + "/"
-            msg += "<" + parent[:-1] + ">;"
-            for k in self.value.attributes:
-                method = getattr(self.value, defines.corelinkformat[k], None)
-                if method is not None:
-                    v = method
-                    msg = msg[:-1] + ";" + str(v) + ","
-                else:
-                    v = self.value.attributes[k]
-                    msg = msg[:-1] + ";" + k + "=" + v + ","
-        else:
-            parent += self.value.path
-        for i in self.children:
-            v = self.children.get(i, None)
-            if v is not None:
-                assert isinstance(v, Tree)
-                msg += v.corelinkformat("", parent)
-        return msg
-
-    def del_child(self, node):
-        """
-        Recursive function. Delete all the children of a node
-
-        :param node: the node
-        :return: nothing
-        """
-        assert isinstance(node, Tree)
-        for k in node.children:
-            v = node.children.get(k, None)
-            if v is not None:
-                return self.del_child(v)
-        try:
-            del self.children[node.value.path]
-        except KeyError:
-            pass
+    length = byte_len(value)
+    if length == 1:
+        num = value & 0xF0
+        num >>= 4
+        m = value & 0x08
+        m >>= 3
+        size = value & 0x07
+    elif length == 2:
+        num = value & 0xFFF0
+        num >>= 4
+        m = value & 0x0008
+        m >>= 3
+        size = value & 0x0007
+    else:
+        num = value & 0xFFFFF0
+        num >>= 4
+        m = value & 0x000008
+        m >>= 3
+        size = value & 0x000007
+    return num, int(m), pow(2, (size + 4))
