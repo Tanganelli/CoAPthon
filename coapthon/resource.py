@@ -437,7 +437,7 @@ class Resource(object):
         :param request: the request
         :return: the response
         """
-        return -1
+        raise NotImplementedError
 
     def render_PUT(self, request):
         """
@@ -446,7 +446,7 @@ class Resource(object):
         :param request: the request
         :return: the response
         """
-        return -1
+        raise NotImplementedError
 
     def render_POST(self, request):
         """
@@ -455,7 +455,7 @@ class Resource(object):
         :param request: the request
         :return: the response
         """
-        return -1
+        raise NotImplementedError
 
     def render_DELETE(self, request):
         """
@@ -463,6 +463,6 @@ class Resource(object):
 
         :param request: the request
         """
-        return -1
+        raise NotImplementedError
 
 

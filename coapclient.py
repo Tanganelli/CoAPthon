@@ -1,12 +1,15 @@
 #!/bin/python
 from Queue import Queue
 import getopt
+import random
 import sys
+import threading
 from coapthon import defines
 from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
 
 client = None
+notification_count = 0
 
 
 def usage():
@@ -19,7 +22,12 @@ def usage():
 
 
 def client_callback(response):
+    global notification_count
+    global client
     print "Callback"
+    notification_count += 1
+    if notification_count == 3:
+        client.stop()
 
 
 def client_callback_observe(response):
@@ -64,27 +72,119 @@ def parse_uri(uri):
 
 
 class HelperClient(object):
-    def __init__(self, server, callback):
+    def __init__(self, server):
         self.server = server
-        self.callback = callback
-        self.protocol = CoAP(self.server, self._wait_response)
+        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response)
         self.queue = Queue()
 
-    def get(self, path):
+    def _wait_response(self, message):
+        if message.code != defines.Codes.CONTINUE.number:
+            self.queue.put(message)
+
+    def stop(self):
+        self.protocol.stopped.set()
+        self.queue.put(None)
+
+    def _thread_body(self, request, callback):
+        self.protocol.send_message(request)
+        while not self.protocol.stopped.isSet():
+            response = self.queue.get(block=True)
+            callback(response)
+
+    def get(self, path, callback=None):
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
         request.uri_path = path
-        self.protocol.send_message(request)
-        response = self.queue.get(block=True)
-        self.callback(response)
 
-    def _wait_response(self, message):
-        self.queue.put(message)
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
 
-    def observe(self, path):
-        pass
+    def observe(self, path, callback):
+        request = Request()
+        request.destination = self.server
+        request.code = defines.Codes.GET.number
+        request.uri_path = path
+        request.observe = 0
 
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def delete(self, path, callback=None):
+        request = Request()
+        request.destination = self.server
+        request.code = defines.Codes.DELETE.number
+        request.uri_path = path
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def post(self, path, payload, callback=None):
+        request = Request()
+        request.destination = self.server
+        request.code = defines.Codes.POST.number
+        request.uri_path = path
+        request.payload = payload
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def put(self, path, payload, callback=None):
+        request = Request()
+        request.destination = self.server
+        request.code = defines.Codes.PUT.number
+        request.uri_path = path
+        request.payload = payload
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def discover(self, callback=None):
+        request = Request()
+        request.destination = self.server
+        request.code = defines.Codes.GET.number
+        request.uri_path = defines.DISCOVERY_URL
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def send_request(self, request, callback=None):
+        if callback is not None:
+            thread = threading.Thread(target=self._thread_body, args=(request, callback))
+            thread.start()
+        else:
+            self.protocol.send_message(request)
+            response = self.queue.get(block=True)
+            return response
+
+    def send_empty(self, empty):
+        self.protocol.send_message(empty)
 
 def main():
     global client
@@ -132,29 +232,30 @@ def main():
         sys.exit(2)
 
     host, port, path = parse_uri(path)
-    client = HelperClient(server=(host, port), callback=client_callback)
+    client = HelperClient(server=(host, port))
     if op == "GET":
         if path is None:
             print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        client.get(path)
+        response = client.get(path)
+        print response.pretty_print()
+        client.stop()
     elif op == "OBSERVE":
         if path is None:
             print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        client.observe(path)
+        client.observe(path, client_callback)
         
     elif op == "DELETE":
         if path is None:
             print "Path cannot be empty for a DELETE request"
             usage()
             sys.exit(2)
-        function = client.protocol.delete
-        args = (path,)
-        kwargs = {}
-        callback = client_callback
+        response = client.delete(path)
+        print response.pretty_print()
+        client.stop()
     elif op == "POST":
         if path is None:
             print "Path cannot be empty for a POST request"
@@ -164,10 +265,9 @@ def main():
             print "Payload cannot be empty for a POST request"
             usage()
             sys.exit(2)
-        function = client.protocol.post
-        args = (path, payload)
-        kwargs = {}
-        callback = client_callback
+        response = client.post(path, payload)
+        print response.pretty_print()
+        client.stop()
     elif op == "PUT":
         if path is None:
             print "Path cannot be empty for a PUT request"
@@ -177,15 +277,13 @@ def main():
             print "Payload cannot be empty for a PUT request"
             usage()
             sys.exit(2)
-        function = client.protocol.put
-        args = (path, payload)
-        kwargs = {}
-        callback = client_callback
+        response = client.put(path, payload)
+        print response.pretty_print()
+        client.stop()
     elif op == "DISCOVER":
-        function = client.protocol.discover
-        args = ()
-        kwargs = {}
-        callback = client_callback
+        response = client.discover()
+        print response.pretty_print()
+        client.stop()
     else:
         print "Operation not recognized"
         usage()

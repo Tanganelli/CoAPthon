@@ -108,6 +108,7 @@ class CoAP(object):
         Stop the server.
 
         """
+        logger.info("Stop server")
         self.stopped.set()
         for event in self.to_be_stopped:
             event.set()
@@ -189,13 +190,13 @@ class CoAP(object):
         :type message: Message
         :param message:
         """
+        if not self.stopped.isSet():
+            host, port = message.destination
+            logger.debug("send_datagram - " + str(message))
+            serializer = Serializer()
+            message = serializer.serialize(message)
 
-        host, port = message.destination
-        logger.debug("send_datagram - " + str(message))
-        serializer = Serializer()
-        message = serializer.serialize(message)
-
-        self._socket.sendto(message, (host, port))
+            self._socket.sendto(message, (host, port))
 
     def add_resource(self, path, resource):
         """
@@ -255,8 +256,13 @@ class CoAP(object):
         else:
             logger.warning("Give up on message {message}".format(message=message.line_print))
             message.timeouted = True
+            if message.observe is not None:
+                self._observeLayer.remove_subscriber(message)
 
-        self.to_be_stopped.remove(transaction.retransmit_stop)
+        try:
+            self.to_be_stopped.remove(transaction.retransmit_stop)
+        except ValueError:
+            pass
         transaction.retransmit_stop = None
         transaction.retransmit_thread = None
 
@@ -300,7 +306,7 @@ class CoAP(object):
 
     def notify(self, resource):
         observers = self._observeLayer.notify(resource)
-
+        logger.debug("Notify")
         for transaction in observers:
             transaction.response = None
             transaction = self._requestLayer.receive_request(transaction)
@@ -310,4 +316,5 @@ class CoAP(object):
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
                     self._start_retrasmission(transaction, transaction.response)
+
                 self.send_datagram(transaction.response)

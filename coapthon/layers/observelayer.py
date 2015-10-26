@@ -1,6 +1,8 @@
-import collections
+import logging
 import time
 from coapthon import defines
+
+logger = logging.getLogger(__name__)
 
 
 class ObserveItem(object):
@@ -21,28 +23,39 @@ class ObserveLayer(object):
         :type request: Request
         :param request:
         """
+        if request.observe == 0:
+            # Observe request
+            host, port = request.destination
+            key_token = hash(str(host) + str(port) + str(request.token))
+
+            self._relations[key_token] = ObserveItem(time.time(), None, True, None)
+
         return request
 
-    def receive_response(self, response, transaction):
+    def receive_response(self, transaction):
         """
 
-        :type response: Response
-        :param response:
         :type transaction: Transaction
         :param transaction:
         :rtype : Transaction
         """
-        raise NotImplementedError
+        host, port = transaction.response.source
+        key_token = hash(str(host) + str(port) + str(transaction.response.token))
+        if key_token in self._relations and transaction.response.type == defines.Types["CON"]:
+            transaction.notification = True
+        return transaction
 
-    def send_empty(self, transaction, message):
+    def send_empty(self, message):
         """
 
-        :type transaction: Transaction
-        :param transaction:
         :type message: Message
         :param message:
         """
-        pass
+        host, port = message.destination
+        key_token = hash(str(host) + str(port) + str(message.token))
+        if key_token in self._relations and message.type == defines.Types["RST"]:
+            del self._relations[key_token]
+        return message
 
     def receive_request(self, transaction):
         """
@@ -77,8 +90,10 @@ class ObserveLayer(object):
         if empty.type == defines.Types["RST"]:
             host, port = transaction.request.source
             key_token = hash(str(host) + str(port) + str(transaction.request.token))
+            logger.info("Remove Subscriber")
             del self._relations[key_token]
             transaction.completed = True
+        return transaction
 
     def send_response(self, transaction):
         """
@@ -119,4 +134,13 @@ class ObserveLayer(object):
                 ret.append(self._relations[key].transaction)
         return ret
 
+    def remove_subscriber(self, message):
+        logger.debug("Remove Subcriber")
+        host, port = message.destination
+        key_token = hash(str(host) + str(port) + str(message.token))
+        try:
+            self._relations[key_token].transaction.completed = True
+            del self._relations[key_token]
+        except KeyError:
+            logger.warning("No Subscriber")
 

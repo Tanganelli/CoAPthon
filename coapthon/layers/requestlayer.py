@@ -94,7 +94,7 @@ class RequestLayer(object):
                 resource = self._server.root[path]
             except KeyError:
                 resource = None
-            if resource is None:
+            if resource is None or path == '/':
                 # Not Found
                 transaction.response.code = defines.Codes.NOT_FOUND.number
             else:

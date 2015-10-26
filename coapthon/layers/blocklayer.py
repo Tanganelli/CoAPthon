@@ -18,8 +18,8 @@ class BlockItem(object):
 
 class BlockLayer(object):
     def __init__(self):
-        self._block1_sent = []
-        self._block2_sent = []
+        self._block1_sent = {}
+        self._block2_sent = {}
         self._block1_receive = {}
         self._block2_receive = {}
 
@@ -112,7 +112,11 @@ class BlockLayer(object):
         key_token = hash(str(host) + str(port) + str(transaction.response.token))
         if key_token in self._block1_sent and transaction.response.block1 is not None:
             item = self._block1_sent[key_token]
-
+            transaction.block_transfer = True
+            if item.m == 0:
+                transaction.block_transfer = False
+                del transaction.request.block1
+                return transaction
             n_num, n_m, n_size = transaction.response.block1
             if n_num != item.num:
                 logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received " + str(n_num))
@@ -128,14 +132,50 @@ class BlockLayer(object):
             item.byte += item.size
             if len(item.payload) <= item.byte:
                 m = 0
-                transaction.block_transaction = False
             else:
                 m = 1
-                transaction.block_transaction = True
             request.block1 = (item.num, m, item.size)
-        elif key_token in self._block2_sent and transaction.response.block2 is not None:
-            # TODO
-            pass
+        elif transaction.response.block2 is not None:
+
+            num, m, size = transaction.response.block2
+            if m == 1:
+                transaction.block_transfer = True
+                if key_token in self._block2_sent:
+                    item = self._block2_sent[key_token]
+                    if num != item.num + 1:
+                        logger.error("Receive unwanted block")
+                        # TODO send rst
+                        return None
+                    if item.content_type is None:
+                        item.content_type = transaction.response.content_type
+                    if item.content_type != transaction.response.content_type:
+                        logger.error("Content-type Error")
+                        # TODO send rst
+                        return None
+                    item.byte += size
+                    item.num = num
+                    item.size = size
+                    item.m = m
+                    item.payload += transaction.response.payload
+                else:
+                    item = BlockItem(size, num, m, size, transaction.response.payload,
+                                     transaction.response.content_type)
+                    self._block2_sent[key_token] = item
+                request = transaction.request
+                del request.mid
+                del request.block2
+                request.block2 = (item.num + 1, 0, item.size)
+            else:
+                transaction.block_transfer = False
+                if key_token in self._block2_sent:
+                    if self._block2_sent[key_token].content_type != transaction.response.content_type:
+                        logger.error("Content-type Error")
+                        # TODO send rst
+                        return None
+                    transaction.response.payload = self._block2_sent[key_token].payload
+                del self._block2_sent[key_token]
+        else:
+            transaction.block_transfer = False
         return transaction
 
     def receive_empty(self, empty, transaction):
@@ -149,7 +189,7 @@ class BlockLayer(object):
         """
         return transaction
 
-    def send_empty(self, transaction, message):
+    def send_empty(self, message):
         """
 
         :type transaction: Transaction
@@ -157,7 +197,7 @@ class BlockLayer(object):
         :type message: Message
         :param message:
         """
-        pass
+        return message
 
     def send_response(self, transaction):
         """
@@ -208,7 +248,7 @@ class BlockLayer(object):
         """
         assert isinstance(request, Request)
         if request.block1 or (request.payload is not None and len(request.payload) > defines.MAX_PAYLOAD):
-            host, port = request.source
+            host, port = request.destination
             key_token = hash(str(host) + str(port) + str(request.token))
             if request.block1:
                 num, m, size = request.block1
@@ -220,8 +260,14 @@ class BlockLayer(object):
             self._block1_sent[key_token] = BlockItem(size, num, m, size, request.payload, request.content_type)
             # TODO check that the payload inside the dict doesn't change
             request.payload = request.payload[0:size]
+            del request.block1
+            request.block1 = (num, m, size)
         elif request.block2:
-            # TODO
+            host, port = request.destination
+            key_token = hash(str(host) + str(port) + str(request.token))
+            num, m, size = request.block2
+            item = BlockItem(size, num, m, size, "", None)
+            self._block2_sent[key_token] = item
             return request
         return request
 

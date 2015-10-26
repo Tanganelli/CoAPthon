@@ -6,6 +6,7 @@ class Transaction(object):
         self._timestamp = timestamp
         self._completed = False
         self._block_transfer = False
+        self.notification = False
         self.separate_timer = None
         self.retransmit_thread = None
         self.retransmit_stop = None

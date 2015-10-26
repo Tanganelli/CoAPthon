@@ -1,4 +1,5 @@
 # coding=utf-8
+import logging
 import threading
 import time
 from coapthon import defines
@@ -6,6 +7,8 @@ from coapthon.resource import Resource
 
 __author__ = 'giacomo'
 
+
+logger = logging.getLogger(__name__)
 
 class TestResource(Resource):
     def __init__(self, name="TestResource", coap_server=None):
@@ -65,11 +68,14 @@ class ObservableResource(Resource):
         return self
 
     def update(self, first=False):
-        timer = threading.Timer(self.period, self.update)
-        timer.setDaemon(True)
-        timer.start()
-        if not first and self._coap_server is not None:
-            self._coap_server.notify(self)
+        if not self._coap_server.stopped.isSet():
+            timer = threading.Timer(self.period, self.update)
+            timer.setDaemon(True)
+            timer.start()
+            if not first and self._coap_server is not None:
+                logger.debug("Periodic Update")
+                self._coap_server.notify(self)
+                self.observe_count += 1
 
 
 class LargeResource(Resource):

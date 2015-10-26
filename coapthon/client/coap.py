@@ -2,6 +2,7 @@ import logging
 import logging.config
 import socket
 import threading
+from coapthon.messages.message import Message
 from coapthon.messages.response import Response
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
@@ -18,11 +19,11 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server, callback):
-        self._currentMID = 1
+    def __init__(self, server, starting_mid, callback):
+        self._currentMID = starting_mid
         self._server = server
         self._callback = callback
-        self.stopped = False
+        self.stopped = threading.Event()
 
         self._messageLayer = MessageLayer(self._currentMID)
         self._blockLayer = BlockLayer()
@@ -58,6 +59,11 @@ class CoAP(object):
             request = self._blockLayer.send_request(request)
             transaction = self._messageLayer.send_request(request)
             self.send_datagram(transaction.request)
+        elif isinstance(message, Message):
+            message = self._observeLayer.send_empty(message)
+            message = self._blockLayer.send_empty(message)
+            message = self._messageLayer.send_empty(None, None, message)
+            self.send_datagram(message)
 
     def send_datagram(self, message):
         host, port = message.destination
@@ -69,8 +75,8 @@ class CoAP(object):
 
     def receive_datagram(self):
         logger.debug("Start receiver Thread")
-        while not self.stopped:
-            self._socket.settimeout(2 * defines.ACK_TIMEOUT)
+        while not self.stopped.isSet():
+            self._socket.settimeout(1)
             try:
                 datagram, addr = self._socket.recvfrom(1152)
             except socket.timeout, e:
@@ -78,7 +84,6 @@ class CoAP(object):
                 # this next if/else is a bit redundant, but illustrates how the
                 # timeout exception is setup
                 if err == 'timed out':
-                    print 'recv timed out, retry later'
                     continue
                 else:
                     print e
@@ -110,4 +115,12 @@ class CoAP(object):
                     transaction = self._messageLayer.send_request(transaction.request)
                     self.send_datagram(transaction.request)
                     return
-                self._callback(transaction.response)
+                transaction = self._observeLayer.receive_response(transaction)
+                if transaction.notification:
+                    ack = Message()
+                    ack.type = defines.Types['ACK']
+                    ack = self._messageLayer.send_empty(transaction, transaction.response, ack)
+                    self.send_datagram(ack)
+                    self._callback(transaction.response)
+                else:
+                    self._callback(transaction.response)

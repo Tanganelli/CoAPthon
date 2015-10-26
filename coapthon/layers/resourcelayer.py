@@ -28,14 +28,15 @@ class ResourceLayer(object):
 
         method = getattr(resource_node, "render_POST", None)
         if hasattr(method, '__call__'):
-            resource = method(request=transaction.request)
+            try:
+                resource = method(request=transaction.request)
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
             separate = False
             callback = None
             if isinstance(resource, Resource):
                 pass
-            elif isinstance(resource, int):
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
                 separate = True
@@ -92,14 +93,15 @@ class ResourceLayer(object):
         """
         method = getattr(parent_resource, "render_POST", None)
         if hasattr(method, '__call__'):
-            resource = method(request=transaction.request)
+            try:
+                resource = method(request=transaction.request)
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
             separate = False
             callback = None
             if isinstance(resource, Resource):
                 pass
-            elif isinstance(resource, int):
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
                 separate = True
@@ -192,14 +194,15 @@ class ResourceLayer(object):
 
         method = getattr(transaction.resource, "render_PUT", None)
         if hasattr(method, '__call__'):
-            resource = method(request=transaction.request)
+            try:
+                resource = method(request=transaction.request)
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
             separate = False
             callback = None
             if isinstance(resource, Resource):
                 pass
-            elif isinstance(resource, int):
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
                 separate = True
@@ -244,15 +247,17 @@ class ResourceLayer(object):
         resource = transaction.resource
         method = getattr(resource, 'render_DELETE', None)
         if hasattr(method, '__call__'):
-            ret = method(request=transaction.request)
-            if ret != -1:
+            try:
+                ret = method(request=transaction.request)
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
+            if ret:
                 del self._parent.root[path]
                 transaction.response.code = defines.Codes.DELETED.number
                 transaction.response.payload = None
                 transaction.resource.deleted = True
                 return transaction
-            elif ret == -1:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
             else:
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
         else:
@@ -275,15 +280,16 @@ class ResourceLayer(object):
                 if transaction.resource.required_content_type in defines.Content_types.values():
                     transaction.response.content_type = transaction.resource.required_content_type
             # Render_GET
-            resource = method(request=transaction.request)
+            try:
+                resource = method(request=transaction.request)
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
 
             separate = False
             callback = None
             if isinstance(resource, Resource):
                 pass
-            elif isinstance(resource, int):
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction.response
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
                 separate = True
