@@ -173,6 +173,10 @@ class Message(object):
             raise AttributeError
         self._source = value
 
+    @source.deleter
+    def source(self):
+        self._source = None
+
     @property
     def code(self):
         """
@@ -376,7 +380,7 @@ class Message(object):
         :type name: String
         :param name: option name
         """
-        for o in self._options:
+        for o in list(self._options):
             assert isinstance(o, Option)
             if o.name == name:
                 self._options.remove(o)
@@ -388,7 +392,7 @@ class Message(object):
         :type number: Integer
         :param number: option naumber
         """
-        for o in self._options:
+        for o in list(self._options):
             assert isinstance(o, Option)
             if o.number == number:
                 self._options.remove(o)

@@ -114,7 +114,7 @@ class CoAP(object):
                 if transaction.block_transfer:
                     transaction = self._messageLayer.send_request(transaction.request)
                     self.send_datagram(transaction.request)
-                    return
+                    continue
                 transaction = self._observeLayer.receive_response(transaction)
                 if transaction.notification:
                     ack = Message()

@@ -2,8 +2,9 @@
 import logging
 import threading
 import time
+
 from coapthon import defines
-from coapthon.resource import Resource
+from coapthon.resources.resource import Resource
 
 __author__ = 'giacomo'
 

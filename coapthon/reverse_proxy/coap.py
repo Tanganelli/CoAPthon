@@ -1,9 +1,13 @@
 import logging
 import logging.config
 import random
+import re
 import socket
 import threading
+import xml.etree.ElementTree as ElementTree
 
+from coapclient import HelperClient
+from coapthon.layers.forwardLayer import ForwardLayer
 from coapthon.messages.message import Message
 from coapthon import defines
 from coapthon.utils import Tree
@@ -21,7 +25,7 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, multicast=False, starting_mid=None):
+    def __init__(self, server_address, xml_file, multicast=False, starting_mid=None):
 
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -37,6 +41,7 @@ class CoAP(object):
         self._blockLayer = BlockLayer()
         self._observeLayer = ObserveLayer()
         self._requestLayer = RequestLayer(self)
+        self._forwardLayer = ForwardLayer(self)
         self.resourceLayer = ResourceLayer(self)
 
         # Resource directory
@@ -48,6 +53,8 @@ class CoAP(object):
 
         self.server_address = server_address
         self.multicast = multicast
+        self.file_xml = xml_file
+        self._mapping = {}
 
         # IPv4 or IPv6
         if len(sockaddr) == 4:
@@ -78,6 +85,64 @@ class CoAP(object):
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             self._socket.bind(self.server_address)
+
+            self.parse_config()
+
+    def parse_config(self):
+        tree = ElementTree.parse(self.file_xml)
+        root = tree.getroot()
+        for server in root.findall('server'):
+            destination = server.text
+            self.discover_remote(destination)
+
+    def discover_remote(self, destination):
+        assert (isinstance(destination, str))
+        split = destination.split(":", 1)
+        host = split[0]
+        port = int(split[1])
+        server = (host, port)
+        client = HelperClient(server)
+        response = client.discover()
+        client.stop()
+        self.discover_remote_results(response)
+
+    def discover_remote_results(self, response):
+        host, port = response.source
+
+        if response.code == defines.Codes.CONTENT.number:
+            resource = Resource('server', self, visible=True, observable=False, allow_children=True)
+            path = str(host) + ":" + str(port)
+            self.add_resource(path, resource)
+
+            self._mapping[str(host) + str(port)] = self.parse_core_link_format(response.payload, path)
+        else:
+            logger.error("Server: " + response.source + " isn't valid.")
+
+    def parse_core_link_format(self, link_format, base_path):
+        while len(link_format) > 0:
+            pattern = "<([^>]*)>;"
+            result = re.match(pattern, link_format)
+            path = result.group(1)
+            path = path.split("/")
+            path = path[1:][0]
+            link_format = link_format[result.end(1) + 2:]
+            pattern = "([^<,])*"
+            result = re.match(pattern, link_format)
+            attributes = result.group(0)
+            dict_att = {}
+            if len(attributes) > 0:
+                attributes = attributes.split(";")
+                for att in attributes:
+                    a = att.split("=")
+                    # TODO check correctness
+                    dict_att[a[0]] = a[1]
+                link_format = link_format[result.end(0) + 1:]
+            resource = Resource('server', self, visible=True, observable=False, allow_children=True)
+            resource.attributes = dict_att
+            self.add_resource(base_path + "/" + path, resource)
+
+        logger.info(self.root.dump())
+        return base_path
 
     def purge(self):
         while not self.stopped.isSet():
@@ -153,7 +218,9 @@ class CoAP(object):
 
             transaction = self._observeLayer.receive_request(transaction)
 
-            transaction = self._requestLayer.receive_request(transaction)
+            transaction = self._forwardLayer.receive_request(transaction)
+
+            # transaction = self._requestLayer.receive_request(transaction)
 
             if transaction.resource is not None and transaction.resource.changed:
                 self.notify(transaction.resource)

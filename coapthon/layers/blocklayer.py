@@ -142,7 +142,7 @@ class BlockLayer(object):
                 transaction.block_transfer = True
                 if key_token in self._block2_sent:
                     item = self._block2_sent[key_token]
-                    if num != item.num + 1:
+                    if num != item.num:
                         logger.error("Receive unwanted block")
                         # TODO send rst
                         return None
@@ -172,7 +172,7 @@ class BlockLayer(object):
                         logger.error("Content-type Error")
                         # TODO send rst
                         return None
-                    transaction.response.payload = self._block2_sent[key_token].payload
+                    transaction.response.payload = self._block2_sent[key_token].payload + transaction.response.payload
                 del self._block2_sent[key_token]
         else:
             transaction.block_transfer = False
