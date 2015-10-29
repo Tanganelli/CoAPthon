@@ -489,6 +489,10 @@ class Message(object):
         self.del_option_by_number(defines.OptionRegistry.OBSERVE.number)
         self.add_option(option)
 
+    @observe.deleter
+    def observe(self):
+        self.del_option_by_number(defines.OptionRegistry.OBSERVE.number)
+
     @property
     def block1(self):
         """

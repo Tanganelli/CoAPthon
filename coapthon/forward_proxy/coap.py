@@ -14,7 +14,6 @@ from coapthon.resources.remoteResource import RemoteResource
 from coapthon.utils import Tree
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.observelayer import ObserveLayer
-from coapthon.layers.requestlayer import RequestLayer
 from coapthon.layers.resourcelayer import ResourceLayer
 from coapthon.messages.request import Request
 from coapthon.layers.messagelayer import MessageLayer
@@ -26,7 +25,7 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, xml_file, multicast=False, starting_mid=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None):
 
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -54,8 +53,6 @@ class CoAP(object):
 
         self.server_address = server_address
         self.multicast = multicast
-        self.file_xml = xml_file
-        self._mapping = {}
 
         # IPv4 or IPv6
         if len(sockaddr) == 4:
@@ -86,65 +83,6 @@ class CoAP(object):
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             self._socket.bind(self.server_address)
-
-            self.parse_config()
-
-    def parse_config(self):
-        tree = ElementTree.parse(self.file_xml)
-        root = tree.getroot()
-        for server in root.findall('server'):
-            destination = server.text
-            name = server.get("name")
-            self.discover_remote(destination, name)
-
-    def discover_remote(self, destination, name):
-        assert (isinstance(destination, str))
-        split = destination.split(":", 1)
-        host = split[0]
-        port = int(split[1])
-        server = (host, port)
-        client = HelperClient(server)
-        response = client.discover()
-        client.stop()
-        self.discover_remote_results(response, name)
-
-    def discover_remote_results(self, response, name):
-        host, port = response.source
-
-        if response.code == defines.Codes.CONTENT.number:
-            resource = Resource('server', self, visible=True, observable=False, allow_children=True)
-            self.add_resource(name, resource)
-            self._mapping[name] = (host, port)
-            self.parse_core_link_format(response.payload, name, (host, port))
-        else:
-            logger.error("Server: " + response.source + " isn't valid.")
-
-    def parse_core_link_format(self, link_format, base_path, remote_server):
-        while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
-            result = re.match(pattern, link_format)
-            path = result.group(1)
-            path = path.split("/")
-            path = path[1:][0]
-            link_format = link_format[result.end(1) + 2:]
-            pattern = "([^<,])*"
-            result = re.match(pattern, link_format)
-            attributes = result.group(0)
-            dict_att = {}
-            if len(attributes) > 0:
-                attributes = attributes.split(";")
-                for att in attributes:
-                    a = att.split("=")
-                    # TODO check correctness
-                    dict_att[a[0]] = a[1]
-                link_format = link_format[result.end(0) + 1:]
-            # TODO handle observing
-            resource = RemoteResource('server', remote_server, path, coap_server=self, visible=True, observable=False,
-                                      allow_children=True)
-            resource.attributes = dict_att
-            self.add_resource(base_path + "/" + path, resource)
-
-        logger.info(self.root.dump())
 
     def purge(self):
         while not self.stopped.isSet():
@@ -220,7 +158,7 @@ class CoAP(object):
 
             transaction = self._observeLayer.receive_request(transaction)
 
-            transaction = self._forwardLayer.receive_request_reverse(transaction)
+            transaction = self._forwardLayer.receive_request(transaction)
 
             if transaction.resource is not None and transaction.resource.changed:
                 self.notify(transaction.resource)

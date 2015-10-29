@@ -50,6 +50,23 @@ def byte_len(int_type):
     return length
 
 
+def parse_uri(uri):
+    t = uri.split("://")
+    tmp = t[1]
+    t = tmp.split("/", 1)
+    tmp = t[0]
+    path = t[1]
+    t = tmp.split(":", 1)
+    try:
+        host = t[0]
+        port = int(t[1])
+    except IndexError:
+        host = tmp
+        port = 5683
+
+    return str(host), port, path
+
+
 class Tree(object):
     def __init__(self):
         self.tree = {}

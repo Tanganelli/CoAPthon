@@ -14,8 +14,8 @@ class Response(Message):
         value = []
         for option in self.options:
             if option.number == defines.OptionRegistry.LOCATION_PATH.number:
-                value.append(option.value)
-        return value
+                value.append(str(option.value))
+        return "/".join(value)
 
     @location_path.setter
     def location_path(self, path):

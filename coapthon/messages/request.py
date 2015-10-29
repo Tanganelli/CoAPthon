@@ -72,8 +72,8 @@ class Request(Message):
         value = []
         for option in self.options:
             if option.number == defines.OptionRegistry.URI_QUERY.number:
-                value.append(option.value)
-        return value
+                value.append(str(option.value))
+        return "&".join(value)
 
     @uri_query.setter
     def uri_query(self, value):

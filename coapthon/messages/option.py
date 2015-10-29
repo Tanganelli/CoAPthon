@@ -61,6 +61,8 @@ class Option(object):
         """
         if isinstance(self._value, int):
             return byte_len(self._value)
+        if self._value is None:
+            return 0
         return len(self._value)
 
     def is_safe(self):

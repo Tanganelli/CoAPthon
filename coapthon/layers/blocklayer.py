@@ -229,6 +229,7 @@ class BlockLayer(object):
             else:
                 m = 0
             transaction.response.payload = transaction.response.payload[byte:byte + size]
+            del transaction.response.block2
             transaction.response.block2 = (num, m, size)
 
             self._block2_receive[key_token].byte += size
