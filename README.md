@@ -82,11 +82,6 @@ Log through ssh to the Yun and issue the following:
 # opkg install distribute #it contains the easy_install command line tool
 # opkg install python-openssl #adds ssl support to python
 # easy_install pip #installs pip
-# pip install bitstring
-# pip install futures
-# wget https://pypi.python.org/packages/source/T/Twisted/Twisted-14.0.2.tar.bz2 .
-# tar -jxvf Twisted-14.0.2.tar.bz2
-# cd Twisted-14.0.2
 ```
 
 Then you need to modify the setup.py and comment the line <strong>conditionalExtensions=getExtensions()</strong>. Then :
@@ -103,20 +98,22 @@ CoAP server
 In order to implements a CoAP server the basic class must be extended. Moreover the server must add some resources.
 
 ```Python
-from twisted.internet import reactor
-from coapthon2.server.coap_protocol import CoAP
-from example_resources import Hello
-
+from coapthon.server.coap import CoAP
+from exampleresources import BasicResource
 
 class CoAPServer(CoAP):
-    def __init__(self):
-        CoAP.__init__(self)
-        self.add_resource('hello/', Hello())
+    def __init__(self, host, port):
+        CoAP.__init__(self, (host, port))
+        self.add_resource('basic/', BasicResource())
 
 def main():
-    reactor.listenUDP(5683, CoAPServer())
-    reactor.run()
-
+    server = CoAPServer("127.0.0.1", 5683)
+    try:
+        server.listen(10)
+    except KeyboardInterrupt:
+        print "Server Shutdown"
+        server.close()
+        print "Exiting..."
 
 if __name__ == '__main__':
     main()
@@ -125,26 +122,30 @@ if __name__ == '__main__':
 Resources are extended from the class resource.Resource. Simple examples can be found in example_resource.py.
 
 ```Python
-from coapthon2.resources.resource import Resource
+from coapthon.resources.resource import Resource
 
-class Hello(Resource):
-    def __init__(self, name="HelloResource"):
-        super(Hello, self).__init__(name, visible=True, observable=True, allow_children=True)
-        self.payload = "Hello world!"
+class BasicResource(Resource):
+    def __init__(self, name="BasicResource", coap_server=None):
+        super(BasicResource, self).__init__(name, coap_server, visible=True,
+                                            observable=True, allow_children=True)
+        self.payload = "Basic Resource"
 
-    def render_GET(self, query=None):
+    def render_GET(self, request):
         return self
 
-    def render_PUT(self, payload=None, query=None):
-        return payload
+    def render_PUT(self, request):
+        self.payload = request.payload
+        return self
 
-    def render_POST(self, payload=None, query=None):
-        q = "?" + "&".join(query)
-        res = Hello()
-        return {"Payload": payload, "Location-Query": q, "Resource": res}
+    def render_POST(self, request):
+        res = BasicResource()
+        res.location_query = request.uri_query
+        res.payload = request.payload
+        return res
 
-    def render_DELETE(self, query=None):
+    def render_DELETE(self, request):
         return True
+
 ```
 
 Build the documentation
