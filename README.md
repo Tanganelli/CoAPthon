@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Tanganelli/CoAPthon.svg?branch=master)](https://travis-ci.org/Tanganelli/CoAPthon)
 CoAPthon
 ========
 
