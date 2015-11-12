@@ -354,6 +354,7 @@ class ResourceLayer(object):
 
     @staticmethod
     def valid(query, attributes):
+        query = query.split("&")
         for q in query:
             q = str(q)
             assert(isinstance(q, str))
