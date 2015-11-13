@@ -8,6 +8,6 @@ install:
 
 script:
 - coverage run plugtest.py
-- coverage run coverage_test.py
+- coverage run -a coverage_test.py
 after_success:
 - coveralls
