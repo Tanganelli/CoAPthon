@@ -808,7 +808,7 @@ I say, looked for all the world like a strip of that same patchwork quilt. Indee
         self._test_plugtest([(req, expected), (req, expected)])
 
     def test_duplicate_not_completed(self):
-        print "TEST_DUPLICATE"
+        print "TEST_DUPLICATE_NOT_COMPLETED"
         path = "/long"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -831,6 +831,31 @@ I say, looked for all the world like a strip of that same patchwork quilt. Indee
 
         self.current_mid += 1
         self._test_plugtest([(req, None), (req, expected), (None, expected2)])
+
+    def test_no_response(self):
+        print "TEST_NO_RESPONSE"
+        path = "/long"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = None
+        expected.token = None
+
+        expected2 = Response()
+        expected2.type = defines.Types["CON"]
+        expected2._mid = None
+        expected2.code = defines.Codes.CONTENT.number
+        expected2.token = None
+
+        self.current_mid += 1
+        self._test_plugtest([(req, expected), (None, expected2), (None, expected2),  (None, expected2)])
 
 if __name__ == '__main__':
     unittest.main()
