@@ -33,27 +33,18 @@ class ResourceLayer(object):
             except NotImplementedError:
                 transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
                 return transaction
-            separate = False
-            callback = None
             if isinstance(resource, Resource):
                 pass
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
-                separate = True
+                resource = self._handle_separate(transaction, callback)
+                if not isinstance(resource, Resource):
+                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                    return transaction
             else:
                 # Handle error
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-
-            if separate:
-                # Handle separate
-                if not transaction.request.acknowledged:
-                    self._parent._send_ack(transaction)
-                    transaction.request.acknowledged = True
-                resource = callback(request=transaction.request)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
 
             resource.path = path
             resource.observe_count = resource_node.observe_count
@@ -98,27 +89,18 @@ class ResourceLayer(object):
             except NotImplementedError:
                 transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
                 return transaction
-            separate = False
-            callback = None
             if isinstance(resource, Resource):
                 pass
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
-                separate = True
+                resource = self._handle_separate(transaction, callback)
+                if not isinstance(resource, Resource):
+                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                    return transaction
             else:
                 # Handle error
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-
-            if separate:
-                # Handle separate
-                if not transaction.request.acknowledged:
-                    self._parent._send_ack(transaction)
-                    transaction.request.acknowledged = True
-                resource = callback(request=transaction.request)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
 
             resource.path = lp
 
@@ -199,29 +181,22 @@ class ResourceLayer(object):
             except NotImplementedError:
                 transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
                 return transaction
-            separate = False
-            callback = None
+
             if isinstance(resource, Resource):
                 pass
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
-                separate = True
+                resource = self._handle_separate(transaction, callback)
+                if not isinstance(resource, Resource):
+                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                    return transaction
             else:
                 # Handle error
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-            if separate:
-                # Handle separate
-                if not transaction.request.acknowledged:
-                    self._parent._send_ack(transaction)
-                    transaction.request.acknowledged = True
-                resource = callback(request=transaction.request)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
 
             if resource.etag is not None:
-                    transaction.response.etag = resource.etag
+                transaction.response.etag = resource.etag
 
             transaction.response.code = defines.Codes.CHANGED.number
             transaction.response.payload = None
@@ -233,6 +208,14 @@ class ResourceLayer(object):
         else:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
             return transaction
+
+    def _handle_separate(self, transaction, callback):
+        # Handle separate
+        if not transaction.request.acknowledged:
+            self._parent._send_ack(transaction)
+            transaction.request.acknowledged = True
+        resource = callback(request=transaction.request)
+        return resource
 
     def delete_resource(self, transaction, path):
         """
@@ -286,26 +269,18 @@ class ResourceLayer(object):
                 transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
                 return transaction
 
-            separate = False
-            callback = None
             if isinstance(resource, Resource):
                 pass
             elif isinstance(resource, tuple) and len(resource) == 2:
                 resource, callback = resource
-                separate = True
+                resource = self._handle_separate(transaction, callback)
+                if not isinstance(resource, Resource):
+                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                    return transaction
             else:
                 # Handle error
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction.response
-            if separate:
-                # Handle separate
-                if not transaction.request.acknowledged:
-                    self._parent._send_ack(transaction)
-                    transaction.request.acknowledged = True
-                resource = callback(request=transaction.request)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
-                    return transaction.response
 
             if resource.etag in transaction.request.etag:
                 transaction.response.code = defines.Codes.VALID.number
