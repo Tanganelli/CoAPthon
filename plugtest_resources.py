@@ -11,6 +11,7 @@ __author__ = 'giacomo'
 
 logger = logging.getLogger(__name__)
 
+
 class TestResource(Resource):
     def __init__(self, name="TestResource", coap_server=None):
         super(TestResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=True)
@@ -122,4 +123,16 @@ class LargeUpdateResource(Resource):
 
     def render_PUT(self, request):
         self.payload = request.payload
+        return self
+
+
+class LongResource(Resource):
+
+    def __init__(self, name="Large", coap_server=None):
+        super(LongResource, self).__init__(name, coap_server, visible=True, observable=False,
+                                                  allow_children=False)
+        self.payload = ""
+
+    def render_GET(self, request):
+        time.sleep(5)
         return self

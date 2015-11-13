@@ -132,7 +132,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.content_type = defines.Content_types["application/link-format"]
-        expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</seg1>;rt="Type1",</query>;rt="Type1","""
+        expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</long>;</seg1>;rt="Type1",</query>;rt="Type1","""
 
         self.current_mid += 1
         self._test_with_client([(req, expected)])
@@ -787,6 +787,50 @@ I say, looked for all the world like a strip of that same patchwork quilt. Indee
         self.current_mid += 1
 
         self._test_plugtest([exchange1, exchange2, exchange3])
+
+    def test_duplicate(self):
+        print "TEST_DUPLICATE"
+        path = "/test"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+
+        self.current_mid += 1
+        self._test_plugtest([(req, expected), (req, expected)])
+
+    def test_duplicate_not_completed(self):
+        print "TEST_DUPLICATE"
+        path = "/long"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = None
+        expected.token = None
+
+        expected2 = Response()
+        expected2.type = defines.Types["CON"]
+        expected2._mid = None
+        expected2.code = defines.Codes.CONTENT.number
+        expected2.token = None
+
+        self.current_mid += 1
+        self._test_plugtest([(req, None), (req, expected), (None, expected2)])
 
 if __name__ == '__main__':
     unittest.main()

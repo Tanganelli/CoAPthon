@@ -1,7 +1,8 @@
 import getopt
 import logging
 import sys
-from plugtest_resources import TestResource, SeparateResource, ObservableResource, LargeResource, LargeUpdateResource
+from plugtest_resources import TestResource, SeparateResource, ObservableResource, LargeResource, LargeUpdateResource, \
+    LongResource
 from coapthon.server.coap import CoAP
 
 __author__ = 'giacomo'
@@ -37,6 +38,7 @@ class CoAPServerPlugTest(CoAP):
         self.add_resource("obs/", ObservableResource(coap_server=self))
         self.add_resource("large/", LargeResource(coap_server=self))
         self.add_resource("large-update/", LargeUpdateResource(coap_server=self))
+        self.add_resource('long/', LongResource())
 
 
 def usage():

@@ -97,8 +97,10 @@ class CoAP(object):
             except socket.timeout:
                 continue
             try:
-
-                self.receive_datagram((data, client_address))
+                args = (data, client_address)
+                t = threading.Thread(target=self.receive_datagram, args=args)
+                t.start()
+                # self.receive_datagram(data, client_address)
             except RuntimeError:
                 print "Exception with Executor"
         self._socket.close()
@@ -114,13 +116,12 @@ class CoAP(object):
             event.set()
         self._socket.close()
 
-    def receive_datagram(self, args):
+    def receive_datagram(self, data, client_address):
         """
         Receive datagram from the udp socket.
 
         :rtype : Message
         """
-        data, client_address = args
 
         serializer = Serializer()
         message = serializer.deserialize(data, client_address)
@@ -133,6 +134,8 @@ class CoAP(object):
                 logger.debug("message duplicated,transaction completed")
                 transaction = self._observeLayer.send_response(transaction)
                 transaction = self._blockLayer.send_response(transaction)
+                transaction.response.type = None
+                transaction.request.acknowledged = False
                 transaction = self._messageLayer.send_response(transaction)
                 self.send_datagram(transaction.response)
                 return

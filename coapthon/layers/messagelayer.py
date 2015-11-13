@@ -49,6 +49,7 @@ class MessageLayer(object):
         if key_mid in self._transactions.keys():
             # Duplicated
             self._transactions[key_mid].request.duplicated = True
+            transaction = self._transactions[key_mid]
         else:
             request.timestamp = time.time()
             transaction = Transaction(request=request, timestamp=request.timestamp)
