@@ -69,6 +69,10 @@ class ObservableResource(Resource):
     def render_GET(self, request):
         return self
 
+    def render_POST(self, request):
+        self.payload = request.payload
+        return self
+
     def update(self, first=False):
         if not self._coap_server.stopped.isSet():
             timer = threading.Timer(self.period, self.update)

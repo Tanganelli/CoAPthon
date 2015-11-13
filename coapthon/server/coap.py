@@ -289,8 +289,7 @@ class CoAP(object):
         :type future: Future
         :param future:
         """
-        if not timer.finished:
-            timer.cancel()
+        timer.cancel()
 
     def _send_ack(self, transaction):
         # Handle separate

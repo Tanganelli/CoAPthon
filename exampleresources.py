@@ -124,6 +124,10 @@ class Big(Resource):
 
     def render_POST(self, request):
         if request.payload is not None:
-            self.payload += request.payload
+            self.payload = request.payload
         return self
 
+
+class voidResource(Resource):
+    def __init__(self, name="Void"):
+        super(voidResource, self).__init__(name)

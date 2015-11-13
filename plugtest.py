@@ -4,7 +4,6 @@ import random
 import socket
 import threading
 import unittest
-import sys
 from coapthon.messages.message import Message
 from coapclient import HelperClient
 from coapthon.messages.response import Response
@@ -856,6 +855,29 @@ I say, looked for all the world like a strip of that same patchwork quilt. Indee
 
         self.current_mid += 1
         self._test_plugtest([(req, expected), (None, expected2), (None, expected2),  (None, expected2)])
+
+    def test_edit_resource(self):
+        print "TEST_EDIT_RESOURCE"
+        path = "/obs"
+        req = Request()
+
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "<value>test</value>"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CREATED.number
+        expected.token = None
+        expected.payload = None
+        expected.location_path = "/obs"
+
+        self.current_mid += 1
+        self._test_with_client([(req, expected)])
 
 if __name__ == '__main__':
     unittest.main()

@@ -91,7 +91,10 @@ class ObserveLayer(object):
             host, port = transaction.request.source
             key_token = hash(str(host) + str(port) + str(transaction.request.token))
             logger.info("Remove Subscriber")
-            del self._relations[key_token]
+            try:
+                del self._relations[key_token]
+            except KeyError:
+                pass
             transaction.completed = True
         return transaction
 
