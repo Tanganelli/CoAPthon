@@ -109,6 +109,8 @@ class Message(object):
         :type value: list
         :param value: list of options
         """
+        if value is None:
+            value = []
         assert isinstance(value, list)
         self._options = value
 

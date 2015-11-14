@@ -47,7 +47,7 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.token, expected.token)
                 if expected.payload is not None:
                     self.assertEqual(received_message.payload, expected.payload)
-                if expected.options is not None:
+                if expected.options:
                     self.assertEqual(received_message.options, expected.options)
         client.stop()
 
@@ -82,7 +82,7 @@ class Tests(unittest.TestCase):
         sock.close()
 
     def test_not_allowed(self):
-        print "TD_COAP_LINK_01"
+        print "TEST_NOT_ALLOWED"
         path = "/void"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -146,6 +146,82 @@ class Tests(unittest.TestCase):
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
         expected.code = defines.Codes.METHOD_NOT_ALLOWED.number
+        expected.token = None
+
+        exchange4 = (req, expected)
+
+        self.current_mid += 1
+        self._test_with_client([exchange1, exchange2, exchange3, exchange4])
+
+    def test_separate(self):
+        print "TEST_SEPARATE"
+        path = "/separate"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["CON"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+
+        exchange1 = (req, expected)
+
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "POST"
+
+        expected = Response()
+        expected.type = defines.Types["CON"]
+        expected._mid = None
+        expected.code = defines.Codes.CREATED.number
+        expected.token = None
+        expected.options = None
+
+        exchange2 = (req, expected)
+
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.PUT.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "PUT"
+
+        expected = Response()
+        expected.type = defines.Types["CON"]
+        expected._mid = None
+        expected.code = defines.Codes.CHANGED.number
+        expected.token = None
+        expected.options = None
+
+        exchange3 = (req, expected)
+
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.DELETE.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["CON"]
+        expected._mid = None
+        expected.code = defines.Codes.DELETED.number
         expected.token = None
 
         exchange4 = (req, expected)

@@ -109,7 +109,9 @@ class CoAP(object):
             message = serializer.deserialize(datagram, source)
 
             if isinstance(message, Response):
-                transaction = self._messageLayer.receive_response(message)
+                transaction, send_ack = self._messageLayer.receive_response(message)
+                if send_ack:
+                    self._send_ack(transaction)
                 transaction = self._blockLayer.receive_response(transaction)
                 if transaction.block_transfer:
                     transaction = self._messageLayer.send_request(transaction.request)
@@ -124,3 +126,20 @@ class CoAP(object):
                     self._callback(transaction.response)
                 else:
                     self._callback(transaction.response)
+            elif isinstance(message, Message):
+                transaction = self._messageLayer.receive_empty(message)
+
+    def _send_ack(self, transaction):
+        # Handle separate
+        """
+        Sends an ACK message for the request.
+
+        :param request: [request, sleep_time] or request
+        """
+
+        ack = Message()
+        ack.type = defines.Types['ACK']
+
+        if not transaction.response.acknowledged:
+            ack = self._messageLayer.send_empty(transaction, transaction.response, ack)
+            self.send_datagram(ack)

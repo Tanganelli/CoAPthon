@@ -235,6 +235,18 @@ class ResourceLayer(object):
             except NotImplementedError:
                 transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
                 return transaction
+            if isinstance(ret, bool):
+                pass
+            elif isinstance(ret, tuple) and len(ret) == 2:
+                resource, callback = ret
+                ret = self._handle_separate(transaction, callback)
+                if not isinstance(ret, bool):
+                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                    return transaction
+            else:
+                # Handle error
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
             if ret:
                 del self._parent.root[path]
                 transaction.response.code = defines.Codes.DELETED.number

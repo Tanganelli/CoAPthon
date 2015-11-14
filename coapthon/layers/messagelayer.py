@@ -77,14 +77,17 @@ class MessageLayer(object):
             transaction = self._transactions_token[key_token]
         else:
             logger.warning("Un-Matched incoming response message " + str(host) + ":" + str(port))
-            return None
+            return None, False
+        send_ack = False
+        if response.type == defines.Types["CON"]:
+            send_ack = True
 
         transaction.request.acknowledged = True
         transaction.completed = True
         transaction.response = response
         if transaction.retransmit_stop is not None:
             transaction.retransmit_stop.set()
-        return transaction
+        return transaction, send_ack
 
     def receive_empty(self, message):
         """

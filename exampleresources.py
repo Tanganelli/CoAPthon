@@ -79,6 +79,25 @@ class Separate(Resource):
         time.sleep(5)
         return self
 
+    def render_POST(self, request):
+        return self, self.render_POST_separate
+
+    def render_POST_separate(self, request):
+        self.payload = request.payload
+        return self
+
+    def render_PUT(self, request):
+        return self, self.render_PUT_separate
+
+    def render_PUT_separate(self, request):
+        self.payload = request.payload
+        return self
+
+    def render_DELETE(self, request):
+        return self, self.render_DELETE_separate
+
+    def render_DELETE_separate(self, request):
+        return True
 
 class Long(Resource):
 
