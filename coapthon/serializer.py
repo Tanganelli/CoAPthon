@@ -1,5 +1,3 @@
-import struct
-import ctypes
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.messages.option import Option
@@ -8,6 +6,23 @@ from coapthon.messages.message import Message
 
 
 class Serializer(object):
+
+    @staticmethod
+    def deserialize_python(fmt, datagram):
+        buf = bytearray(datagram)
+        values = []
+        i = 0
+        for item in fmt:
+            if item == "!":
+                continue
+            if item == "B" or item == "c":
+                values.append(buf[i])
+                i += 1
+            if item == "H":
+                tmp = buf[i] << 8
+                values.append(tmp + buf[i+1])
+                i += 2
+        return values
 
     @staticmethod
     def deserialize(datagram, source):
@@ -25,8 +40,7 @@ class Serializer(object):
         while pos < length:
             fmt += "c"
             pos += 1
-        s = struct.Struct(fmt)
-        values = s.unpack_from(datagram)
+        values = Serializer.deserialize_python(fmt, datagram)
         first = values[0]
         code = values[1]
         mid = values[2]
@@ -48,7 +62,11 @@ class Serializer(object):
         message._mid = mid
         pos = 3
         if token_length > 0:
-                message.token = "".join(values[pos: pos + token_length])
+            tmp = values[pos: pos + token_length]
+            value = ""
+            for b in tmp:
+                value += str(unichr(b))
+            message.token = value
         else:
             message.token = None
 
@@ -56,7 +74,11 @@ class Serializer(object):
         current_option = 0
         length_packet = len(values)
         while pos < length_packet:
-            next_byte = struct.unpack("B", values[pos])[0]
+            #next_byte = struct.unpack("B", values[pos])[0]
+            try:
+                next_byte = int(values[pos])
+            except ValueError:
+                next_byte = int(values[pos], 16)
             pos += 1
             if next_byte != int(defines.PAYLOAD_MARKER):
                 # the first 4 bits of the byte represent the option delta
@@ -80,12 +102,12 @@ class Serializer(object):
                     tmp = values[pos: pos + option_length]
                     value = 0
                     for b in tmp:
-                        value = (value << 8) | struct.unpack("B", b)[0]
+                        value = (value << 8) | b
                 else:
                     tmp = values[pos: pos + option_length]
                     value = ""
                     for b in tmp:
-                        value += str(b)
+                        value += str(unichr(b))
 
                 pos += option_length
                 option = Option()
@@ -101,7 +123,7 @@ class Serializer(object):
                 message.payload = ""
                 payload = values[pos:]
                 for b in payload:
-                    message.payload += str(b)
+                    message.payload += str(unichr(b))
                     pos += 1
         return message
 
@@ -154,6 +176,7 @@ class Serializer(object):
             if optiondeltanibble == 13:
                 fmt += "B"
                 values.append(optiondelta - 13)
+
             elif optiondeltanibble == 14:
                 fmt += "B"
                 values.append(optiondelta - 296)
@@ -162,6 +185,7 @@ class Serializer(object):
             if optionlengthnibble == 13:
                 fmt += "B"
                 values.append(optionlength - 13)
+
             elif optionlengthnibble == 14:
                 fmt += "B"
                 values.append(optionlength - 269)
@@ -197,19 +221,28 @@ class Serializer(object):
                 fmt += "c"
                 values.append(b)
 
-        datagram = None
         if values[1] is None:
             values[1] = 0
-        try:
-            s = struct.Struct(fmt)
-            datagram = ctypes.create_string_buffer(s.size)
-            s.pack_into(datagram, 0, *values)
-        except struct.error as e:
-            print values
-            print e.args
-            print e.message
 
-        return datagram
+        ret = Serializer.serialize_python(fmt, values)
+        return ret
+
+    @staticmethod
+    def serialize_python(fmt, values):
+        buf = bytearray()
+        i = 0
+        for item in fmt:
+            if item == "!":
+                continue
+            if item == "B" or item == "c":
+                buf.append(values[i])
+                i += 1
+            if item == "H":
+                tmp = Serializer.int_to_words(values[i], 2, 8)
+                buf.append(tmp[0])
+                buf.append(tmp[1])
+                i += 1
+        return buf
 
     @staticmethod
     def is_request(code):
@@ -240,11 +273,11 @@ class Serializer(object):
         if nibble <= 12:
             return nibble, pos
         elif nibble == 13:
-            tmp = struct.unpack("B", values[pos])[0] + 13
+            tmp = values[pos] + 13
             pos += 1
             return tmp, pos
         elif nibble == 14:
-            tmp = struct.unpack("B", values[pos])[0] + 269
+            tmp = values[pos] + 269
             pos += 2
             return tmp, pos
         else:
