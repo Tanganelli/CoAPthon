@@ -23,6 +23,13 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 class CoAP(object):
     def __init__(self, server_address, multicast=False, starting_mid=None):
 
+        """
+        Initialize the server.
+
+        :param server_address: Server address for incoming connections
+        :param multicast: if the ip is a multicast address
+        :param starting_mid: used for testing purposes
+        """
         self.stopped = threading.Event()
         self.stopped.clear()
         self.to_be_stopped = []
@@ -80,6 +87,10 @@ class CoAP(object):
             self._socket.bind(self.server_address)
 
     def purge(self):
+        """
+        Clean old transactions
+
+        """
         while not self.stopped.isSet():
             self.stopped.wait(timeout=defines.EXCHANGE_LIFETIME)
             self._messageLayer.purge()
@@ -120,7 +131,8 @@ class CoAP(object):
         """
         Receive datagram from the udp socket.
 
-        :rtype : Message
+        :param data: the udp message
+        :param client_address: the ip and port of the client
         """
 
         serializer = Serializer()
@@ -175,14 +187,14 @@ class CoAP(object):
 
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
-                    self._start_retrasmission(transaction, transaction.response)
+                    self._start_retransmission(transaction, transaction.response)
                 self.send_datagram(transaction.response)
 
         elif isinstance(message, Message):
             transaction = self._messageLayer.receive_empty(message)
             if transaction is not None:
                 transaction = self._blockLayer.receive_empty(message, transaction)
-                transaction = self._observeLayer.receive_empty(message, transaction)
+                self._observeLayer.receive_empty(message, transaction)
 
         else:  # is Response
             logger.error("Received response from %s", message.source)
@@ -205,8 +217,9 @@ class CoAP(object):
         """
         Helper function to add resources to the resource directory during server initialization.
 
+        :param path: the path for the new created resource
         :type resource: Resource
-        :param resource:
+        :param resource: the resource to be added
         """
 
         assert isinstance(resource, Resource)
@@ -228,14 +241,14 @@ class CoAP(object):
                 self.root[actual_path] = resource
         return True
 
-    def _start_retrasmission(self, transaction, message):
+    def _start_retransmission(self, transaction, message):
         """
+        Start the retransmission task.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the message that needs retransmission
         :type message: Message
-        :param message:
-        :rtype : Future
+        :param message: the message that needs the retransmission task
         """
         if message.type == defines.Types['CON']:
             future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
@@ -246,6 +259,14 @@ class CoAP(object):
             transaction.retransmit_thread.start()
 
     def _retransmit(self, transaction, message, future_time, retransmit_count):
+        """
+        Thread function to retransmit the message in the future
+
+        :param transaction: the transaction that owns the message that needs retransmission
+        :param message: the message that needs the retransmission task
+        :param future_time: the amount of time to wait before a new attempt
+        :param retransmit_count: the number of retransmissions
+        """
         while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
                 and not self.stopped.isSet():
             transaction.retransmit_stop.wait(timeout=future_time)
@@ -271,12 +292,11 @@ class CoAP(object):
 
     def _start_separate_timer(self, transaction):
         """
+        Start a thread to handle separate mode.
 
         :type transaction: Transaction
-        :param transaction:
-        :type message: Message
-        :param message:
-        :rtype : Future
+        :param transaction: the transaction that is in processing
+        :rtype : the Timer object
         """
         t = threading.Timer(defines.ACK_TIMEOUT, self._send_ack, (transaction,))
         t.start()
@@ -285,28 +305,32 @@ class CoAP(object):
     @staticmethod
     def _stop_separate_timer(timer):
         """
+        Stop the separate Thread if an answer has been already provided to the client.
 
-        :type future: Future
-        :param future:
+        :param timer: The Timer object
         """
         timer.cancel()
 
     def _send_ack(self, transaction):
-        # Handle separate
         """
         Sends an ACK message for the request.
 
-        :param request: [request, sleep_time] or request
+        :param transaction: the transaction that owns the request
         """
 
         ack = Message()
         ack.type = defines.Types['ACK']
 
-        if not transaction.request.acknowledged:
+        if not transaction.request.acknowledged and transaction.request.type == defines.Types["CON"]:
             ack = self._messageLayer.send_empty(transaction, transaction.request, ack)
             self.send_datagram(ack)
 
     def notify(self, resource):
+        """
+        Notifies the observers of a certain resource.
+
+        :param resource: the resource
+        """
         observers = self._observeLayer.notify(resource)
         logger.debug("Notify")
         for transaction in observers:
@@ -317,6 +341,6 @@ class CoAP(object):
             transaction = self._messageLayer.send_response(transaction)
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
-                    self._start_retrasmission(transaction, transaction.response)
+                    self._start_retransmission(transaction, transaction.response)
 
                 self.send_datagram(transaction.response)

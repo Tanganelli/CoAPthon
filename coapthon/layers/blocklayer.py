@@ -25,9 +25,10 @@ class BlockLayer(object):
 
     def receive_request(self, transaction):
         """
+        Handles the Blocks option in a incoming request.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
         """
         if transaction.request.block2 is not None:
@@ -103,9 +104,10 @@ class BlockLayer(object):
 
     def receive_response(self, transaction):
         """
+        Handles the Blocks option in a incoming response.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the response
         :rtype : Transaction
         """
         host, port = transaction.response.source
@@ -119,7 +121,8 @@ class BlockLayer(object):
                 return transaction
             n_num, n_m, n_size = transaction.response.block1
             if n_num != item.num:
-                logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received " + str(n_num))
+                logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received "
+                               + str(n_num))
                 return None
             if n_size < item.size:
                 logger.debug("Scale down size, was " + str(item.size) + " become " + str(n_size))
@@ -201,9 +204,11 @@ class BlockLayer(object):
 
     def send_response(self, transaction):
         """
+        Handles the Blocks option in a outgoing response.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the response
+        :rtype : Transaction
         """
         host, port = transaction.request.source
         key_token = hash(str(host) + str(port) + str(transaction.request.token))
@@ -243,9 +248,10 @@ class BlockLayer(object):
 
     def send_request(self, request):
         """
+        Handles the Blocks option in a outgoing request.
 
         :type request: Request
-        :param request:
+        :param request: the outgoing request
         """
         assert isinstance(request, Request)
         if request.block1 or (request.payload is not None and len(request.payload) > defines.MAX_PAYLOAD):

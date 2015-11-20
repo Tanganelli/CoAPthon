@@ -20,7 +20,6 @@ class ObserveLayer(object):
     def send_request(self, request):
         """
 
-        :type request: Request
         :param request:
         """
         if request.observe == 0:
