@@ -141,60 +141,56 @@ class CoAP(object):
         if isinstance(message, Request):
 
             transaction = self._messageLayer.receive_request(message)
+            with transaction:
+                if transaction.request.duplicated and transaction.completed:
+                    logger.debug("message duplicated, transaction completed")
+                    self.send_datagram(transaction.response)
+                    return
+                elif transaction.request.duplicated and not transaction.completed:
+                    logger.debug("message duplicated, transaction NOT completed")
+                    self._send_ack(transaction)
+                    return
 
-            if transaction.request.duplicated and transaction.completed:
-                logger.debug("message duplicated,transaction completed")
-                transaction = self._observeLayer.send_response(transaction)
-                transaction = self._blockLayer.send_response(transaction)
-                transaction.response.type = None
-                transaction.request.acknowledged = False
-                transaction = self._messageLayer.send_response(transaction)
-                self.send_datagram(transaction.response)
-                return
-            elif transaction.request.duplicated and not transaction.completed:
-                logger.debug("message duplicated,transaction NOT completed")
-                self._send_ack(transaction)
-                return
+                transaction.separate_timer = self._start_separate_timer(transaction)
 
-            transaction.separate_timer = self._start_separate_timer(transaction)
+                self._blockLayer.receive_request(transaction)
 
-            transaction = self._blockLayer.receive_request(transaction)
+                if transaction.block_transfer:
+                    self._stop_separate_timer(transaction.separate_timer)
+                    self._messageLayer.send_response(transaction)
+                    self.send_datagram(transaction.response)
+                    return
 
-            if transaction.block_transfer:
+                self._observeLayer.receive_request(transaction)
+
+                self._requestLayer.receive_request(transaction)
+
+                if transaction.resource is not None and transaction.resource.changed:
+                    self.notify(transaction.resource)
+                    transaction.resource.changed = False
+                elif transaction.resource is not None and transaction.resource.deleted:
+                    self.notify(transaction.resource)
+                    transaction.resource.deleted = False
+
+                self._observeLayer.send_response(transaction)
+
+                self._blockLayer.send_response(transaction)
+
                 self._stop_separate_timer(transaction.separate_timer)
-                transaction = self._messageLayer.send_response(transaction)
-                self.send_datagram(transaction.response)
-                return
 
-            transaction = self._observeLayer.receive_request(transaction)
+                self._messageLayer.send_response(transaction)
 
-            transaction = self._requestLayer.receive_request(transaction)
-
-            if transaction.resource is not None and transaction.resource.changed:
-                self.notify(transaction.resource)
-                transaction.resource.changed = False
-            elif transaction.resource is not None and transaction.resource.deleted:
-                self.notify(transaction.resource)
-                transaction.resource.deleted = False
-
-            transaction = self._observeLayer.send_response(transaction)
-
-            transaction = self._blockLayer.send_response(transaction)
-
-            self._stop_separate_timer(transaction.separate_timer)
-
-            transaction = self._messageLayer.send_response(transaction)
-
-            if transaction.response is not None:
-                if transaction.response.type == defines.Types["CON"]:
-                    self._start_retransmission(transaction, transaction.response)
-                self.send_datagram(transaction.response)
+                if transaction.response is not None:
+                    if transaction.response.type == defines.Types["CON"]:
+                        self._start_retransmission(transaction, transaction.response)
+                    self.send_datagram(transaction.response)
 
         elif isinstance(message, Message):
             transaction = self._messageLayer.receive_empty(message)
             if transaction is not None:
-                transaction = self._blockLayer.receive_empty(message, transaction)
-                self._observeLayer.receive_empty(message, transaction)
+                with transaction:
+                    self._blockLayer.receive_empty(message, transaction)
+                    self._observeLayer.receive_empty(message, transaction)
 
         else:  # is Response
             logger.error("Received response from %s", message.source)
@@ -250,13 +246,14 @@ class CoAP(object):
         :type message: Message
         :param message: the message that needs the retransmission task
         """
-        if message.type == defines.Types['CON']:
-            future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
-            transaction.retransmit_thread = threading.Thread(target=self._retransmit,
-                                                             args=(transaction, message, future_time, 0))
-            transaction.retransmit_stop = threading.Event()
-            self.to_be_stopped.append(transaction.retransmit_stop)
-            transaction.retransmit_thread.start()
+        with transaction:
+            if message.type == defines.Types['CON']:
+                future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+                transaction.retransmit_thread = threading.Thread(target=self._retransmit,
+                                                                 args=(transaction, message, future_time, 0))
+                transaction.retransmit_stop = threading.Event()
+                self.to_be_stopped.append(transaction.retransmit_stop)
+                transaction.retransmit_thread.start()
 
     def _retransmit(self, transaction, message, future_time, retransmit_count):
         """
@@ -267,28 +264,29 @@ class CoAP(object):
         :param future_time: the amount of time to wait before a new attempt
         :param retransmit_count: the number of retransmissions
         """
-        while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
-                and not self.stopped.isSet():
-            transaction.retransmit_stop.wait(timeout=future_time)
-            if not message.acknowledged and not message.rejected and not self.stopped.isSet():
-                retransmit_count += 1
-                future_time *= 2
-                self.send_datagram(message)
+        with transaction:
+            while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
+                    and not self.stopped.isSet():
+                transaction.retransmit_stop.wait(timeout=future_time)
+                if not message.acknowledged and not message.rejected and not self.stopped.isSet():
+                    retransmit_count += 1
+                    future_time *= 2
+                    self.send_datagram(message)
 
-        if message.acknowledged or message.rejected:
-            message.timeouted = False
-        else:
-            logger.warning("Give up on message {message}".format(message=message.line_print))
-            message.timeouted = True
-            if message.observe is not None:
-                self._observeLayer.remove_subscriber(message)
+            if message.acknowledged or message.rejected:
+                message.timeouted = False
+            else:
+                logger.warning("Give up on message {message}".format(message=message.line_print))
+                message.timeouted = True
+                if message.observe is not None:
+                    self._observeLayer.remove_subscriber(message)
 
-        try:
-            self.to_be_stopped.remove(transaction.retransmit_stop)
-        except ValueError:
-            pass
-        transaction.retransmit_stop = None
-        transaction.retransmit_thread = None
+            try:
+                self.to_be_stopped.remove(transaction.retransmit_stop)
+            except ValueError:
+                pass
+            transaction.retransmit_stop = None
+            transaction.retransmit_thread = None
 
     def _start_separate_timer(self, transaction):
         """
@@ -320,7 +318,7 @@ class CoAP(object):
 
         ack = Message()
         ack.type = defines.Types['ACK']
-
+        # TODO handle mutex on transaction
         if not transaction.request.acknowledged and transaction.request.type == defines.Types["CON"]:
             ack = self._messageLayer.send_empty(transaction, transaction.request, ack)
             self.send_datagram(ack)
@@ -334,13 +332,14 @@ class CoAP(object):
         observers = self._observeLayer.notify(resource)
         logger.debug("Notify")
         for transaction in observers:
-            transaction.response = None
-            transaction = self._requestLayer.receive_request(transaction)
-            transaction = self._observeLayer.send_response(transaction)
-            transaction = self._blockLayer.send_response(transaction)
-            transaction = self._messageLayer.send_response(transaction)
-            if transaction.response is not None:
-                if transaction.response.type == defines.Types["CON"]:
-                    self._start_retransmission(transaction, transaction.response)
+            with transaction:
+                transaction.response = None
+                transaction = self._requestLayer.receive_request(transaction)
+                transaction = self._observeLayer.send_response(transaction)
+                transaction = self._blockLayer.send_response(transaction)
+                transaction = self._messageLayer.send_response(transaction)
+                if transaction.response is not None:
+                    if transaction.response.type == defines.Types["CON"]:
+                        self._start_retransmission(transaction, transaction.response)
 
-                self.send_datagram(transaction.response)
+                    self.send_datagram(transaction.response)

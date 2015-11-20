@@ -121,8 +121,8 @@ class BlockLayer(object):
                 return transaction
             n_num, n_m, n_size = transaction.response.block1
             if n_num != item.num:
-                logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received "
-                               + str(n_num))
+                logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received " +
+                               str(n_num))
                 return None
             if n_size < item.size:
                 logger.debug("Scale down size, was " + str(item.size) + " become " + str(n_size))

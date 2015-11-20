@@ -1,3 +1,6 @@
+import threading
+
+
 class Transaction(object):
     def __init__(self, request=None, response=None, resource=None, timestamp=None):
         self._response = response
@@ -10,6 +13,13 @@ class Transaction(object):
         self.separate_timer = None
         self.retransmit_thread = None
         self.retransmit_stop = None
+        self._lock = threading.RLock()
+
+    def __enter__(self):
+        self._lock.acquire()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._lock.release()
 
     @property
     def response(self):
