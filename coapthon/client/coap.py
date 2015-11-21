@@ -112,12 +112,15 @@ class CoAP(object):
                 transaction, send_ack = self._messageLayer.receive_response(message)
                 if send_ack:
                     self._send_ack(transaction)
-                transaction = self._blockLayer.receive_response(transaction)
+                self._blockLayer.receive_response(transaction)
                 if transaction.block_transfer:
                     transaction = self._messageLayer.send_request(transaction.request)
                     self.send_datagram(transaction.request)
                     continue
-                transaction = self._observeLayer.receive_response(transaction)
+                elif transaction is None:
+                    self._send_rst(transaction)
+                    return
+                self._observeLayer.receive_response(transaction)
                 if transaction.notification:
                     ack = Message()
                     ack.type = defines.Types['ACK']
@@ -127,7 +130,7 @@ class CoAP(object):
                 else:
                     self._callback(transaction.response)
             elif isinstance(message, Message):
-                transaction = self._messageLayer.receive_empty(message)
+                self._messageLayer.receive_empty(message)
 
     def _send_ack(self, transaction):
         # Handle separate
@@ -143,3 +146,18 @@ class CoAP(object):
         if not transaction.response.acknowledged:
             ack = self._messageLayer.send_empty(transaction, transaction.response, ack)
             self.send_datagram(ack)
+
+    def _send_rst(self, transaction):
+        # Handle separate
+        """
+        Sends an RST message for the request.
+
+        :param request: [request, sleep_time] or request
+        """
+
+        rst = Message()
+        rst.type = defines.Types['RST']
+
+        if not transaction.response.acknowledged:
+            rst = self._messageLayer.send_empty(transaction, transaction.response, rst)
+            self.send_datagram(rst)

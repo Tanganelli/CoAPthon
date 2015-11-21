@@ -108,10 +108,24 @@ class CoAP(object):
             except socket.timeout:
                 continue
             try:
-                args = (data, client_address)
-                t = threading.Thread(target=self.receive_datagram, args=args)
-                t.start()
+                serializer = Serializer()
+                message = serializer.deserialize(data, client_address)
+                logger.debug("receive_datagram - " + str(message))
+                if isinstance(message, Request):
+                    transaction = self._messageLayer.receive_request(message)
+                    args = (transaction, )
+                    t = threading.Thread(target=self.receive_request, args=args)
+                    t.start()
                 # self.receive_datagram(data, client_address)
+                elif isinstance(message, Message):
+                    transaction = self._messageLayer.receive_empty(message)
+                    if transaction is not None:
+                        with transaction:
+                            self._blockLayer.receive_empty(message, transaction)
+                            self._observeLayer.receive_empty(message, transaction)
+
+                else:  # is Response
+                    logger.error("Received response from %s", message.source)
             except RuntimeError:
                 print "Exception with Executor"
         self._socket.close()
@@ -127,7 +141,7 @@ class CoAP(object):
             event.set()
         self._socket.close()
 
-    def receive_datagram(self, data, client_address):
+    def receive_request(self, transaction):
         """
         Receive datagram from the udp socket.
 
@@ -135,65 +149,49 @@ class CoAP(object):
         :param client_address: the ip and port of the client
         """
 
-        serializer = Serializer()
-        message = serializer.deserialize(data, client_address)
-        logger.debug("receive_datagram - " + str(message))
-        if isinstance(message, Request):
+        with transaction:
+            if transaction.request.duplicated and transaction.completed:
+                logger.debug("message duplicated, transaction completed")
+                self.send_datagram(transaction.response)
+                return
+            elif transaction.request.duplicated and not transaction.completed:
+                logger.debug("message duplicated, transaction NOT completed")
+                self._send_ack(transaction)
+                return
 
-            transaction = self._messageLayer.receive_request(message)
-            with transaction:
-                if transaction.request.duplicated and transaction.completed:
-                    logger.debug("message duplicated, transaction completed")
-                    self.send_datagram(transaction.response)
-                    return
-                elif transaction.request.duplicated and not transaction.completed:
-                    logger.debug("message duplicated, transaction NOT completed")
-                    self._send_ack(transaction)
-                    return
+            transaction.separate_timer = self._start_separate_timer(transaction)
 
-                transaction.separate_timer = self._start_separate_timer(transaction)
+            self._blockLayer.receive_request(transaction)
 
-                self._blockLayer.receive_request(transaction)
-
-                if transaction.block_transfer:
-                    self._stop_separate_timer(transaction.separate_timer)
-                    self._messageLayer.send_response(transaction)
-                    self.send_datagram(transaction.response)
-                    return
-
-                self._observeLayer.receive_request(transaction)
-
-                self._requestLayer.receive_request(transaction)
-
-                if transaction.resource is not None and transaction.resource.changed:
-                    self.notify(transaction.resource)
-                    transaction.resource.changed = False
-                elif transaction.resource is not None and transaction.resource.deleted:
-                    self.notify(transaction.resource)
-                    transaction.resource.deleted = False
-
-                self._observeLayer.send_response(transaction)
-
-                self._blockLayer.send_response(transaction)
-
+            if transaction.block_transfer:
                 self._stop_separate_timer(transaction.separate_timer)
-
                 self._messageLayer.send_response(transaction)
+                self.send_datagram(transaction.response)
+                return
 
-                if transaction.response is not None:
-                    if transaction.response.type == defines.Types["CON"]:
-                        self._start_retransmission(transaction, transaction.response)
-                    self.send_datagram(transaction.response)
+            self._observeLayer.receive_request(transaction)
 
-        elif isinstance(message, Message):
-            transaction = self._messageLayer.receive_empty(message)
-            if transaction is not None:
-                with transaction:
-                    self._blockLayer.receive_empty(message, transaction)
-                    self._observeLayer.receive_empty(message, transaction)
+            self._requestLayer.receive_request(transaction)
 
-        else:  # is Response
-            logger.error("Received response from %s", message.source)
+            if transaction.resource is not None and transaction.resource.changed:
+                self.notify(transaction.resource)
+                transaction.resource.changed = False
+            elif transaction.resource is not None and transaction.resource.deleted:
+                self.notify(transaction.resource)
+                transaction.resource.deleted = False
+
+            self._observeLayer.send_response(transaction)
+
+            self._blockLayer.send_response(transaction)
+
+            self._stop_separate_timer(transaction.separate_timer)
+
+            self._messageLayer.send_response(transaction)
+
+            if transaction.response is not None:
+                if transaction.response.type == defines.Types["CON"]:
+                    self._start_retransmission(transaction, transaction.response)
+                self.send_datagram(transaction.response)
 
     def send_datagram(self, message):
         """

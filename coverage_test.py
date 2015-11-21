@@ -168,6 +168,7 @@ class Tests(unittest.TestCase):
         expected._mid = None
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
+        expected.max_age = 60
 
         exchange1 = (req, expected)
 

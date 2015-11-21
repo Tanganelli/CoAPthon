@@ -71,6 +71,7 @@ class Separate(Resource):
     def __init__(self, name="Separate", coap_server=None):
         super(Separate, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
         self.payload = "Separate"
+        self.max_age = 60
 
     def render_GET(self, request):
         return self, self.render_GET_separate

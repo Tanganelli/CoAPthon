@@ -35,7 +35,7 @@ class MessageLayer(object):
         """
 
         :type request: Request
-        :param request:
+        :param request: the incoming request
         :rtype : Transaction
         """
         logger.debug("receive_request - " + str(request))
@@ -53,8 +53,9 @@ class MessageLayer(object):
         else:
             request.timestamp = time.time()
             transaction = Transaction(request=request, timestamp=request.timestamp)
-            self._transactions[key_mid] = transaction
-            self._transactions_token[key_token] = transaction
+            with transaction:
+                self._transactions[key_mid] = transaction
+                self._transactions_token[key_token] = transaction
         return transaction
 
     def receive_response(self, response):
