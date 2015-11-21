@@ -230,6 +230,30 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
+    def test_post(self):
+        print "TEST_POST"
+        path = "/storage/new_res?id=1"
+        req = Request()
+
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "test"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CREATED.number
+        expected.token = None
+        expected.payload = None
+        expected.location_path = "storage/new_res"
+        expected.location_query = "id=1"
+
+        self.current_mid += 1
+        self._test_with_client([(req, expected)])
+
 if __name__ == '__main__':
     unittest.main()
 

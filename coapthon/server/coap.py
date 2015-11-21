@@ -152,7 +152,8 @@ class CoAP(object):
         with transaction:
             if transaction.request.duplicated and transaction.completed:
                 logger.debug("message duplicated, transaction completed")
-                self.send_datagram(transaction.response)
+                if transaction.response is not None:
+                    self.send_datagram(transaction.response)
                 return
             elif transaction.request.duplicated and not transaction.completed:
                 logger.debug("message duplicated, transaction NOT completed")
