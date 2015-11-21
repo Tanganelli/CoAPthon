@@ -6,6 +6,7 @@ import unittest
 from coapclient import HelperClient
 from coapserver import CoAPServer
 from coapthon import defines
+from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
@@ -49,6 +50,11 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.payload, expected.payload)
                 if expected.options:
                     self.assertEqual(received_message.options, expected.options)
+                    for o in expected.options:
+                        assert isinstance(o, Option)
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
         client.stop()
 
     def client_callback(self, response):
@@ -78,7 +84,11 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.payload, expected.payload)
                 if expected.options is not None:
                     self.assertEqual(received_message.options, expected.options)
-
+                    for o in expected.options:
+                        assert isinstance(o, Option)
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
         sock.close()
 
     def test_not_allowed(self):

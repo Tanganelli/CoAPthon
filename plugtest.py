@@ -51,6 +51,10 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.payload, expected.payload)
                 if expected.options is not None:
                     self.assertEqual(received_message.options, expected.options)
+                    for o in expected.options:
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
         client.stop()
 
     def client_callback(self, response):
@@ -112,7 +116,10 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.payload, expected.payload)
                 if expected.options is not None:
                     self.assertEqual(received_message.options, expected.options)
-
+                    for o in expected.options:
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
         sock.close()
 
     def test_td_coap_link_01(self):

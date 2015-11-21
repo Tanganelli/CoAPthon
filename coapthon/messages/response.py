@@ -28,9 +28,9 @@ class Response(Message):
             option.number = defines.OptionRegistry.LOCATION_PATH.number
             option.value = p
             self.add_option(option)
-        if len(tmp) > 1:
-            query = tmp[1]
-            self.location_query = query
+        # if len(tmp) > 1:
+        #     query = tmp[1]
+        #     self.location_query = query
 
     @location_path.deleter
     def location_path(self):
