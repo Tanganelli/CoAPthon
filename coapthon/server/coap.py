@@ -113,6 +113,15 @@ class CoAP(object):
                 logger.debug("receive_datagram - " + str(message))
                 if isinstance(message, Request):
                     transaction = self._messageLayer.receive_request(message)
+                    if transaction.request.duplicated and transaction.completed:
+                        logger.debug("message duplicated, transaction completed")
+                        if transaction.response is not None:
+                            self.send_datagram(transaction.response)
+                        return
+                    elif transaction.request.duplicated and not transaction.completed:
+                        logger.debug("message duplicated, transaction NOT completed")
+                        self._send_ack(transaction)
+                        return
                     args = (transaction, )
                     t = threading.Thread(target=self.receive_request, args=args)
                     t.start()
@@ -150,15 +159,6 @@ class CoAP(object):
         """
 
         with transaction:
-            if transaction.request.duplicated and transaction.completed:
-                logger.debug("message duplicated, transaction completed")
-                if transaction.response is not None:
-                    self.send_datagram(transaction.response)
-                return
-            elif transaction.request.duplicated and not transaction.completed:
-                logger.debug("message duplicated, transaction NOT completed")
-                self._send_ack(transaction)
-                return
 
             transaction.separate_timer = self._start_separate_timer(transaction)
 
