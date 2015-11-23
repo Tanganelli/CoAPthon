@@ -25,6 +25,7 @@ class ResourceLayer(object):
         :return: the transaction
         """
         resource_node = self._parent.root[path]
+        transaction.resource = resource_node
         # If-Match
         if transaction.request.if_match:
             if None not in transaction.request.if_match and str(transaction.resource.etag) \
