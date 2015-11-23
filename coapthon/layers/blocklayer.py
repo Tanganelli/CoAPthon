@@ -56,23 +56,13 @@ class BlockLayer(object):
                 if num != self._block1_receive[key_token].num \
                         or content_type != self._block1_receive[key_token].content_type:
                     # Error Incomplete
-                    transaction.block_transfer = True
-                    transaction.response = Response()
-                    transaction.response.destination = transaction.request.source
-                    transaction.response.token = transaction.request.token
-                    transaction.response.code = defines.Codes.REQUEST_ENTITY_INCOMPLETE.number
-                    return transaction
+                    return self.incomplete(transaction)
                 self._block1_receive[key_token].payload += transaction.request.payload
             else:
                 # first block
                 if num != 0:
                     # Error Incomplete
-                    transaction.block_transfer = True
-                    transaction.response = Response()
-                    transaction.response.destination = transaction.request.source
-                    transaction.response.token = transaction.request.token
-                    transaction.response.code = defines.Codes.REQUEST_ENTITY_INCOMPLETE.number
-                    return transaction
+                    return self.incomplete(transaction)
                 content_type = transaction.request.content_type
                 self._block1_receive[key_token] = BlockItem(size, num, m, size, transaction.request.payload,
                                                             content_type)
@@ -277,5 +267,14 @@ class BlockLayer(object):
             self._block2_sent[key_token] = item
             return request
         return request
+
+    @staticmethod
+    def incomplete(transaction):
+        transaction.block_transfer = True
+        transaction.response = Response()
+        transaction.response.destination = transaction.request.source
+        transaction.response.token = transaction.request.token
+        transaction.response.code = defines.Codes.REQUEST_ENTITY_INCOMPLETE.number
+        return transaction
 
 

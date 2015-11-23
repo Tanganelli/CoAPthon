@@ -50,18 +50,6 @@ class Request(Message):
         self.del_option_by_number(defines.OptionRegistry.URI_PATH.number)
 
     @property
-    def blockwise(self):
-        """
-
-        :rtype : Boolean
-        """
-        for option in self.options:
-            if option.number == defines.OptionRegistry.BLOCK1.number or \
-                            option.number == defines.OptionRegistry.BLOCK2.number:
-                return True
-        return False
-
-    @property
     def uri_query(self):
         """
         Get the Uri-Query of a request.

@@ -222,16 +222,6 @@ class Resource(object):
         """
         return self._visible
 
-    @visible.setter
-    def visible(self, v):
-        """
-        Set if the resource is visible.
-
-        :param v: the visibility (True or False)
-        """
-        assert isinstance(v, bool)
-        self._visible = v
-
     @property
     def observable(self):
         """
@@ -241,16 +231,6 @@ class Resource(object):
         """
         return self._observable
 
-    @observable.setter
-    def observable(self, v):
-        """
-        Set if the resource is observable.
-
-        :param v: the observability (True or False)
-        """
-        assert isinstance(v, bool)
-        self._observable = v
-
     @property
     def allow_children(self):
         """
@@ -259,16 +239,6 @@ class Resource(object):
         :return: True, if allow children
         """
         return self._allow_children
-
-    @allow_children.setter
-    def allow_children(self, v):
-        """
-        Set if the resource  allow children.
-
-        :param v: the  allow children (True or False)
-        """
-        assert isinstance(v, bool)
-        self._allow_children = v
 
     @property
     def observe_count(self):
