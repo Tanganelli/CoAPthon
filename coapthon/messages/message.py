@@ -175,10 +175,6 @@ class Message(object):
             raise AttributeError
         self._source = value
 
-    @source.deleter
-    def source(self):
-        self._source = None
-
     @property
     def code(self):
         """
@@ -271,30 +267,6 @@ class Message(object):
             self._acknowledged = False
             self._rejected = False
             self._cancelled = True
-
-    @property
-    def cancelled(self):
-        """
-        Checks if this message has been canceled.
-
-        :return: True, if is canceled
-        """
-        return self._cancelled
-
-    @cancelled.setter
-    def cancelled(self, value):
-        """
-        Marks this message as canceled.
-
-        :type value: Boolean
-        :param value: if canceled
-        """
-        assert (isinstance(value, bool))
-        self._cancelled = value
-        if value:
-            self._timeouted = False
-            self._acknowledged = False
-            self._rejected = False
 
     @property
     def duplicated(self):

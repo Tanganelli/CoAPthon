@@ -272,6 +272,7 @@ class Tests(unittest.TestCase):
         req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
+        req.if_match = ["test", "not"]
 
         expected = Response()
         expected.type = defines.Types["ACK"]
@@ -284,7 +285,25 @@ class Tests(unittest.TestCase):
         exchange2 = (req, expected)
         self.current_mid += 1
 
-        self._test_with_client([exchange1, exchange2])
+        req = Request()
+        req.code = defines.Codes.PUT.number
+        req.uri_path = "/storage/new_res"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.if_match = ["not"]
+        req.payload = "not"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.PRECONDITION_FAILED.number
+        expected.token = None
+
+        exchange3 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1, exchange2, exchange3])
 
 if __name__ == '__main__':
     unittest.main()
