@@ -252,6 +252,7 @@ class Tests(unittest.TestCase):
         req.destination = self.server_address
         req.etag = "test"
         req.payload = "test"
+        req.add_if_none_match()
 
         expected = Response()
         expected.type = defines.Types["ACK"]
@@ -303,7 +304,25 @@ class Tests(unittest.TestCase):
         exchange3 = (req, expected)
         self.current_mid += 1
 
-        self._test_with_client([exchange1, exchange2, exchange3])
+        req = Request()
+        req.code = defines.Codes.PUT.number
+        req.uri_path = "/storage/new_res"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.add_if_none_match()
+        req.payload = "not"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.PRECONDITION_FAILED.number
+        expected.token = None
+
+        exchange4 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
 if __name__ == '__main__':
     unittest.main()

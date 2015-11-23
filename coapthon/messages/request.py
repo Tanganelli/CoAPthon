@@ -156,14 +156,13 @@ class Request(Message):
         """
         for option in self.options:
             if option.number == defines.OptionRegistry.IF_NONE_MATCH.number:
-                return option.value
-        return None
+                return True
+        return False
 
-    @if_none_match.setter
-    def if_none_match(self, value):
+    def add_if_none_match(self):
         option = Option()
         option.number = defines.OptionRegistry.IF_NONE_MATCH.number
-        option.value = value
+        option.value = None
         self.add_option(option)
 
     @if_none_match.deleter
