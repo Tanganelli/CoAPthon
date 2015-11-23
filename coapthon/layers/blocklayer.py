@@ -182,16 +182,6 @@ class BlockLayer(object):
         """
         return transaction
 
-    def send_empty(self, message):
-        """
-
-        :type transaction: Transaction
-        :param transaction:
-        :type message: Message
-        :param message:
-        """
-        return message
-
     def send_response(self, transaction):
         """
         Handles the Blocks option in a outgoing response.
