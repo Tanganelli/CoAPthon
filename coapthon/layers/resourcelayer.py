@@ -25,6 +25,12 @@ class ResourceLayer(object):
         :return: the transaction
         """
         resource_node = self._parent.root[path]
+        # If-Match
+        if transaction.request.if_match:
+            if None not in transaction.request.if_match and str(transaction.resource.etag) \
+                    not in transaction.request.if_match:
+                transaction.response.code = defines.Codes.PRECONDITION_FAILED.number
+                return transaction
 
         method = getattr(resource_node, "render_POST", None)
         if hasattr(method, '__call__'):
@@ -103,6 +109,8 @@ class ResourceLayer(object):
                 return transaction
 
             resource.path = lp
+            if transaction.request.etag:
+                resource.etag = transaction.request.etag[0]
 
             if resource.etag is not None:
                 transaction.response.etag = resource.etag

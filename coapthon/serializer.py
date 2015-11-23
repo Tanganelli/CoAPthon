@@ -174,10 +174,15 @@ class Serializer(object):
                     for num in range(0, optionlength):
                         fmt += "B"
                         values.append(words[num])
-                else:
+                elif opt_type == defines.STRING:
                     for b in str(option.value):
                         fmt += "c"
                         values.append(b)
+                else:
+                    for b in option.value:
+                        fmt += "B"
+                        values.append(b)
+
 
             # update last option number
             lastoptionnumber = option.number
