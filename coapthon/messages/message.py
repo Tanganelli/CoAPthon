@@ -344,7 +344,7 @@ class Message(object):
         :param option: the option
         """
         assert isinstance(option, Option)
-        while option in self._options:
+        while option in list(self._options):
             self._options.remove(option)
 
     def del_option_by_name(self, name):

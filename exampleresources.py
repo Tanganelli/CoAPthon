@@ -16,13 +16,11 @@ class BasicResource(Resource):
         return self
 
     def render_PUT(self, request):
-        self.payload = request.payload
+        self.edit_resource(request)
         return self
 
     def render_POST(self, request):
-        res = BasicResource()
-        res.location_query = request.uri_query
-        res.payload = request.payload
+        res = self.init_resource(request, BasicResource())
         return res
 
     def render_DELETE(self, request):
@@ -38,9 +36,7 @@ class Storage(Resource):
         return self
 
     def render_POST(self, request):
-        res = BasicResource()
-        res.payload = request.payload
-        res.location_query = request.uri_query
+        res = self.init_resource(request, BasicResource())
         return res
 
 

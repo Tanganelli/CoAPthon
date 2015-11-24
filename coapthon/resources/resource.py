@@ -19,7 +19,7 @@ class Resource(object):
             self.name = name.name
             self.path = name.path
             self._visible = name.visible
-            self.observable = name.observable
+            self._observable = name.observable
             self._required_content_type = name.required_content_type
             self._allow_children = name.allow_children
             self.observe_count = name.observe_count
@@ -178,7 +178,6 @@ class Resource(object):
         :param p: the new payload
         """
         if isinstance(p, dict):
-            self._payload = {}
             for k in p.keys():
                 v = p[k]
                 self._payload[k] = v
@@ -400,6 +399,19 @@ class Resource(object):
         """
         self._attributes["sz"] = sz
 
+    def init_resource(self, request, res):
+        res.location_query = request.uri_query
+        if request.etag:
+            res.etag = request.etag
+        res.payload = {request.content_type: request.payload}
+        return res
+
+    def edit_resource(self, request):
+        self.location_query = request.uri_query
+        if request.etag:
+            self.etag = request.etag
+        self.payload = {request.content_type: request.payload}
+
     def render_GET(self, request):
         """
         Method to be redefined to render a GET request on the resource.
@@ -434,5 +446,6 @@ class Resource(object):
         :param request: the request
         """
         raise NotImplementedError
+
 
 
