@@ -682,6 +682,8 @@ class Tests(unittest.TestCase):
         expected.payload = "<value>0</value>"
         expected.content_type = defines.Content_types["application/xml"]
 
+        print(expected.pretty_print())
+
         exchange7 = (req, expected)
         self.current_mid += 1
 
