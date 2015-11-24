@@ -1,4 +1,5 @@
 import time
+from coapthon import defines
 
 from coapthon.resources.resource import Resource
 
@@ -150,3 +151,12 @@ class Big(Resource):
 class voidResource(Resource):
     def __init__(self, name="Void"):
         super(voidResource, self).__init__(name)
+
+
+class XMLResource(Resource):
+    def __init__(self, name="Void"):
+        super(XMLResource, self).__init__(name)
+        self.payload = {defines.Content_types["application/xml"]: "<value>0</value>"}
+
+    def render_GET(self, request):
+        return self
