@@ -5,7 +5,7 @@ __version__ = "3.0"
 
 ''' CoAP Parameters '''
 
-ACK_TIMEOUT = 100  # standard 2
+ACK_TIMEOUT = 2  # standard 2
 
 SEPARATE_TIMEOUT = ACK_TIMEOUT / 2
 
