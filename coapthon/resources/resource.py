@@ -9,61 +9,44 @@ class Resource(object):
         """
         Initialize a new Resource.
 
-        :param name: the name or a Resource object to copy from.
+        :param name: the name of the resource.
         :param visible: if the resource is visible
         :param observable: if the resource is observable
         :param allow_children: if the resource could has children
         """
-        if isinstance(name, Resource):
-            self._attributes = name.attributes
-            self.name = name.name
-            self.path = name.path
-            self._visible = name.visible
-            self._observable = name.observable
-            self._required_content_type = name.required_content_type
-            self._allow_children = name.allow_children
-            self.observe_count = name.observe_count
-            self._payload = name.payload
-            self._etag = name.etag
-            self._location_query = name.location_query
-            self._max_age = name.max_age
-            self._coap_server = name._coap_server
-            self._deleted = False
-            self._changed = False
-        else:
-            # The attributes of this resource.
-            self._attributes = {}
+        # The attributes of this resource.
+        self._attributes = {}
 
-            # The resource name.
-            self.name = name
+        # The resource name.
+        self.name = name
 
-            # The resource path.
-            self.path = None
+        # The resource path.
+        self.path = None
 
-            # Indicates whether this resource is visible to clients.
-            self._visible = visible
+        # Indicates whether this resource is visible to clients.
+        self._visible = visible
 
-            # Indicates whether this resource is observable by clients.
-            self._observable = observable
+        # Indicates whether this resource is observable by clients.
+        self._observable = observable
 
-            self._allow_children = allow_children
+        self._allow_children = allow_children
 
-            self._observe_count = 1
+        self._observe_count = 1
 
-            self._payload = {}
+        self._payload = {}
 
-            self._required_content_type = None
+        self._required_content_type = None
 
-            self._etag = []
+        self._etag = []
 
-            self._location_query = []
+        self._location_query = []
 
-            self._max_age = None
+        self._max_age = None
 
-            self._coap_server = coap_server
+        self._coap_server = coap_server
 
-            self._deleted = False
-            self._changed = False
+        self._deleted = False
+        self._changed = False
 
     @property
     def deleted(self):
@@ -155,20 +138,18 @@ class Resource(object):
         :return: the payload.
         """
         if self._required_content_type is not None:
-            if isinstance(self._payload, dict):
-                try:
-                    return self._payload[self._required_content_type]
-                except KeyError:
-                    raise KeyError("Content-Type not available")
+            try:
+                return self._payload[self._required_content_type]
+            except KeyError:
+                raise KeyError("Content-Type not available")
         else:
-            if isinstance(self._payload, dict):
-                if defines.Content_types["text/plain"] in self._payload:
-                    return self._payload[defines.Content_types["text/plain"]]
-                else:
-                    val = self._payload.keys()
-                    return val[0], self._payload[val[0]]
 
-        return self._payload
+            if defines.Content_types["text/plain"] in self._payload:
+                return self._payload[defines.Content_types["text/plain"]]
+            else:
+                val = self._payload.keys()
+                return val[0], self._payload[val[0]]
+
 
     @payload.setter
     def payload(self, p):
@@ -183,15 +164,6 @@ class Resource(object):
                 self._payload[k] = v
         else:
             self._payload = {defines.Content_types["text/plain"]: p}
-
-    @property
-    def raw_payload(self):
-        """
-        Get the payload of the resource as a dict of all different payloads defined for the resource.
-
-        :return: the payload as dict
-        """
-        return self._payload
 
     @property
     def attributes(self):
@@ -274,10 +246,7 @@ class Resource(object):
 
         :param act: the actual required Content-Type.
         """
-        if isinstance(act, str):
-            self._required_content_type = defines.Content_types[act]
-        else:
-            self._required_content_type = act
+        self._required_content_type = act
 
     @property
     def content_type(self):

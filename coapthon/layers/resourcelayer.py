@@ -340,9 +340,10 @@ class ResourceLayer(object):
             if i == "/":
                 continue
             resource = self._parent.root[i]
-            ret = self.valid(transaction.request.uri_query, resource.attributes)
-            if ret:
-                payload += self.corelinkformat(resource)
+            if resource.visible:
+                ret = self.valid(transaction.request.uri_query, resource.attributes)
+                if ret:
+                    payload += self.corelinkformat(resource)
 
         transaction.response.payload = payload
         transaction.response.content_type = defines.Content_types["application/link-format"]
