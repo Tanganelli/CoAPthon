@@ -245,8 +245,7 @@ class Tests(unittest.TestCase):
         expected._mid = self.current_mid
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
-        expected.payload = "<value>test</value>"
-        expected.content_type = defines.Content_types["application/xml"]
+        expected.payload = "Test Resource"
 
         self.current_mid += 1
         exchange2 = (req, expected)
