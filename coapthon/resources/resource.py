@@ -402,14 +402,14 @@ class Resource(object):
     def init_resource(self, request, res):
         res.location_query = request.uri_query
         if request.etag:
-            res.etag = request.etag
+            res.etag = request.etag[0]
         res.payload = {request.content_type: request.payload}
         return res
 
     def edit_resource(self, request):
         self.location_query = request.uri_query
         if request.etag:
-            self.etag = request.etag
+            self.etag = request.etag[0]
         self.payload = {request.content_type: request.payload}
 
     def render_GET(self, request):

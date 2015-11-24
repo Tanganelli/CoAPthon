@@ -514,7 +514,7 @@ class Tests(unittest.TestCase):
         option.number = defines.OptionRegistry.ETAG.number
         option.value = "test"
         req.add_option(option)
-        req.del_option_by_name("ETAG")
+        req.del_option_by_name("ETag")
         req.payload = "test"
 
         expected = Response()
