@@ -58,7 +58,7 @@ class Child(Resource):
 
     def render_POST(self, request):
         res = BasicResource()
-        res.location_query = request.query
+        res.location_query = request.uri_query
         res.payload = request.payload
         return res
 
