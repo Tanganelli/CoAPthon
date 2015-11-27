@@ -110,8 +110,6 @@ class ResourceLayer(object):
                 return transaction
 
             resource.path = lp
-            if transaction.request.etag:
-                resource.etag = transaction.request.etag[0]
 
             if resource.etag is not None:
                 transaction.response.etag = resource.etag

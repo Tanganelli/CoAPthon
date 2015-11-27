@@ -2,7 +2,7 @@ import getopt
 import logging
 import sys
 from coapthon.server.coap import CoAP
-from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource
+from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource
 
 __author__ = 'giacomo'
 
@@ -17,6 +17,7 @@ class CoAPServer(CoAP):
         self.add_resource('big/', Big())
         self.add_resource('void/', voidResource())
         self.add_resource('xml/', XMLResource())
+        self.add_resource('etag/', ETAGResource())
         print "CoAP Server start on " + host + ":" + str(port)
         print self.root.dump()
 

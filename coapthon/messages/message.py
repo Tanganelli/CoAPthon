@@ -391,10 +391,13 @@ class Message(object):
 
         :param etag: the etag
         """
-        option = Option()
-        option.number = defines.OptionRegistry.ETAG.number
-        option.value = etag
-        self.add_option(option)
+        if not isinstance(etag, list):
+            etag = [etag]
+        for e in etag:
+            option = Option()
+            option.number = defines.OptionRegistry.ETAG.number
+            option.value = e
+            self.add_option(option)
 
     @etag.deleter
     def etag(self):

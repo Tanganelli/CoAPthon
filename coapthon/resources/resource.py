@@ -276,12 +276,9 @@ class Resource(object):
         if isinstance(lst, str):
             ct = defines.Content_types[lst]
             value.append(ct)
-        else:
+        elif isinstance(lst, list):
             for ct in lst:
-                ct = defines.Content_types[ct]
-                value.append(ct)
-        if len(value) > 0:
-            self._attributes["ct"] = value
+                self.add_content_type(ct)
 
     def add_content_type(self, ct):
         """
@@ -370,15 +367,11 @@ class Resource(object):
 
     def init_resource(self, request, res):
         res.location_query = request.uri_query
-        if request.etag:
-            res.etag = request.etag[0]
         res.payload = {request.content_type: request.payload}
         return res
 
     def edit_resource(self, request):
         self.location_query = request.uri_query
-        if request.etag:
-            self.etag = request.etag[0]
         self.payload = {request.content_type: request.payload}
 
     def render_GET(self, request):

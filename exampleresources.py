@@ -160,3 +160,20 @@ class XMLResource(Resource):
 
     def render_GET(self, request):
         return self
+
+
+class ETAGResource(Resource):
+    def __init__(self, name="ETag"):
+        super(ETAGResource, self).__init__(name)
+        self.count = 0
+        self.payload = "ETag resource"
+        self.etag = str(self.count)
+
+    def render_GET(self, request):
+        return self
+
+    def render_POST(self, request):
+        self.payload = request.payload
+        self.count += 1
+        self.etag = str(self.count)
+        return self

@@ -250,7 +250,6 @@ class Tests(unittest.TestCase):
         req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
-        req.etag = "test"
         req.payload = "test"
         req.add_if_none_match()
 
@@ -262,7 +261,6 @@ class Tests(unittest.TestCase):
         expected.payload = None
         expected.location_path = "storage/new_res"
         expected.location_query = "id=1"
-        expected.etag = "test"
 
         exchange1 = (req, expected)
         self.current_mid += 1
@@ -281,7 +279,6 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "test"
-        expected.etag = "test"
 
         exchange2 = (req, expected)
         self.current_mid += 1
@@ -688,6 +685,70 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7])
+
+    def test_ETAG(self):
+        print "TEST_ETAG"
+        path = "/etag"
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = "ETag resource"
+        expected.etag = "0"
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "test"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CREATED.number
+        expected.token = None
+        expected.payload = None
+        expected.location_path = path
+        expected.etag = "1"
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.etag = "1"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.VALID.number
+        expected.token = None
+        expected.payload = "test"
+        expected.etag = "1"
+
+        exchange3 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1, exchange2, exchange3])
+
 if __name__ == '__main__':
     unittest.main()
 
