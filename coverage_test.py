@@ -639,6 +639,171 @@ class Tests(unittest.TestCase):
 
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7, exchange8])
 
+    def test_post_block_big(self):
+        print "TEST_POST_BLOCK_BIG"
+        path = "/big"
+        req = Request()
+
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "Lorem ipsum dolo"
+        req.block1 = (0, 1, 16)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (0, 1, 16)
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "r sit amet, consectetur adipisci"
+        req.block1 = (1, 1, 32)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (1, 1, 32)
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "ng elit. Sed ut ultrices ligula. Pellentesque purus augue, cursu"
+        req.block1 = (2, 1, 64)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (2, 1, 64)
+
+        exchange3 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "s ultricies est in, vehicula congue metus. Vestibulum vel justo lacinia, porttitor quam vitae, " \
+                      "feugiat sapien. Quisque finibus, "
+        req.block1 = (3, 1, 128)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (3, 1, 128)
+
+        exchange4 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "nisi vitae rhoncus malesuada, augue mauris dapibus tellus, sit amet venenatis libero" \
+                      " libero sed lorem. In pharetra turpis sed eros porta mollis. Quisque dictum dolor nisl," \
+                      " imperdiet tincidunt augue malesuada vitae. Donec non felis urna. Suspendisse at hend"
+        req.block1 = (4, 1, 256)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (4, 1, 256)
+
+        exchange5 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "rerit ex, quis aliquet ante. Vivamus ultrices dolor at elit tincidunt, eget fringilla " \
+                      "ligula vestibulum. In molestie sagittis nibh, ut efficitur tellus faucibus non. Maecenas " \
+                      "posuere elementum faucibus. Morbi nisi diam, molestie non feugiat et, elementum eget magna." \
+                      " Donec vel sem facilisis quam viverra ultrices nec eu lacus. Sed molestie nisi id ultrices " \
+                      "interdum. Curabitur pharetra sed tellus in dignissim. Duis placerat aliquam metus, volutpat " \
+                      "elementum augue aliquam a. Nunc sed dolor at orci maximus portt"
+        req.block1 = (5, 1, 512)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTINUE.number
+        expected.token = None
+        expected.payload = None
+        expected.block1 = (5, 1, 512)
+
+        exchange6 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.POST.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "itor ac sit amet eros. Mauris et nisi in tortor pharetra rhoncus sit amet hendrerit metus. " \
+                      "Integer laoreet placerat cursus. Nam a nulla ex. Donec laoreet sagittis libero quis " \
+                      "imperdiet. Vivamus facilisis turpis nec rhoncus venenatis. Duis pulvinar tellus vel quam " \
+                      "maximus imperdiet. Mauris eget nibh orci. Duis ut cursus nibh. Nulla sed commodo elit. " \
+                      "Suspendisse ac eros lacinia, mattis turpis at, porttitor justo. Vivamus molestie " \
+                      "tincidunt libero. Etiam porttitor lacus odio, at lobortis tortor scelerisque nec. " \
+                      "Nullam non ante vel nisi ultrices consectetur. Maecenas massa felis, tempor eget " \
+                      "malesuada eget, pretium eu sapien. Vivamus dapibus ante erat, non faucibus orci sodales " \
+                      "sit amet. Cras magna felis, sodales eget magna sed, eleifend rutrum ligula. Vivamus interdum " \
+                      "enim enim, eu facilisis tortor dignissim quis. Ut metus nulla, mattis non lorem et, " \
+                      "elementum ultrices orci. Quisque eleifend, arcu vitae ullamcorper pulvinar, ipsum ex " \
+                      "sodales arcu, eget consectetur mauris metus ac tortor. Donec id sem felis. Maur"
+        req.block1 = (6, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CREATED.number
+        expected.token = None
+        expected.payload = None
+        expected.location_path = "big"
+
+        exchange7 = (req, expected)
+        self.current_mid += 1
+
+        self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7])
+
     def test_options(self):
         print "TEST_OPTIONS"
         path = "/storage/new_res"
