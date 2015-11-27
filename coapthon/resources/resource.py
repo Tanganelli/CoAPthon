@@ -315,6 +315,8 @@ class Resource(object):
 
         :param rt: the CoRE Link Format rt attribute
         """
+        if not isinstance(rt, str):
+            rt = str(rt)
         self._attributes["rt"] = rt
 
     @property
@@ -339,6 +341,8 @@ class Resource(object):
 
         :param ift: the CoRE Link Format if attribute
         """
+        if not isinstance(ift, str):
+            ift = str(ift)
         self._attributes["if"] = ift
 
     @property
@@ -363,6 +367,8 @@ class Resource(object):
 
         :param sz: the CoRE Link Format sz attribute
         """
+        if not isinstance(sz, str):
+            sz = str(sz)
         self._attributes["sz"] = sz
 
     def init_resource(self, request, res):

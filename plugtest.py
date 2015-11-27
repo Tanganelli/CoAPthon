@@ -138,7 +138,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.content_type = defines.Content_types["application/link-format"]
-        expected.payload = """</separate>;</large-update>;</seg1/seg2/seg3>;rt="Type1",</large>;</seg1/seg2>;rt="Type1",</test>;rt="Type1",</obs>;</long>;</seg1>;rt="Type1",</query>;rt="Type1","""
+        expected.payload = """</separate>;if="separate",</large-update>;</seg1/seg2/seg3>;rt="Type1";sz="13",</large>;</seg1/seg2>;rt="Type1";sz="13",</test>;rt="Type1";sz="13",</obs>;</long>;</seg1>;rt="Type1";sz="13",</query>;rt="Type1";sz="13","""
 
         self.current_mid += 1
         self._test_with_client([(req, expected)])
@@ -160,7 +160,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.content_type = defines.Content_types["application/link-format"]
-        expected.payload = """</seg1/seg2/seg3>;rt="Type1",</seg1/seg2>;rt="Type1",</test>;rt="Type1",</seg1>;rt="Type1",</query>;rt="Type1","""
+        expected.payload = """</seg1/seg2/seg3>;rt="Type1";sz="13",</seg1/seg2>;rt="Type1";sz="13",</test>;rt="Type1";sz="13",</seg1>;rt="Type1";sz="13",</query>;rt="Type1";sz="13","""
 
         self.current_mid += 1
         self._test_with_client([(req, expected)])

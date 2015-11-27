@@ -16,7 +16,8 @@ class TestResource(Resource):
     def __init__(self, name="TestResource", coap_server=None):
         super(TestResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=True)
         self.payload = "Test Resource"
-        self.attributes["rt"] = "Type1"
+        self.resource_type = "Type1"
+        self.maximum_size_estimated = len(self.payload)
 
     def render_GET(self, request):
         return self
@@ -49,6 +50,7 @@ class SeparateResource(Resource):
     def __init__(self, name="Separate", coap_server=None):
         super(SeparateResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=False)
         self.payload = "Separate Resource"
+        self.interface_type = "separate"
 
     def render_GET(self, request):
         return self, self.render_GET_separate
