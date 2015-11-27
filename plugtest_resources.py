@@ -51,6 +51,7 @@ class SeparateResource(Resource):
         super(SeparateResource, self).__init__(name, coap_server, visible=True, observable=False, allow_children=False)
         self.payload = "Separate Resource"
         self.interface_type = "separate"
+        self.add_content_type("text/plain")
 
     def render_GET(self, request):
         return self, self.render_GET_separate
