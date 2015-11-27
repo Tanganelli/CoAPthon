@@ -6,37 +6,6 @@ class RequestLayer(object):
     def __init__(self, server):
         self._server = server
 
-    def send_empty(self, transaction, message):
-        """
-
-        :type transaction: Transaction
-        :param transaction:
-        :type message: Message
-        :param message:
-        """
-        pass
-
-    def receive_response(self, response, transaction):
-        """
-
-        :type response: Response
-        :param response:
-        :type transaction: Transaction
-        :param transaction:
-        :rtype : Transaction
-        """
-        raise NotImplementedError
-
-    def send_response(self, transaction, response):
-        """
-
-        :type transaction: Transaction
-        :param transaction:
-        :type response: Response
-        :param response:
-        """
-        pass
-
     def receive_request(self, transaction):
         """
 
@@ -56,17 +25,6 @@ class RequestLayer(object):
         else:
             transaction.response = None
         return transaction
-
-    def receive_empty(self, empty, transaction):
-        """
-
-        :type empty: Message
-        :param empty:
-        :type transaction: Transaction
-        :param transaction:
-        :rtype : Transaction
-        """
-        raise NotImplementedError
 
     def send_request(self, request):
         """

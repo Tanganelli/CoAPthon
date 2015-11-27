@@ -1156,6 +1156,82 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
+
+    # def test_not_found(self):
+    #     print "TEST_not_found"
+    #     path = "/not_found"
+    #
+    #     req = Request()
+    #     req.code = defines.Codes.GET.number
+    #     req.uri_path = path
+    #     req.type = defines.Types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #
+    #     expected = Response()
+    #     expected.type = defines.Types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.Codes.NOT_FOUND.number
+    #     expected.token = None
+    #     expected.payload = None
+    #
+    #     exchange1 = (req, expected)
+    #     self.current_mid += 1
+    #
+    #     req = Request()
+    #     req.code = defines.Codes.POST.number
+    #     req.uri_path = path
+    #     req.type = defines.Types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #     req.payload = "test"
+    #
+    #     expected = Response()
+    #     expected.type = defines.Types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.Codes.NOT_FOUND.number
+    #     expected.token = None
+    #
+    #     exchange2 = (req, expected)
+    #     self.current_mid += 1
+    #
+    #     req = Request()
+    #     req.code = defines.Codes.PUT.number
+    #     req.uri_path = path
+    #     req.type = defines.Types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #     req.payload = "testPUT"
+    #
+    #     expected = Response()
+    #     expected.type = defines.Types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.Codes.NOT_FOUND.number
+    #     expected.token = None
+    #     expected.payload = None
+    #
+    #     exchange3 = (req, expected)
+    #     self.current_mid += 1
+    #
+    #     req = Request()
+    #     req.code = defines.Codes.DELETE.number
+    #     req.uri_path = path
+    #     req.type = defines.Types["CON"]
+    #     req._mid = self.current_mid
+    #     req.destination = self.server_address
+    #
+    #     expected = Response()
+    #     expected.type = defines.Types["ACK"]
+    #     expected._mid = self.current_mid
+    #     expected.code = defines.Codes.NOT_FOUND.number
+    #     expected.token = None
+    #     expected.payload = None
+    #
+    #     exchange4 = (req, expected)
+    #     self.current_mid += 1
+    #
+    #     self._test_with_client([exchange1, exchange2, exchange3, exchange4])
+
 if __name__ == '__main__':
     unittest.main()
 

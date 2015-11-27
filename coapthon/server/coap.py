@@ -47,7 +47,7 @@ class CoAP(object):
         self.resourceLayer = ResourceLayer(self)
 
         # Resource directory
-        root = Resource('root', self, visible=False, observable=False, allow_children=True)
+        root = Resource('root', self, visible=False, observable=False, allow_children=False)
         root.path = '/'
         self.root = Tree()
         self.root["/"] = root
