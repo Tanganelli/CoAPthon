@@ -493,9 +493,7 @@ class Message(object):
         option = Option()
         option.number = defines.OptionRegistry.BLOCK1.number
         num, m, size = value
-        if size > 1024:
-            szx = 6
-        elif 512 < size <= 1024:
+        if size > 512:
             szx = 6
         elif 256 < size <= 512:
             szx = 5
@@ -538,9 +536,7 @@ class Message(object):
         option = Option()
         option.number = defines.OptionRegistry.BLOCK2.number
         num, m, size = value
-        if size > 1024:
-            szx = 6
-        elif 512 < size <= 1024:
+        if size > 512:
             szx = 6
         elif 256 < size <= 512:
             szx = 5
