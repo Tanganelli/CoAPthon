@@ -100,6 +100,7 @@ class Separate(Resource):
     def render_DELETE_separate(self, request):
         return True
 
+
 class Long(Resource):
 
     def __init__(self, name="Long", coap_server=None):

@@ -473,6 +473,172 @@ class Tests(unittest.TestCase):
 
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5])
 
+    def test_get_block(self):
+        print "TEST_POST_BLOCK"
+        path = "/big"
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (0, 0, 512)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (0, 1, 512)
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (1, 0, 256)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (1, 1, 256)
+
+        exchange2 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (2, 0, 128)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (2, 1, 128)
+
+        exchange3 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (3, 0, 64)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (3, 1, 64)
+
+        exchange4 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (4, 0, 32)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (4, 1, 32)
+
+        exchange5 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (5, 0, 16)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (5, 1, 16)
+
+        exchange6 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (6, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (6, 1, 1024)
+
+        exchange7 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = None
+        req.block2 = (7, 0, 1024)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.block2 = (7, 0, 1024)
+
+        exchange8 = (req, expected)
+        self.current_mid += 1
+
+        self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7, exchange8])
+
     def test_options(self):
         print "TEST_OPTIONS"
         path = "/storage/new_res"
