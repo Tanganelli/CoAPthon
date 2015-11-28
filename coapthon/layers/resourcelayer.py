@@ -34,50 +34,46 @@ class ResourceLayer(object):
                 return transaction
 
         method = getattr(resource_node, "render_POST", None)
-        if hasattr(method, '__call__'):
-            try:
-                resource = method(request=transaction.request)
-            except NotImplementedError:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
-            if isinstance(resource, Resource):
-                pass
-            elif isinstance(resource, tuple) and len(resource) == 2:
-                resource, callback = resource
-                resource = self._handle_separate(transaction, callback)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
-            else:
-                # Handle error
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                return transaction
-
-            resource.path = path
-            resource.observe_count = resource_node.observe_count
-
-            transaction.response.code = defines.Codes.CREATED.number
-            resource.changed = True
-            resource.observe_count += 1
-            transaction.resource = resource
-
-            assert(isinstance(resource, Resource))
-            if resource.etag is not None:
-                transaction.response.etag = resource.etag
-
-            transaction.response.location_path = path
-
-            if resource.location_query is not None and len(resource.location_query) > 0:
-                transaction.response.location_query = resource.location_query
-
-            transaction.response.payload = None
-
-            self._parent.root[path] = resource
-
-            return transaction
-        else:
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
             return transaction
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction
+
+        resource.path = path
+        resource.observe_count = resource_node.observe_count
+
+        transaction.response.code = defines.Codes.CREATED.number
+        resource.changed = True
+        resource.observe_count += 1
+        transaction.resource = resource
+
+        assert(isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+
+        transaction.response.location_path = path
+
+        if resource.location_query is not None and len(resource.location_query) > 0:
+            transaction.response.location_query = resource.location_query
+
+        transaction.response.payload = None
+
+        self._parent.root[path] = resource
+
+        return transaction
 
     def add_resource(self, transaction, parent_resource, lp):
         """
@@ -90,47 +86,42 @@ class ResourceLayer(object):
         :return: the response
         """
         method = getattr(parent_resource, "render_POST", None)
-        if hasattr(method, '__call__'):
-            try:
-                resource = method(request=transaction.request)
-            except NotImplementedError:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
-            if isinstance(resource, Resource):
-                pass
-            elif isinstance(resource, tuple) and len(resource) == 2:
-                resource, callback = resource
-                resource = self._handle_separate(transaction, callback)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
-            else:
-                # Handle error
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                return transaction
-
-            resource.path = lp
-
-            if resource.etag is not None:
-                transaction.response.etag = resource.etag
-
-            transaction.response.location_path = lp
-
-            if resource.location_query is not None and len(resource.location_query) > 0:
-                transaction.response.location_query = resource.location_query
-
-            transaction.response.code = defines.Codes.CREATED.number
-            transaction.response.payload = None
-            resource.changed = True
-            transaction.resource = resource
-
-            self._parent.root[lp] = resource
-
-            return transaction
-
-        else:
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
             return transaction
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction
+
+        resource.path = lp
+
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+
+        transaction.response.location_path = lp
+
+        if resource.location_query is not None and len(resource.location_query) > 0:
+            transaction.response.location_query = resource.location_query
+
+        transaction.response.code = defines.Codes.CREATED.number
+        transaction.response.payload = None
+        resource.changed = True
+        transaction.resource = resource
+
+        self._parent.root[lp] = resource
+
+        return transaction
 
     def create_resource(self, path, transaction):
         """
@@ -177,44 +168,41 @@ class ResourceLayer(object):
                 return transaction
         # If-None-Match
         if transaction.request.if_none_match:
-            # TODO check
             transaction.response.code = defines.Codes.PRECONDITION_FAILED.number
             return transaction
 
         method = getattr(transaction.resource, "render_PUT", None)
-        if hasattr(method, '__call__'):
-            try:
-                resource = method(request=transaction.request)
-            except NotImplementedError:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
 
-            if isinstance(resource, Resource):
-                pass
-            elif isinstance(resource, tuple) and len(resource) == 2:
-                resource, callback = resource
-                resource = self._handle_separate(transaction, callback)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
-            else:
-                # Handle error
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                return transaction
-
-            if resource.etag is not None:
-                transaction.response.etag = resource.etag
-
-            transaction.response.code = defines.Codes.CHANGED.number
-            transaction.response.payload = None
-            resource.changed = True
-            resource.observe_count += 1
-            transaction.resource = resource
-
-            return transaction
-        else:
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
             return transaction
+
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction
+
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+
+        transaction.response.code = defines.Codes.CHANGED.number
+        transaction.response.payload = None
+        resource.changed = True
+        resource.observe_count += 1
+        transaction.resource = resource
+
+        return transaction
+
 
     def _handle_separate(self, transaction, callback):
         # Handle separate
@@ -236,34 +224,32 @@ class ResourceLayer(object):
 
         resource = transaction.resource
         method = getattr(resource, 'render_DELETE', None)
-        if hasattr(method, '__call__'):
-            try:
-                ret = method(request=transaction.request)
-            except NotImplementedError:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
-            if isinstance(ret, bool):
-                pass
-            elif isinstance(ret, tuple) and len(ret) == 2:
-                resource, callback = ret
-                ret = self._handle_separate(transaction, callback)
-                if not isinstance(ret, bool):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
-            else:
-                # Handle error
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                return transaction
-            if ret:
-                del self._parent.root[path]
-                transaction.response.code = defines.Codes.DELETED.number
-                transaction.response.payload = None
-                transaction.resource.deleted = True
-                return transaction
-            else:
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-        else:
+
+        try:
+            ret = method(request=transaction.request)
+        except NotImplementedError:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+            return transaction
+        if isinstance(ret, bool):
+            pass
+        elif isinstance(ret, tuple) and len(ret) == 2:
+            resource, callback = ret
+            ret = self._handle_separate(transaction, callback)
+            if not isinstance(ret, bool):
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction
+        if ret:
+            del self._parent.root[path]
+            transaction.response.code = defines.Codes.DELETED.number
+            transaction.response.payload = None
+            transaction.resource.deleted = True
+        else:
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+
         return transaction
 
     def get_resource(self, transaction):
@@ -274,56 +260,54 @@ class ResourceLayer(object):
         :return: the transaction
         """
         method = getattr(transaction.resource, 'render_GET', None)
-        if hasattr(method, '__call__'):
-            transaction.resource.required_content_type = None
-            # Accept
-            if transaction.request.accept is not None:
-                transaction.resource.required_content_type = transaction.request.accept
-                if transaction.resource.required_content_type in defines.Content_types.values():
-                    transaction.response.content_type = transaction.resource.required_content_type
-            # Render_GET
-            try:
-                resource = method(request=transaction.request)
-            except NotImplementedError:
-                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
-                return transaction
 
-            if isinstance(resource, Resource):
-                pass
-            elif isinstance(resource, tuple) and len(resource) == 2:
-                resource, callback = resource
-                resource = self._handle_separate(transaction, callback)
-                if not isinstance(resource, Resource):
-                    transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                    return transaction
-            else:
-                # Handle error
-                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
-                return transaction.response
-
-            if resource.etag in transaction.request.etag:
-                transaction.response.code = defines.Codes.VALID.number
-            else:
-                transaction.response.code = defines.Codes.CONTENT.number
-
-            try:
-                transaction.response.payload = resource.payload
-            except KeyError:
-                transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
-                return transaction.response
-
-            assert(isinstance(resource, Resource))
-            if resource.etag is not None:
-                transaction.response.etag = resource.etag
-            if resource.max_age is not None:
-                transaction.response.max_age = resource.max_age
-
-            transaction.resource = resource
-
-            return transaction
-        else:
+        transaction.resource.required_content_type = None
+        # Accept
+        if transaction.request.accept is not None:
+            transaction.resource.required_content_type = transaction.request.accept
+            if transaction.resource.required_content_type in defines.Content_types.values():
+                transaction.response.content_type = transaction.resource.required_content_type
+        # Render_GET
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
             transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+            return transaction
+
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction.response
+
+        if resource.etag in transaction.request.etag:
+            transaction.response.code = defines.Codes.VALID.number
+        else:
+            transaction.response.code = defines.Codes.CONTENT.number
+
+        try:
+            transaction.response.payload = resource.payload
+        except KeyError:
+            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+            return transaction.response
+
+        assert(isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+        if resource.max_age is not None:
+            transaction.response.max_age = resource.max_age
+
+        transaction.resource = resource
+
+        return transaction
+
 
     def discover(self, transaction):
         """
