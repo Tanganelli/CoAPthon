@@ -48,7 +48,10 @@ class Serializer(object):
         message._mid = mid
         pos = 3
         if token_length > 0:
+            try:
                 message.token = "".join(values[pos: pos + token_length])
+            except AttributeError:
+                return defines.Codes.BAD_REQUEST.number
         else:
             message.token = None
 
@@ -73,7 +76,7 @@ class Serializer(object):
                     option_item = defines.OptionRegistry.LIST[current_option]
                 except KeyError:
                     # log.err("unrecognized option")
-                    return message, "BAD_OPTION"
+                    return defines.Codes.BAD_REQUEST.number
                 if option_length == 0:
                     value = None
                 elif option_item.value_type == defines.INTEGER:
@@ -97,7 +100,7 @@ class Serializer(object):
 
                 if length_packet <= pos:
                     # log.err("Payload Marker with no payload")
-                    return message, "BAD_REQUEST"
+                    return defines.Codes.BAD_REQUEST.number
                 message.payload = ""
                 payload = values[pos:]
                 for b in payload:
@@ -127,8 +130,6 @@ class Serializer(object):
         values = [tmp, message.code, message.mid]
 
         if message.token is not None and tkl > 0:
-            if isinstance(message.token, int):
-                message.token = str(message.token)
 
             for b in str(message.token):
                 fmt += "c"
@@ -188,8 +189,7 @@ class Serializer(object):
             lastoptionnumber = option.number
 
         payload = message.payload
-        if isinstance(payload, dict):
-            payload = payload.get("Payload")
+
         if payload is not None and len(payload) > 0:
             # if payload is present and of non-zero length, it is prefixed by
             # an one-byte Payload Marker (0xFF) which indicates the end of

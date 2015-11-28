@@ -1167,12 +1167,13 @@ class Tests(unittest.TestCase):
         req.type = defines.Types["CON"]
         req._mid = self.current_mid
         req.destination = self.server_address
+        req.token = 100
 
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
         expected.code = defines.Codes.NOT_FOUND.number
-        expected.token = None
+        expected.token = "100"
         expected.payload = None
 
         exchange1 = (req, expected)

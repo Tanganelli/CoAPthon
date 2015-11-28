@@ -89,6 +89,10 @@ class Message(object):
         :param value: the Token
         """
         # TODO check if longer that acceptable
+        if not isinstance(value, str):
+            value = str(value)
+        if len(value) > 256:
+            raise AttributeError
         self._token = value
 
     @token.deleter

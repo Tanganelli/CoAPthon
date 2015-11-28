@@ -129,6 +129,15 @@ class CoAP(object):
 
         serializer = Serializer()
         message = serializer.deserialize(data, client_address)
+        if isinstance(message, int):
+            logger.error("receive_datagram - BAD REQUEST")
+
+            rst = Message()
+            rst.destination = client_address
+            rst.type = defines.Types["RST"]
+            rst.code = message
+            self.send_datagram(rst)
+            return
         logger.debug("receive_datagram - " + str(message))
         if isinstance(message, Request):
 
