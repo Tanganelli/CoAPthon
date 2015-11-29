@@ -61,7 +61,6 @@ class CoAP(object):
             self.send_datagram(transaction.request)
         elif isinstance(message, Message):
             message = self._observeLayer.send_empty(message)
-            message = self._blockLayer.send_empty(message)
             message = self._messageLayer.send_empty(None, None, message)
             self.send_datagram(message)
 

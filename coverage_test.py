@@ -91,6 +91,36 @@ class Tests(unittest.TestCase):
                         self.assertEqual(option_value, option_value_rec)
         sock.close()
 
+    def _test_datagram(self, message_list):
+        serializer = Serializer()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        for message, expected in message_list:
+            if message is not None:
+                datagram, destination = message
+                sock.sendto(datagram, destination)
+            if expected is not None:
+                datagram, source = sock.recvfrom(4096)
+                received_message = serializer.deserialize(datagram, source)
+                if expected.type is not None:
+                    self.assertEqual(received_message.type, expected.type)
+                if expected.mid is not None:
+                    self.assertEqual(received_message.mid, expected.mid)
+                self.assertEqual(received_message.code, expected.code)
+                if expected.source is not None:
+                    self.assertEqual(received_message.source, source)
+                if expected.token is not None:
+                    self.assertEqual(received_message.token, expected.token)
+                if expected.payload is not None:
+                    self.assertEqual(received_message.payload, expected.payload)
+                if expected.options is not None:
+                    self.assertEqual(received_message.options, expected.options)
+                    for o in expected.options:
+                        assert isinstance(o, Option)
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
+        sock.close()
+
     def test_not_allowed(self):
         print "TEST_NOT_ALLOWED"
         path = "/void"
@@ -1232,6 +1262,47 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
+
+    def test_invalid(self):
+        print "TEST_INVALID"
+
+        req = ("\00\01\8c\da", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange1 = (req, expected)
+
+        req = ("\cc\cc\cc\cc", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange2 = (req, expected)
+
+        req = ("\00\05\8c\da", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange3 = (req, expected)
+
+        req = ("\00\01\8c\da\94", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange4 = (req, expected)
+
+        self._test_datagram([exchange1, exchange2, exchange3, exchange4])
 
 if __name__ == '__main__':
     unittest.main()

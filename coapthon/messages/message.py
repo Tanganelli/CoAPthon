@@ -22,6 +22,17 @@ class Message(object):
         self._cancelled = None
         self._duplicated = None
         self._timestamp = None
+        self._version = 1
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, v):
+        if not isinstance(v, int) or v != 1:
+            raise AttributeError
+        self._version = v
 
     @property
     def type(self):

@@ -18,95 +18,96 @@ class Serializer(object):
         :param datagram:
         :param source:
         """
-
-        fmt = "!BBH"
-        pos = 4
-        length = len(datagram)
-        while pos < length:
-            fmt += "c"
-            pos += 1
-        s = struct.Struct(fmt)
-        values = s.unpack_from(datagram)
-        first = values[0]
-        code = values[1]
-        mid = values[2]
-        version = (first & 0xC0) >> 6
-        message_type = (first & 0x30) >> 4
-        token_length = (first & 0x0F)
-        if Serializer.is_response(code):
-            message = Response()
-            message.code = code
-        elif Serializer.is_request(code):
-            message = Request()
-            message.code = code
-        else:
-            message = Message()
-        message.source = source
-        message.destination = None
-        message.version = version
-        message.type = message_type
-        message._mid = mid
-        pos = 3
-        if token_length > 0:
-            try:
-                message.token = "".join(values[pos: pos + token_length])
-            except AttributeError:
-                return defines.Codes.BAD_REQUEST.number
-        else:
-            message.token = None
-
-        pos += token_length
-        current_option = 0
-        length_packet = len(values)
-        while pos < length_packet:
-            next_byte = struct.unpack("B", values[pos])[0]
-            pos += 1
-            if next_byte != int(defines.PAYLOAD_MARKER):
-                # the first 4 bits of the byte represent the option delta
-                # delta = self._reader.read(4).uint
-                delta = (next_byte & 0xF0) >> 4
-                # the second 4 bits represent the option length
-                # length = self._reader.read(4).uint
-                length = (next_byte & 0x0F)
-                num, pos = Serializer.read_option_value_from_nibble(delta, pos, values)
-                option_length, pos = Serializer.read_option_value_from_nibble(length, pos, values)
-                current_option += num
-                # read option
-                try:
-                    option_item = defines.OptionRegistry.LIST[current_option]
-                except KeyError:
-                    # log.err("unrecognized option")
-                    return defines.Codes.BAD_REQUEST.number
-                if option_length == 0:
-                    value = None
-                elif option_item.value_type == defines.INTEGER:
-                    tmp = values[pos: pos + option_length]
-                    value = 0
-                    for b in tmp:
-                        value = (value << 8) | struct.unpack("B", b)[0]
-                else:
-                    tmp = values[pos: pos + option_length]
-                    value = ""
-                    for b in tmp:
-                        value += str(b)
-
-                pos += option_length
-                option = Option()
-                option.number = current_option
-                option.value = Serializer.convert_to_raw(current_option, value, option_length)
-
-                message.add_option(option)
+        try:
+            fmt = "!BBH"
+            pos = 4
+            length = len(datagram)
+            while pos < length:
+                fmt += "c"
+                pos += 1
+            s = struct.Struct(fmt)
+            values = s.unpack_from(datagram)
+            first = values[0]
+            code = values[1]
+            mid = values[2]
+            version = (first & 0xC0) >> 6
+            message_type = (first & 0x30) >> 4
+            token_length = (first & 0x0F)
+            if Serializer.is_response(code):
+                message = Response()
+                message.code = code
+            elif Serializer.is_request(code):
+                message = Request()
+                message.code = code
             else:
+                message = Message()
+            message.source = source
+            message.destination = None
+            message.version = version
+            message.type = message_type
+            message.mid = mid
+            pos = 3
+            if token_length > 0:
+                message.token = "".join(values[pos: pos + token_length])
+            else:
+                message.token = None
 
-                if length_packet <= pos:
-                    # log.err("Payload Marker with no payload")
-                    return defines.Codes.BAD_REQUEST.number
-                message.payload = ""
-                payload = values[pos:]
-                for b in payload:
-                    message.payload += str(b)
-                    pos += 1
-        return message
+            pos += token_length
+            current_option = 0
+            length_packet = len(values)
+            while pos < length_packet:
+                next_byte = struct.unpack("B", values[pos])[0]
+                pos += 1
+                if next_byte != int(defines.PAYLOAD_MARKER):
+                    # the first 4 bits of the byte represent the option delta
+                    # delta = self._reader.read(4).uint
+                    delta = (next_byte & 0xF0) >> 4
+                    # the second 4 bits represent the option length
+                    # length = self._reader.read(4).uint
+                    length = (next_byte & 0x0F)
+                    num, pos = Serializer.read_option_value_from_nibble(delta, pos, values)
+                    option_length, pos = Serializer.read_option_value_from_nibble(length, pos, values)
+                    current_option += num
+                    # read option
+                    try:
+                        option_item = defines.OptionRegistry.LIST[current_option]
+                    except KeyError:
+                        # log.err("unrecognized option")
+                        raise AttributeError
+                    if option_length == 0:
+                        value = None
+                    elif option_item.value_type == defines.INTEGER:
+                        tmp = values[pos: pos + option_length]
+                        value = 0
+                        for b in tmp:
+                            value = (value << 8) | struct.unpack("B", b)[0]
+                    else:
+                        tmp = values[pos: pos + option_length]
+                        value = ""
+                        for b in tmp:
+                            value += str(b)
+
+                    pos += option_length
+                    option = Option()
+                    option.number = current_option
+                    option.value = Serializer.convert_to_raw(current_option, value, option_length)
+
+                    message.add_option(option)
+                else:
+
+                    if length_packet <= pos:
+                        # log.err("Payload Marker with no payload")
+                        raise AttributeError
+                    message.payload = ""
+                    payload = values[pos:]
+                    for b in payload:
+                        message.payload += str(b)
+                        pos += 1
+            return message
+        except AttributeError:
+            return defines.Codes.BAD_REQUEST.number
+        except struct.error:
+            raise AttributeError
 
     @staticmethod
     def serialize(message):
@@ -119,8 +120,6 @@ class Serializer(object):
 
         if message.token is None or message.token == "":
             tkl = 0
-        elif isinstance(message.token, int):
-            tkl = len(str(message.token))
         else:
             tkl = len(message.token)
         tmp = (defines.VERSION << 2)
@@ -253,7 +252,7 @@ class Serializer(object):
             pos += 2
             return tmp, pos
         else:
-            raise ValueError("Unsupported option nibble " + str(nibble))
+            raise AttributeError("Unsupported option nibble " + str(nibble))
 
     @staticmethod
     def convert_to_raw(number, value, length):
@@ -309,7 +308,7 @@ class Serializer(object):
         elif optionvalue <= 65535 + 269:
             return 14
         else:
-            raise ValueError("Unsupported option delta " + optionvalue)
+            raise AttributeError("Unsupported option delta " + optionvalue)
 
     @staticmethod
     def int_to_words(int_val, num_words=4, word_size=32):
@@ -328,7 +327,7 @@ class Serializer(object):
         max_word_size = 2 ** word_size - 1
 
         if not 0 <= int_val <= max_int:
-            raise IndexError('integer %r is out of bounds!' % hex(int_val))
+            raise AttributeError('integer %r is out of bounds!' % hex(int_val))
 
         words = []
         for _ in range(num_words):
