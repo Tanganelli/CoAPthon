@@ -57,6 +57,33 @@ class Tests(unittest.TestCase):
                         self.assertEqual(option_value, option_value_rec)
         client.stop()
 
+    def _test_with_client_observe(self, message_list):
+        client = HelperClient(self.server_address)
+        for message, expected in message_list:
+            if message is not None:
+                client.send_request(message, self.client_callback)
+            if expected is not None:
+                received_message = self.queue.get()
+                if expected.type is not None:
+                    self.assertEqual(received_message.type, expected.type)
+                if expected.mid is not None:
+                    self.assertEqual(received_message.mid, expected.mid)
+                self.assertEqual(received_message.code, expected.code)
+                if expected.source is not None:
+                    self.assertEqual(received_message.source, self.server_address)
+                if expected.token is not None:
+                    self.assertEqual(received_message.token, expected.token)
+                if expected.payload is not None:
+                    self.assertEqual(received_message.payload, expected.payload)
+                if expected.options:
+                    self.assertEqual(len(received_message.options), len(expected.options))
+                    for o in expected.options:
+                        assert isinstance(o, Option)
+                        option_value = getattr(expected, o.name.lower().replace("-", "_"))
+                        option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
+                        self.assertEqual(option_value, option_value_rec)
+        client.stop()
+
     def client_callback(self, response):
         print "Callback"
         self.queue.put(response)
@@ -1363,6 +1390,40 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client([exchange1])
+
+    def test_observe_client(self):
+        print "TEST_OBSERVE_CLIENT"
+        path = "/basic"
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.observe = 0
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+        expected.observe = 1
+
+        exchange1 = (req, expected)
+
+        req = Request()
+        req.code = defines.Codes.EMPTY.number
+        req.uri_path = path
+        req.type = defines.Types["RST"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        exchange2 = (req, None)
+        self.current_mid += 1
+
+        self._test_with_client_observe([exchange1, exchange2])
 
 if __name__ == '__main__':
     unittest.main()

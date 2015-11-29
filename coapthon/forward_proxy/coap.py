@@ -193,7 +193,7 @@ class CoAP(object):
             transaction = self._messageLayer.receive_empty(message)
             if transaction is not None:
                 transaction = self._blockLayer.receive_empty(message, transaction)
-                transaction = self._observeLayer.receive_empty(message, transaction)
+                self._observeLayer.receive_empty(message, transaction)
 
         else:  # is Response
             logger.error("Received response from %s", message.source)

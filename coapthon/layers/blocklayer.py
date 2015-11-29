@@ -137,14 +137,12 @@ class BlockLayer(object):
                     item = self._block2_sent[key_token]
                     if num != item.num:
                         logger.error("Receive unwanted block")
-                        # TODO send rst
-                        return None
+                        return self.error(transaction, defines.Codes.REQUEST_ENTITY_INCOMPLETE.number)
                     if item.content_type is None:
                         item.content_type = transaction.response.content_type
                     if item.content_type != transaction.response.content_type:
                         logger.error("Content-type Error")
-                        # TODO send rst
-                        return None
+                        return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     item.byte += size
                     item.num = num
                     item.size = size
@@ -163,8 +161,7 @@ class BlockLayer(object):
                 if key_token in self._block2_sent:
                     if self._block2_sent[key_token].content_type != transaction.response.content_type:
                         logger.error("Content-type Error")
-                        # TODO send rst
-                        return None
+                        return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     transaction.response.payload = self._block2_sent[key_token].payload + transaction.response.payload
                 del self._block2_sent[key_token]
         else:
@@ -245,7 +242,6 @@ class BlockLayer(object):
                 size = defines.MAX_PAYLOAD
 
             self._block1_sent[key_token] = BlockItem(size, num, m, size, request.payload, request.content_type)
-            # TODO check that the payload inside the dict doesn't change
             request.payload = request.payload[0:size]
             del request.block1
             request.block1 = (num, m, size)
@@ -267,4 +263,13 @@ class BlockLayer(object):
         transaction.response.code = defines.Codes.REQUEST_ENTITY_INCOMPLETE.number
         return transaction
 
+    @staticmethod
+    def error(transaction, code):
+        transaction.block_transfer = True
+        transaction.response = Response()
+        transaction.response.destination = transaction.request.source
+        transaction.response.type = defines.Types["RST"]
+        transaction.response.token = transaction.request.token
+        transaction.response.code = code
+        return transaction
 
