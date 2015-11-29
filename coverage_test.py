@@ -1302,7 +1302,16 @@ class Tests(unittest.TestCase):
 
         exchange4 = (req, expected)
 
-        self._test_datagram([exchange1, exchange2, exchange3, exchange4])
+        req = ("\40\02\8c\da\75\62\61\73\69\63\ff", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange5 = (req, expected)
+
+        self._test_datagram([exchange1, exchange2, exchange3, exchange4, exchange5])
 
 if __name__ == '__main__':
     unittest.main()
