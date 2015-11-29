@@ -1266,6 +1266,7 @@ class Tests(unittest.TestCase):
     def test_invalid(self):
         print "TEST_INVALID"
 
+        # version
         req = ("\x00\x01\x8c\xda", self.server_address)
 
         expected = Response()
@@ -1275,7 +1276,8 @@ class Tests(unittest.TestCase):
 
         exchange1 = (req, expected)
 
-        req = ("\xcc\xcc\xcc\xcc", self.server_address)
+        # version
+        req = ("\x40", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1284,7 +1286,8 @@ class Tests(unittest.TestCase):
 
         exchange2 = (req, expected)
 
-        req = ("\x00\x05\x8c\xda", self.server_address)
+        # code
+        req = ("\x40\x05\x8c\xda", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1293,7 +1296,8 @@ class Tests(unittest.TestCase):
 
         exchange3 = (req, expected)
 
-        req = ("\x00\x01\x8c\xda\x94", self.server_address)
+        # option
+        req = ("\x40\x01\x8c\xda\x94", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1302,6 +1306,7 @@ class Tests(unittest.TestCase):
 
         exchange4 = (req, expected)
 
+        # payload marker
         req = ("\x40\x02\x8c\xda\x75\x62\x61\x73\x69\x63\xff", self.server_address)
 
         expected = Response()
