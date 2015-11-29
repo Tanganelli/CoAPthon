@@ -107,7 +107,7 @@ class Serializer(object):
         except AttributeError:
             return defines.Codes.BAD_REQUEST.number
         except struct.error:
-            raise AttributeError
+            return defines.Codes.BAD_REQUEST.number
 
     @staticmethod
     def serialize(message):
