@@ -1266,7 +1266,7 @@ class Tests(unittest.TestCase):
     def test_invalid(self):
         print "TEST_INVALID"
 
-        req = ("\00\01\8c\da", self.server_address)
+        req = ("\x00\x01\x8c\xda", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1275,7 +1275,7 @@ class Tests(unittest.TestCase):
 
         exchange1 = (req, expected)
 
-        req = ("\cc\cc\cc\cc", self.server_address)
+        req = ("\xcc\xcc\xcc\xcc", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1284,7 +1284,7 @@ class Tests(unittest.TestCase):
 
         exchange2 = (req, expected)
 
-        req = ("\00\05\8c\da", self.server_address)
+        req = ("\x00\x05\x8c\xda", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1293,7 +1293,7 @@ class Tests(unittest.TestCase):
 
         exchange3 = (req, expected)
 
-        req = ("\00\01\8c\da\94", self.server_address)
+        req = ("\x00\x01\x8c\xda\x94", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
@@ -1302,7 +1302,7 @@ class Tests(unittest.TestCase):
 
         exchange4 = (req, expected)
 
-        req = ("\40\02\8c\da\75\62\61\73\69\63\ff", self.server_address)
+        req = ("\x40\x02\x8c\xda\x75\x62\x61\x73\x69\x63\xff", self.server_address)
 
         expected = Response()
         expected.type = defines.Types["RST"]
