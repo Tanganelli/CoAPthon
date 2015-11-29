@@ -6,6 +6,7 @@ import unittest
 from coapclient import HelperClient
 from coapserver import CoAPServer
 from coapthon import defines
+from coapthon.messages.message import Message
 from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
@@ -1413,7 +1414,7 @@ class Tests(unittest.TestCase):
 
         exchange1 = (req, expected)
 
-        req = Request()
+        req = Message()
         req.code = defines.Codes.EMPTY.number
         req.uri_path = path
         req.type = defines.Types["RST"]
