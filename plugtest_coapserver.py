@@ -41,11 +41,11 @@ class CoAPServerPlugTest(CoAP):
         self.add_resource('long/', LongResource())
 
 
-def usage():
+def usage():  # pragma: no cover
     print "plugtest_coapserver.py -i <ip address> -p <port>"
 
 
-def main(argv):
+def main(argv):  # pragma: no cover
     ip = "127.0.0.1"
     port = 5683
     try:

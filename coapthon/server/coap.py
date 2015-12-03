@@ -79,7 +79,7 @@ class CoAP(object):
             # Set some more multicast options
             interface = socket.gethostbyname(socket.gethostname())
             self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address)
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address[0])
                                     + socket.inet_aton(interface))
         else:
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
