@@ -40,7 +40,7 @@ class Tests(unittest.TestCase):
         self.proxy_thread.join(timeout=25)
         self.proxy = None
 
-    def _test_with_client(self, message_list):
+    def _test_with_client(self, message_list):  # pragma: no cover
         client = HelperClient(self.server_address)
         for message, expected in message_list:
             if message is not None:
@@ -66,7 +66,7 @@ class Tests(unittest.TestCase):
                         self.assertEqual(option_value, option_value_rec)
         client.stop()
 
-    def _test_with_client_observe(self, message_list):
+    def _test_with_client_observe(self, message_list):  # pragma: no cover
         client = HelperClient(self.server_address)
         for message, expected in message_list:
             if message is not None:
@@ -93,11 +93,11 @@ class Tests(unittest.TestCase):
                         self.assertEqual(option_value, option_value_rec)
         client.stop()
 
-    def client_callback(self, response):
+    def client_callback(self, response):  # pragma: no cover
         print "Callback"
         self.queue.put(response)
 
-    def _test_plugtest(self, message_list):
+    def _test_plugtest(self, message_list):  # pragma: no cover
         serializer = Serializer()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for message, expected in message_list:
@@ -127,7 +127,7 @@ class Tests(unittest.TestCase):
                         self.assertEqual(option_value, option_value_rec)
         sock.close()
 
-    def _test_datagram(self, message_list):
+    def _test_datagram(self, message_list):  # pragma: no cover
         serializer = Serializer()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for message, expected in message_list:

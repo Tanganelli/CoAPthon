@@ -6,10 +6,8 @@ exclude_lines =
 
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
-    raise NotImplementedError
     except RuntimeError
 
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
-    def _test([a-zA-Z0-9_\(\),]*):

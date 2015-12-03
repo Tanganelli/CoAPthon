@@ -32,7 +32,7 @@ class Tests(unittest.TestCase):
         self.server_thread.join(timeout=25)
         self.server = None
 
-    def _test_with_client(self, message_list):
+    def _test_with_client(self, message_list):  # pragma: no cover
         client = HelperClient(self.server_address)
         for message, expected in message_list:
             if message is not None:
@@ -61,7 +61,7 @@ class Tests(unittest.TestCase):
         print "Callback"
         self.queue.put(response)
 
-    def _test_with_client_observe(self, message_list, callback):
+    def _test_with_client_observe(self, message_list, callback):  # pragma: no cover
         client = HelperClient(self.server_address)
         token = None
         last_mid = 0
@@ -93,7 +93,7 @@ class Tests(unittest.TestCase):
         client.send_empty(message)
         client.stop()
 
-    def _test_plugtest(self, message_list):
+    def _test_plugtest(self, message_list):  # pragma: no cover
         serializer = Serializer()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for message, expected in message_list:

@@ -30,15 +30,26 @@ class CoAP(object):
         self._observeLayer = ObserveLayer()
         self._requestLayer = RequestLayer(self)
 
-        try:
-            # legal
-            socket.inet_aton(server[0])
-        except socket.error:
-            # Not legal
-            data = socket.getaddrinfo(server[0], server[1])
-            self._server = (data[0], data[1])
+        # try:
+        #     # legal
+        #     socket.inet_aton(server[0])
+        # except socket.error:
+        #     # Not legal
+        #     data = socket.getaddrinfo(server[0], server[1])
+        #     self._server = (data[0], data[1])
 
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        host, port = self._server
+        ret = socket.getaddrinfo(host, port)
+        family, socktype, proto, canonname, sockaddr = ret[0]
+
+        if len(sockaddr) == 4:
+            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        else:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._receiver_thread = threading.Thread(target=self.receive_datagram)
         self._receiver_thread.start()
 
