@@ -13,7 +13,7 @@ from coapthon.utils import parse_uri
 client = None
 
 
-def usage():
+def usage():  # pragma: no cover
     print "Command:\tcoapclient.py -o -p [-P]"
     print "Options:"
     print "\t-o, --operation=\tGET|PUT|POST|DELETE|DISCOVER|OBSERVE"
@@ -49,9 +49,6 @@ def client_callback_observe(response):
                 break
         else:
             break
-
-
-
 
 
 class HelperClient(object):
@@ -181,7 +178,7 @@ class HelperClient(object):
         self.protocol.send_message(empty)
 
 
-def main():
+def main():  # pragma: no cover
     global client
     op = None
     path = None
@@ -285,5 +282,5 @@ def main():
         sys.exit(2)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

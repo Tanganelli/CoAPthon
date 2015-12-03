@@ -14,11 +14,11 @@ class CoAPForwardProxy(CoAP):
         print "CoAP Proxy start on " + host + ":" + str(port)
 
 
-def usage():
+def usage():  # pragma: no cover
     print "coapforwardproxy.py -i <ip address> -p <port>"
 
 
-def main(argv):
+def main(argv):  # pragma: no cover
     ip = "127.0.0.1"
     port = 5684
     try:
@@ -44,5 +44,5 @@ def main(argv):
         print "Exiting..."
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main(sys.argv[1:])

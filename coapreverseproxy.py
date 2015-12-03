@@ -13,11 +13,11 @@ class CoAPReverseProxy(CoAP):
         print "CoAP Proxy start on " + host + ":" + str(port)
 
 
-def usage():
+def usage():  # pragma: no cover
     print "coapreverseproxy.py -i <ip address> -p <port> -f <xml_file>"
 
 
-def main(argv):
+def main(argv):  # pragma: no cover
     ip = "127.0.0.1"
     port = 5684
     file_xml = "reverse_proxy_mapping.xml"
@@ -46,5 +46,5 @@ def main(argv):
         print "Exiting..."
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main(sys.argv[1:])

@@ -23,11 +23,11 @@ class CoAPServer(CoAP):
         print self.root.dump()
 
 
-def usage():
+def usage():  # pragma: no cover
     print "coapserver.py -i <ip address> -p <port>"
 
 
-def main(argv):
+def main(argv):  # pragma: no cover
     ip = "127.0.0.1"
     port = 5683
     try:
@@ -53,5 +53,5 @@ def main(argv):
         print "Exiting..."
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main(sys.argv[1:])
