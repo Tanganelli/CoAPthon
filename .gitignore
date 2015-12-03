@@ -23,7 +23,6 @@ __pycache__
 pip-log.txt
 
 # Unit test / coverage reports
-.coverage
 .tox
 nosetests.xml
 
@@ -36,6 +35,7 @@ nosetests.xml
 *.sh
 !.gitignore
 !.travis.yml
+!.coveragerc
 *~
 
 ### Eclipse ###

@@ -212,33 +212,6 @@ class CoAP(object):
 
             self._socket.sendto(message, (host, port))
 
-    def add_resource(self, path, resource):
-        """
-        Helper function to add resources to the resource directory during server initialization.
-
-        :type resource: Resource
-        :param resource:
-        """
-
-        assert isinstance(resource, Resource)
-        path = path.strip("/")
-        paths = path.split("/")
-        actual_path = ""
-        i = 0
-        for p in paths:
-            i += 1
-            actual_path += "/" + p
-            try:
-                res = self.root[actual_path]
-            except KeyError:
-                res = None
-            if res is None:
-                if len(paths) != i:
-                    return False
-                resource.path = actual_path
-                self.root[actual_path] = resource
-        return True
-
     def _start_retrasmission(self, transaction, message):
         """
 
@@ -300,8 +273,7 @@ class CoAP(object):
         :type future: Future
         :param future:
         """
-        if not timer.finished:
-            timer.cancel()
+        timer.cancel()
 
     def _send_ack(self, transaction):
         # Handle separate
@@ -317,18 +289,3 @@ class CoAP(object):
         if not transaction.request.acknowledged:
             ack = self._messageLayer.send_empty(transaction, transaction.request, ack)
             self.send_datagram(ack)
-
-    def notify(self, resource):
-        observers = self._observeLayer.notify(resource)
-        logger.debug("Notify")
-        for transaction in observers:
-            transaction.response = None
-            transaction = self._requestLayer.receive_request(transaction)
-            transaction = self._observeLayer.send_response(transaction)
-            transaction = self._blockLayer.send_response(transaction)
-            transaction = self._messageLayer.send_response(transaction)
-            if transaction.response is not None:
-                if transaction.response.type == defines.Types["CON"]:
-                    self._start_retrasmission(transaction, transaction.response)
-
-                self.send_datagram(transaction.response)
