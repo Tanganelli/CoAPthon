@@ -379,18 +379,3 @@ class CoAP(object):
         if not transaction.request.acknowledged:
             ack = self._messageLayer.send_empty(transaction, transaction.request, ack)
             self.send_datagram(ack)
-
-    def notify(self, resource):
-        observers = self._observeLayer.notify(resource)
-        logger.debug("Notify")
-        for transaction in observers:
-            transaction.response = None
-            transaction = self._requestLayer.receive_request(transaction)
-            transaction = self._observeLayer.send_response(transaction)
-            transaction = self._blockLayer.send_response(transaction)
-            transaction = self._messageLayer.send_response(transaction)
-            if transaction.response is not None:
-                if transaction.response.type == defines.Types["CON"]:
-                    self._start_retrasmission(transaction, transaction.response)
-
-                self.send_datagram(transaction.response)
