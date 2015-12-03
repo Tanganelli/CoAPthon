@@ -71,11 +71,17 @@ class MessageLayer(object):
         except AttributeError:
             return
         key_mid = hash(str(host) + str(port) + str(response.mid))
+        key_mid_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(response.mid))
         key_token = hash(str(host) + str(port) + str(response.token))
+        key_token_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(response.token))
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
         elif key_token in self._transactions_token:
             transaction = self._transactions_token[key_token]
+        elif key_mid_multicast in self._transactions.keys():
+            transaction = self._transactions[key_mid_multicast]
+        elif key_token_multicast in self._transactions_token:
+            transaction = self._transactions_token[key_token_multicast]
         else:
             logger.warning("Un-Matched incoming response message " + str(host) + ":" + str(port))
             return None, False
@@ -103,11 +109,17 @@ class MessageLayer(object):
         except AttributeError:
             return
         key_mid = hash(str(host) + str(port) + str(message.mid))
+        key_mid_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(message.mid))
         key_token = hash(str(host) + str(port) + str(message.token))
+        key_token_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(message.token))
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
         elif key_token in self._transactions_token:
             transaction = self._transactions_token[key_token]
+        elif key_mid_multicast in self._transactions.keys():
+            transaction = self._transactions[key_mid_multicast]
+        elif key_token_multicast in self._transactions_token:
+            transaction = self._transactions_token[key_token_multicast]
         else:
             logger.warning("Un-Matched incoming empty message " + str(host) + ":" + str(port))
             return None

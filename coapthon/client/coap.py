@@ -120,6 +120,8 @@ class CoAP(object):
 
             if isinstance(message, Response):
                 transaction, send_ack = self._messageLayer.receive_response(message)
+                if transaction is None:
+                    continue
                 if send_ack:
                     self._send_ack(transaction)
                 self._blockLayer.receive_response(transaction)
