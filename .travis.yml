@@ -10,5 +10,6 @@ script:
 - coverage run plugtest.py
 - coverage run -a coverage_test.py
 - coverage run -a coverage_test_proxy.py
+- coverage run -a coverage_test_reverse_proxy.py
 after_success:
 - coveralls

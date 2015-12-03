@@ -11,37 +11,6 @@ class ForwardLayer(object):
     def __init__(self, server):
         self._server = server
 
-    def send_empty(self, transaction, message):
-        """
-
-        :type transaction: Transaction
-        :param transaction:
-        :type message: Message
-        :param message:
-        """
-        pass
-
-    def receive_response(self, response, transaction):
-        """
-
-        :type response: Response
-        :param response:
-        :type transaction: Transaction
-        :param transaction:
-        :rtype : Transaction
-        """
-        raise NotImplementedError
-
-    def send_response(self, transaction, response):
-        """
-
-        :type transaction: Transaction
-        :param transaction:
-        :type response: Response
-        :param response:
-        """
-        pass
-
     def receive_request(self, transaction):
         """
 
@@ -148,25 +117,6 @@ class ForwardLayer(object):
         if response.code == defines.Codes.DELETED.number:
             del self._server.root["/" + transaction.request.uri_path]
         return transaction
-
-    def receive_empty(self, empty, transaction):
-        """
-
-        :type empty: Message
-        :param empty:
-        :type transaction: Transaction
-        :param transaction:
-        :rtype : Transaction
-        """
-        raise NotImplementedError
-
-    def send_request(self, request):
-        """
-
-        :type request: Request
-        :param request:
-        """
-        return request
 
     def _handle_get(self, transaction):
         """
