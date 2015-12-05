@@ -1370,6 +1370,48 @@ class Tests(unittest.TestCase):
 
         self._test_with_client_observe([exchange1])
 
+    def test_duplicate(self):
+        print "TEST_DUPLICATE"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.proxy_uri = "coap://127.0.0.1:5684/basic"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+
+        self.current_mid += 1
+        self._test_plugtest([(req, expected), (req, expected)])
+
+    def test_duplicate_not_completed(self):
+        print "TEST_DUPLICATE_NOT_COMPLETED"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.proxy_uri = "coap://127.0.0.1:5684/long"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = None
+        expected.token = None
+
+        expected2 = Response()
+        expected2.type = defines.Types["CON"]
+        expected2._mid = None
+        expected2.code = defines.Codes.CONTENT.number
+        expected2.token = None
+
+        self.current_mid += 1
+        self._test_plugtest([(req, None), (req, expected), (None, expected2)])
+
 if __name__ == '__main__':
     unittest.main()
 
