@@ -42,7 +42,7 @@ class CoAP(object):
         ret = socket.getaddrinfo(host, port)
         family, socktype, proto, canonname, sockaddr = ret[0]
 
-        if len(sockaddr) == 4:
+        if socktype == socket.AF_INET6:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         else:

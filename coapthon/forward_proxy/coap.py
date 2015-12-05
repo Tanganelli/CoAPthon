@@ -53,7 +53,7 @@ class CoAP(object):
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
-        if self.multicast:
+        if self.multicast: # pragma: no cover
 
             # Create a socket
             self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)

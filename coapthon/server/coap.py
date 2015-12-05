@@ -59,7 +59,7 @@ class CoAP(object):
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
-        if self.multicast:
+        if self.multicast: # pragma: no cover
 
             # Create a socket
             self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)
@@ -81,7 +81,7 @@ class CoAP(object):
                 self._socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
 
         else:
-            if addrinfo[0] == socket.AF_INET: # IPv4
+            if addrinfo[0] == socket.AF_INET:  # IPv4
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             else:
