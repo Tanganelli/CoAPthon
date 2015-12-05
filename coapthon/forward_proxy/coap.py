@@ -169,13 +169,6 @@ class CoAP(object):
 
             transaction = self._forwardLayer.receive_request(transaction)
 
-            if transaction.resource is not None and transaction.resource.changed:
-                self.notify(transaction.resource)
-                transaction.resource.changed = False
-            elif transaction.resource is not None and transaction.resource.deleted:
-                self.notify(transaction.resource)
-                transaction.resource.deleted = False
-
             transaction = self._observeLayer.send_response(transaction)
 
             transaction = self._blockLayer.send_response(transaction)

@@ -250,7 +250,7 @@ class CoAP(object):
                 transaction = self._blockLayer.receive_empty(message, transaction)
                 self._observeLayer.receive_empty(message, transaction)
 
-        else:  # is Response
+        else:  # pragma: no cover
             logger.error("Received response from %s", message.source)
 
     def send_datagram(self, message):
@@ -355,8 +355,7 @@ class CoAP(object):
         :type future: Future
         :param future:
         """
-        if not timer.finished:
-            timer.cancel()
+        timer.cancel()
 
     def _send_ack(self, transaction):
         # Handle separate
