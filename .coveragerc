@@ -8,6 +8,10 @@ exclude_lines =
     raise AssertionError
     except RuntimeError
     except ValueError
+    raise KeyError
+    except IndexError
+    except AttributeError
+    except KeyError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

@@ -110,7 +110,7 @@ class BlockLayer(object):
                 del transaction.request.block1
                 return transaction
             n_num, n_m, n_size = transaction.response.block1
-            if n_num != item.num:
+            if n_num != item.num:  # pragma: no cover
                 logger.warning("Blockwise num acknowledged error, expected " + str(item.num) + " received " +
                                str(n_num))
                 return None
@@ -135,12 +135,12 @@ class BlockLayer(object):
                 transaction.block_transfer = True
                 if key_token in self._block2_sent:
                     item = self._block2_sent[key_token]
-                    if num != item.num:
+                    if num != item.num:  # pragma: no cover
                         logger.error("Receive unwanted block")
                         return self.error(transaction, defines.Codes.REQUEST_ENTITY_INCOMPLETE.number)
                     if item.content_type is None:
                         item.content_type = transaction.response.content_type
-                    if item.content_type != transaction.response.content_type:
+                    if item.content_type != transaction.response.content_type:  # pragma: no cover
                         logger.error("Content-type Error")
                         return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     item.byte += size
@@ -159,7 +159,7 @@ class BlockLayer(object):
             else:
                 transaction.block_transfer = False
                 if key_token in self._block2_sent:
-                    if self._block2_sent[key_token].content_type != transaction.response.content_type:
+                    if self._block2_sent[key_token].content_type != transaction.response.content_type:  # pragma: no cover
                         logger.error("Content-type Error")
                         return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     transaction.response.payload = self._block2_sent[key_token].payload + transaction.response.payload
@@ -264,7 +264,7 @@ class BlockLayer(object):
         return transaction
 
     @staticmethod
-    def error(transaction, code):
+    def error(transaction, code):  # pragma: no cover
         transaction.block_transfer = True
         transaction.response = Response()
         transaction.response.destination = transaction.request.source

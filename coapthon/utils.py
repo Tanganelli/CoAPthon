@@ -89,16 +89,6 @@ class Tree(object):
             return ret
         raise KeyError
 
-    def from_prefix(self, path):
-        ret = []
-        for key in self.tree.keys():
-            if key.startswith(path):
-                ret.append(key)
-
-        if len(ret) > 0:
-            return ret
-        raise KeyError
-
     def __getitem__(self, item):
         return self.tree[item]
 

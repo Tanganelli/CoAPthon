@@ -71,7 +71,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             callback(response)
 
-    def cancel_observing(self, response, send_rst):
+    def cancel_observing(self, response, send_rst):  # pragma: no cover
         if send_rst:
             message = Message()
             message.destination = self.server
@@ -82,7 +82,7 @@ class HelperClient(object):
             self.protocol.send_message(message)
         self.stop()
 
-    def get(self, path, callback=None):
+    def get(self, path, callback=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -96,7 +96,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def observe(self, path, callback):
+    def observe(self, path, callback):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -111,7 +111,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def delete(self, path, callback=None):
+    def delete(self, path, callback=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.DELETE.number
@@ -124,7 +124,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def post(self, path, payload, callback=None):
+    def post(self, path, payload, callback=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.POST.number
@@ -138,7 +138,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def put(self, path, payload, callback=None):
+    def put(self, path, payload, callback=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.PUT.number
@@ -152,7 +152,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def discover(self, callback=None):
+    def discover(self, callback=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -165,7 +165,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def send_request(self, request, callback=None):
+    def send_request(self, request, callback=None):  # pragma: no cover
         if callback is not None:
             thread = threading.Thread(target=self._thread_body, args=(request, callback))
             thread.start()
@@ -174,7 +174,7 @@ class HelperClient(object):
             response = self.queue.get(block=True)
             return response
 
-    def send_empty(self, empty):
+    def send_empty(self, empty):  # pragma: no cover
         self.protocol.send_message(empty)
 
 

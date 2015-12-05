@@ -44,10 +44,10 @@ class ResourceLayer(object):
         elif isinstance(resource, tuple) and len(resource) == 2:
             resource, callback = resource
             resource = self._handle_separate(transaction, callback)
-            if not isinstance(resource, Resource):
+            if not isinstance(resource, Resource):  # pragma: no cover
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-        else:
+        else:  # pragma: no cover
             # Handle error
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction
@@ -96,10 +96,10 @@ class ResourceLayer(object):
         elif isinstance(resource, tuple) and len(resource) == 2:
             resource, callback = resource
             resource = self._handle_separate(transaction, callback)
-            if not isinstance(resource, Resource):
+            if not isinstance(resource, Resource):  # pragma: no cover
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-        else:
+        else:  # pragma: no cover
             # Handle error
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction
@@ -184,10 +184,10 @@ class ResourceLayer(object):
         elif isinstance(resource, tuple) and len(resource) == 2:
             resource, callback = resource
             resource = self._handle_separate(transaction, callback)
-            if not isinstance(resource, Resource):
+            if not isinstance(resource, Resource):  # pragma: no cover
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-        else:
+        else:  # pragma: no cover
             # Handle error
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction
@@ -202,7 +202,6 @@ class ResourceLayer(object):
         transaction.resource = resource
 
         return transaction
-
 
     def _handle_separate(self, transaction, callback):
         # Handle separate
@@ -235,10 +234,10 @@ class ResourceLayer(object):
         elif isinstance(ret, tuple) and len(ret) == 2:
             resource, callback = ret
             ret = self._handle_separate(transaction, callback)
-            if not isinstance(ret, bool):
+            if not isinstance(ret, bool):  # pragma: no cover
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-        else:
+        else:  # pragma: no cover
             # Handle error
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction
@@ -247,7 +246,7 @@ class ResourceLayer(object):
             transaction.response.code = defines.Codes.DELETED.number
             transaction.response.payload = None
             transaction.resource.deleted = True
-        else:
+        else:  # pragma: no cover
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
 
         return transaction
@@ -279,10 +278,10 @@ class ResourceLayer(object):
         elif isinstance(resource, tuple) and len(resource) == 2:
             resource, callback = resource
             resource = self._handle_separate(transaction, callback)
-            if not isinstance(resource, Resource):
+            if not isinstance(resource, Resource):  # pragma: no cover
                 transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
                 return transaction
-        else:
+        else:  # pragma: no cover
             # Handle error
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction.response
@@ -307,7 +306,6 @@ class ResourceLayer(object):
         transaction.resource = resource
 
         return transaction
-
 
     def discover(self, transaction):
         """
