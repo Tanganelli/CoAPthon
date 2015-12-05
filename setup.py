@@ -10,6 +10,6 @@ setup(
     author='Giacomo Tanganelli',
     author_email='giacomo.tanganelli@for.unipi.it',
     description='CoAPthon is a python library to the CoAP protocol. ',
-    scripts=['coapserver.py', 'coapclient.py', 'exampleresources.py', 'coapforwardproxy.py', 'coapreverseproxy.py',
-             'reverse_proxy_mapping.xml'], requires=['sphinx']
+    scripts=['coapserver.py', 'coapclient.py', 'exampleresources.py', 'coapforwardproxy.py', 'coapreverseproxy.py'],
+    requires=['sphinx']
 )

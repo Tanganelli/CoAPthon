@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import os
 import random
 import socket
 import struct
@@ -7,7 +8,7 @@ import threading
 
 from coapthon.messages.message import Message
 from coapthon import defines
-from coapthon.utils import Tree
+from coapthon.utils import Tree, create_logging
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.observelayer import ObserveLayer
 from coapthon.layers.requestlayer import RequestLayer
@@ -16,6 +17,10 @@ from coapthon.messages.request import Request
 from coapthon.layers.messagelayer import MessageLayer
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
+
+
+if not os.path.isfile("logging.conf"):
+    create_logging()
 
 logger = logging.getLogger(__name__)
 logging.config.fileConfig("logging.conf", disable_existing_loggers=False)

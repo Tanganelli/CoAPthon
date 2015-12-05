@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python2
 from Queue import Queue
 import getopt
 import random
@@ -26,7 +26,7 @@ def client_callback(response):
     print "Callback"
 
 
-def client_callback_observe(response):
+def client_callback_observe(response):  # pragma: no cover
     global client
     print "Callback_observe"
     check = True

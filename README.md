@@ -19,7 +19,7 @@ What is implemented
 ===================
 
 - CoAP server
-- CoAP client asynchronous/synchronous
+- CoAP client
 - CoAP to CoAP Forwarding proxy
 - CoAP to CoAP Reverse Proxy
 - Observe feature

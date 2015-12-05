@@ -1,8 +1,9 @@
+#!/usr/bin/env python2
+
 import getopt
 import logging
 import sys
 from coapthon.forward_proxy.coap import CoAP
-
 
 __author__ = 'giacomo'
 

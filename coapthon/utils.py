@@ -67,6 +67,27 @@ def parse_uri(uri):
     return str(host), port, path
 
 
+def create_logging():
+    with open("logging.conf", "w") as f:
+        f.writelines("[loggers]\n")
+        f.writelines("keys=root\n\n")
+        f.writelines("[handlers]\n")
+        f.writelines("keys=consoleHandler\n\n")
+        f.writelines("[formatters]\n")
+        f.writelines("keys=simpleFormatter\n\n")
+        f.writelines("[logger_root]\n")
+        f.writelines("level=DEBUG\n")
+        f.writelines("handlers=consoleHandler\n\n")
+        f.writelines("[handler_consoleHandler]\n")
+        f.writelines("class=StreamHandler\n")
+        f.writelines("level=DEBUG\n")
+        f.writelines("formatter=simpleFormatter\n")
+        f.writelines("args=(sys.stdout,)\n\n")
+        f.writelines("[formatter_simpleFormatter]\n")
+        f.writelines("format=%(asctime)s - %(threadName)-10s - %(name)s - %(levelname)s - %(message)s\n")
+        f.writelines("datefmt=")
+
+
 class Tree(object):
     def __init__(self):
         self.tree = {}
