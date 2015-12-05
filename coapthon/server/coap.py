@@ -90,29 +90,6 @@ class CoAP(object):
 
             self._socket.bind(self.server_address)
 
-            # # Set some options to make it multicast-friendly
-            # try:
-            #         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            # except AttributeError:
-            #         pass  # Some systems don't support SO_REUSEPORT
-            # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 20)
-            # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
-            #
-            # # Bind to the port
-            # self._socket.bind(self.server_address)
-            #
-            # # Set some more multicast options
-            # interface = socket.gethostbyname(socket.gethostname())
-            # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
-            # self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address[0])
-            #                         + socket.inet_aton(interface))
-
-    @staticmethod
-    def ip6_to_integer(ip6):
-        ip6 = socket.inet_pton(socket.AF_INET6, ip6)
-        a, b = struct.unpack(">QQ", ip6)
-        return (a << 64) | b
-
     def purge(self):
         """
         Clean old transactions

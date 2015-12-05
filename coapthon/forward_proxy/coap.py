@@ -5,6 +5,7 @@ import re
 import socket
 import threading
 import xml.etree.ElementTree as ElementTree
+import struct
 
 from coapclient import HelperClient
 from coapthon.layers.forwardLayer import ForwardLayer
@@ -33,10 +34,6 @@ class CoAP(object):
         self.purge = threading.Thread(target=self.purge)
         self.purge.start()
 
-        host, port = server_address
-        ret = socket.getaddrinfo(host, port)
-        family, socktype, proto, canonname, sockaddr = ret[0]
-
         self._messageLayer = MessageLayer(starting_mid)
         self._blockLayer = BlockLayer()
         self._observeLayer = ObserveLayer()
@@ -54,33 +51,36 @@ class CoAP(object):
         self.server_address = server_address
         self.multicast = multicast
 
-        # IPv4 or IPv6
-        if len(sockaddr) == 4:
-            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        else:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
         if self.multicast:
-            # Set some options to make it multicast-friendly
-            try:
-                    self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            except AttributeError:
-                    pass  # Some systems don't support SO_REUSEPORT
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 20)
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
 
-            # Bind to the port
-            self._socket.bind(self.server_address)
+            # Create a socket
+            self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)
 
-            # Set some more multicast options
-            interface = socket.gethostbyname(socket.gethostname())
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address)
-                                    + socket.inet_aton(interface))
-        else:
+            # Allow multiple copies of this program on one machine
+            # (not strictly needed)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+            # Bind it to the port
+            self._socket.bind(('', self.server_address[1]))
+
+            group_bin = socket.inet_pton(addrinfo[1], addrinfo[4][0])
+            # Join group
+            if addrinfo[0] == socket.AF_INET: # IPv4
+                mreq = group_bin + struct.pack('=I', socket.INADDR_ANY)
+                self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            else:
+                mreq = group_bin + struct.pack('@I', 0)
+                self._socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
+
+        else:
+            if addrinfo[0] == socket.AF_INET: # IPv4
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            else:
+                self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             self._socket.bind(self.server_address)
 
