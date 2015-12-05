@@ -39,14 +39,13 @@ class CoAP(object):
         #     self._server = (data[0], data[1])
 
         host, port = self._server
-        ret = socket.getaddrinfo(host, port)
-        family, socktype, proto, canonname, sockaddr = ret[0]
+        addrinfo = socket.getaddrinfo(host, None)[0]
 
-        if socktype == socket.AF_INET6:
-            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        if addrinfo[0] == socket.AF_INET:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         else:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
