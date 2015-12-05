@@ -88,6 +88,8 @@ class CoAP(object):
                 self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
                 self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+            self._socket.bind(self.server_address)
+
             # # Set some options to make it multicast-friendly
             # try:
             #         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
