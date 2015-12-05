@@ -57,22 +57,36 @@ class CoAP(object):
         self.server_address = server_address
         self.multicast = multicast
 
-        # IPv4 or IPv6
-        if len(sockaddr) == 4:
-            self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        else:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
         if self.multicast:
-            self._socket.bind(("", self.server_address[1]))
-            try:
-                group = socket.inet_aton(self.server_address[0])
-            except:
-                group = self.server_address[0]
-            mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-            self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+
+            # Create a socket
+            self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)
+
+            # Allow multiple copies of this program on one machine
+            # (not strictly needed)
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+            # Bind it to the port
+            self._socket.bind(('', self.server_address[1]))
+
+            group_bin = socket.inet_pton(addrinfo[1], addrinfo[4][0])
+            # Join group
+            if addrinfo[0] == socket.AF_INET: # IPv4
+                mreq = group_bin + struct.pack('=I', socket.INADDR_ANY)
+                self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            else:
+                mreq = group_bin + struct.pack('@I', 0)
+                self._socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
+
+        else:
+            if addrinfo[0] == socket.AF_INET: # IPv4
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            else:
+                self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             # # Set some options to make it multicast-friendly
             # try:
@@ -90,10 +104,6 @@ class CoAP(object):
             # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
             # self._socket.setsockopt(socket.SOL_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self.server_address[0])
             #                         + socket.inet_aton(interface))
-        else:
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-            self._socket.bind(self.server_address)
 
     @staticmethod
     def ip6_to_integer(ip6):
