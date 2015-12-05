@@ -204,7 +204,6 @@ class MessageLayer(object):
     def send_empty(self, transaction, related, message):
         """
 
-        :type transaction: Transaction
         :param transaction:
         :type message: Message
         :param message:

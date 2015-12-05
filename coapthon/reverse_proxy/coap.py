@@ -231,13 +231,6 @@ class CoAP(object):
 
             transaction = self._forwardLayer.receive_request_reverse(transaction)
 
-            if transaction.resource is not None and transaction.resource.changed:
-                self.notify(transaction.resource)
-                transaction.resource.changed = False
-            elif transaction.resource is not None and transaction.resource.deleted:
-                self.notify(transaction.resource)
-                transaction.resource.deleted = False
-
             transaction = self._observeLayer.send_response(transaction)
 
             transaction = self._blockLayer.send_response(transaction)
@@ -255,7 +248,7 @@ class CoAP(object):
             transaction = self._messageLayer.receive_empty(message)
             if transaction is not None:
                 transaction = self._blockLayer.receive_empty(message, transaction)
-                transaction = self._observeLayer.receive_empty(message, transaction)
+                self._observeLayer.receive_empty(message, transaction)
 
         else:  # is Response
             logger.error("Received response from %s", message.source)

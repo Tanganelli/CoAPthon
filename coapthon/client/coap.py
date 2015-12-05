@@ -88,20 +88,11 @@ class CoAP(object):
             self._socket.settimeout(1)
             try:
                 datagram, addr = self._socket.recvfrom(1152)
-            except socket.timeout, e:
-                err = e.args[0]
-                # this next if/else is a bit redundant, but illustrates how the
-                # timeout exception is setup
-                if err == 'timed out':
-                    continue
-                else:
-                    print e
-                    return
-            except socket.error, e:
-                # Something else happened, handle error, exit, etc.
-                print e
+            except socket.timeout:  # pragma: no cover
+                continue
+            except socket.error:  # pragma: no cover
                 return
-            else:
+            else:  # pragma: no cover
                 if len(datagram) == 0:
                     print 'orderly shutdown on server end'
                     return
@@ -119,7 +110,7 @@ class CoAP(object):
 
             if isinstance(message, Response):
                 transaction, send_ack = self._messageLayer.receive_response(message)
-                if transaction is None:
+                if transaction is None:  # pragma: no cover
                     continue
                 if send_ack:
                     self._send_ack(transaction)
@@ -128,11 +119,11 @@ class CoAP(object):
                     transaction = self._messageLayer.send_request(transaction.request)
                     self.send_datagram(transaction.request)
                     continue
-                elif transaction is None:
+                elif transaction is None:  # pragma: no cover
                     self._send_rst(transaction)
                     return
                 self._observeLayer.receive_response(transaction)
-                if transaction.notification:
+                if transaction.notification:  # pragma: no cover
                     ack = Message()
                     ack.type = defines.Types['ACK']
                     ack = self._messageLayer.send_empty(transaction, transaction.response, ack)
@@ -146,9 +137,9 @@ class CoAP(object):
     def _send_ack(self, transaction):
         # Handle separate
         """
-        Sends an ACK message for the request.
+        Sends an ACK message for the response.
 
-        :param request: [request, sleep_time] or request
+        :param transaction: transaction that holds the response
         """
 
         ack = Message()
@@ -158,12 +149,12 @@ class CoAP(object):
             ack = self._messageLayer.send_empty(transaction, transaction.response, ack)
             self.send_datagram(ack)
 
-    def _send_rst(self, transaction):
+    def _send_rst(self, transaction):  # pragma: no cover
         # Handle separate
         """
-        Sends an RST message for the request.
+        Sends an RST message for the response.
 
-        :param request: [request, sleep_time] or request
+        :param transaction: transaction that holds the response
         """
 
         rst = Message()
