@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # CoAPthon documentation build configuration file, created by
-# sphinx-quickstart on Fri Nov 20 17:54:12 2015.
+# sphinx-quickstart on Sun Dec  6 14:50:08 2015.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -18,7 +18,7 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../coapthon'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- General configuration ------------------------------------------------
 
@@ -30,8 +30,6 @@ sys.path.insert(0, os.path.abspath('../coapthon'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
 ]
@@ -73,7 +71,7 @@ release = '4.0'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = []
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

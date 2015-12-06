@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 # COAP ping implementation
 # 0x4000 0001 <-->  0x7000 0001
