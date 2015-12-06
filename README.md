@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/Tanganelli/CoAPthon.svg?branch=master)](https://travis-ci.org/Tanganelli/CoAPthon)
 [![Coverage Status](https://coveralls.io/repos/Tanganelli/CoAPthon/badge.svg?branch=master&service=github)](https://coveralls.io/github/Tanganelli/CoAPthon?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/coapthon/badge/?version=latest)](http://coapthon.readthedocs.org/en/latest/?badge=latest)
+
 CoAPthon
 ========
 
