@@ -1,4 +1,11 @@
+import random
+import string
+
 __author__ = 'giacomo'
+
+
+def generate_random_token(size):
+    return ''.join(random.choice(string.ascii_letters) for _ in range(size))
 
 
 def parse_blockwise(value):

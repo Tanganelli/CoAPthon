@@ -5,6 +5,7 @@ from coapthon.messages.message import Message
 from coapthon import defines
 from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
+from coapthon.utils import generate_random_token
 
 __author__ = 'jacko'
 
@@ -86,6 +87,7 @@ class HelperClient(object):
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.POST.number
+        request.token = generate_random_token(2)
         request.uri_path = path
         request.payload = payload
         if callback is not None:
