@@ -293,7 +293,7 @@ class ResourceLayer(object):
 
         try:
             transaction.response.payload = resource.payload
-            if resource.required_content_type is not None and transaction.response.content_type is None:
+            if resource.required_content_type is not None:
                 transaction.response.content_type = resource.required_content_type
         except KeyError:
             transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
