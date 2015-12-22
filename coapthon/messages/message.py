@@ -591,7 +591,10 @@ class Message(object):
             msg += "{name}: {value}, ".format(name=opt.name, value=opt.value)
         msg += "]"
         if self.payload is not None:
-            msg += " {payload}...{length} bytes".format(payload=self.payload[0:20], length=len(self.payload))
+            try:
+                msg += " {payload}...{length} bytes".format(payload=self.payload[0:20], length=len(self.payload))
+            except TypeError:
+                pass
         else:
             msg += " No payload"
         return msg
