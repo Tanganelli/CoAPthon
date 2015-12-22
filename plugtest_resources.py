@@ -25,7 +25,7 @@ class TestResource(Resource):
     def render_PUT(self, request):
         for option in request.options:
             if option.number == defines.OptionRegistry.CONTENT_TYPE.number:
-                self.payload = {option.value: request.payload}
+                self.payload = (option.value, request.payload)
                 return self
         self.payload = request.payload
         return self
