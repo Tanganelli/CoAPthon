@@ -42,10 +42,6 @@ class CoAP(object):
         self.purge = threading.Thread(target=self.purge)
         self.purge.start()
 
-        host, port = server_address
-        ret = socket.getaddrinfo(host, port)
-        family, socktype, proto, canonname, sockaddr = ret[0]
-
         self._messageLayer = MessageLayer(starting_mid)
         self._blockLayer = BlockLayer()
         self._observeLayer = ObserveLayer()
@@ -64,7 +60,7 @@ class CoAP(object):
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
-        if self.multicast: # pragma: no cover
+        if self.multicast:  # pragma: no cover
 
             # Create a socket
             self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)

@@ -1030,6 +1030,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "<value>test</value>"
+        expected.content_type = defines.Content_types["application/xml"]
 
         exchange5 = (req, expected)
         self.current_mid += 1
@@ -1048,7 +1049,6 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.NOT_ACCEPTABLE.number
         expected.token = None
         expected.payload = None
-        expected.content_type = defines.Content_types["application/json"]
 
         exchange6 = (req, expected)
         self.current_mid += 1
@@ -1066,14 +1066,69 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "<value>0</value>"
-        expected.content_type = defines.Content_types["application/xml"]
 
         print(expected.pretty_print())
 
         exchange7 = (req, expected)
         self.current_mid += 1
 
-        self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7])
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = "/encoding"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = "0"
+
+        exchange8 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = "/encoding"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.accept = defines.Content_types["application/xml"]
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = "<value>0</value>"
+        expected.content_type = defines.Content_types["application/xml"]
+
+        exchange9 = (req, expected)
+        self.current_mid += 1
+
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = "/encoding"
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.accept = defines.Content_types["application/json"]
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = "{'value': '0'}"
+        expected.content_type = defines.Content_types["application/json"]
+
+        exchange10 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7,
+                                exchange8, exchange9, exchange10])
 
     def test_ETAG(self):
         print "TEST_ETAG"

@@ -155,12 +155,38 @@ class voidResource(Resource):
 
 
 class XMLResource(Resource):
-    def __init__(self, name="Void"):
+    def __init__(self, name="XML"):
         super(XMLResource, self).__init__(name)
-        self.payload = {defines.Content_types["application/xml"]: "<value>0</value>"}
+        self.value = 0
+        self.payload = (defines.Content_types["application/xml"], "<value>"+str(self.value)+"</value>")
 
     def render_GET(self, request):
         return self
+
+
+class MultipleEncodingResource(Resource):
+    def __init__(self, name="MultipleEncoding"):
+        super(MultipleEncodingResource, self).__init__(name)
+        self.value = 0
+        self.payload = str(self.value)
+        self.content_type = [defines.Content_types["application/xml"], defines.Content_types["application/json"]]
+
+    def render_GET(self, request):
+        if request.accept == defines.Content_types["application/xml"]:
+            self.payload = (defines.Content_types["application/xml"],  "<value>"+str(self.value)+"</value>")
+        elif request.accept == defines.Content_types["application/json"]:
+            self.payload = (defines.Content_types["application/json"], "{'value': '"+str(self.value)+"'}")
+        elif request.accept == defines.Content_types["text/plain"]:
+            self.payload = (defines.Content_types["text/plain"], str(self.value))
+        return self
+
+    def render_PUT(self, request):
+        self.edit_resource(request)
+        return self
+
+    def render_POST(self, request):
+        res = self.init_resource(request, MultipleEncodingResource())
+        return res
 
 
 class ETAGResource(Resource):

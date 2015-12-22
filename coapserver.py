@@ -2,8 +2,10 @@
 
 import getopt
 import sys
+from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
-from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, Child
+from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, Child, \
+    MultipleEncodingResource
 
 __author__ = 'giacomo'
 
@@ -18,6 +20,7 @@ class CoAPServer(CoAP):
         self.add_resource('big/', Big())
         self.add_resource('void/', voidResource())
         self.add_resource('xml/', XMLResource())
+        self.add_resource('encoding/', MultipleEncodingResource())
         self.add_resource('etag/', ETAGResource())
         self.add_resource('child/', Child())
         print "CoAP Server start on " + host + ":" + str(port)

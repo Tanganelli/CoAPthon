@@ -35,7 +35,7 @@ class Resource(object):
 
         self._payload = {}
 
-        self._required_content_type = None
+        self._content_type = None
 
         self._etag = []
 
@@ -137,9 +137,9 @@ class Resource(object):
 
         :return: the payload.
         """
-        if self._required_content_type is not None:
+        if self._content_type is not None:
             try:
-                return self._payload[self._required_content_type]
+                return self._payload[self._content_type]
             except KeyError:
                 raise KeyError("Content-Type not available")
         else:
@@ -150,7 +150,6 @@ class Resource(object):
                 val = self._payload.keys()
                 return val[0], self._payload[val[0]]
 
-
     @payload.setter
     def payload(self, p):
         """
@@ -158,10 +157,11 @@ class Resource(object):
 
         :param p: the new payload
         """
-        if isinstance(p, dict):
-            for k in p.keys():
-                v = p[k]
-                self._payload[k] = v
+        if isinstance(p, tuple):
+            k = p[0]
+            v = p[1]
+            self.actual_content_type = k
+            self._payload[k] = v
         else:
             self._payload = {defines.Content_types["text/plain"]: p}
 
@@ -231,22 +231,22 @@ class Resource(object):
         self._observe_count = v
 
     @property
-    def required_content_type(self):
+    def actual_content_type(self):
         """
         Get the actual required Content-Type.
 
         :return: the actual required Content-Type.
         """
-        return self._required_content_type
+        return self._content_type
 
-    @required_content_type.setter
-    def required_content_type(self, act):
+    @actual_content_type.setter
+    def actual_content_type(self, act):
         """
         Set the actual required Content-Type.
 
         :param act: the actual required Content-Type.
         """
-        self._required_content_type = act
+        self._content_type = act
 
     @property
     def content_type(self):
@@ -289,7 +289,6 @@ class Resource(object):
         lst = self._attributes.get("ct")
         if lst is None:
             lst = []
-        ct = defines.Content_types[ct]
         lst.append(ct)
         self._attributes["ct"] = lst
 
@@ -373,12 +372,12 @@ class Resource(object):
 
     def init_resource(self, request, res):
         res.location_query = request.uri_query
-        res.payload = {request.content_type: request.payload}
+        res.payload = (request.content_type, request.payload)
         return res
 
     def edit_resource(self, request):
         self.location_query = request.uri_query
-        self.payload = {request.content_type: request.payload}
+        self.payload = (request.content_type, request.payload)
 
     def render_GET(self, request):
         """
