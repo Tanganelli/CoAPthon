@@ -289,6 +289,8 @@ class Resource(object):
         lst = self._attributes.get("ct")
         if lst is None:
             lst = []
+        if isinstance(ct, str):
+            ct = defines.Content_types[ct]
         lst.append(ct)
         self._attributes["ct"] = lst
 
