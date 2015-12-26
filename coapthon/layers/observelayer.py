@@ -119,10 +119,11 @@ class ObserveLayer(object):
                 del self._relations[key_token]
         return transaction
 
-    def notify(self, resource):
+    def notify(self, resource, root):
         ret = []
+        resource_list = root.with_prefix_resource(resource.path)
         for key in self._relations.keys():
-            if self._relations[key].transaction.resource == resource:
+            if self._relations[key].transaction.resource in resource_list:
                 if self._relations[key].non_counter > defines.MAX_NON_NOTIFICATIONS \
                         or self._relations[key].transaction.request.type == defines.Types["CON"]:
                     self._relations[key].transaction.response.type = defines.Types["CON"]

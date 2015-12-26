@@ -117,6 +117,16 @@ class Tree(object):
             return ret
         raise KeyError
 
+    def with_prefix_resource(self, path):
+        ret = []
+        for key, value in self.tree.iteritems():
+            if path.startswith(key):
+                ret.append(value)
+
+        if len(ret) > 0:
+            return ret
+        raise KeyError
+
     def __getitem__(self, item):
         return self.tree[item]
 
