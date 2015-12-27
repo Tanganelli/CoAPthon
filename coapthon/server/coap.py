@@ -347,7 +347,7 @@ class CoAP(object):
 
         :param resource: the resource
         """
-        observers = self._observeLayer.notify(resource, self.root)
+        observers = self._observeLayer.notify(resource)
         logger.debug("Notify")
         for transaction in observers:
             with transaction:
