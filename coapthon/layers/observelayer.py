@@ -119,9 +119,12 @@ class ObserveLayer(object):
                 del self._relations[key_token]
         return transaction
 
-    def notify(self, resource, root):
+    def notify(self, resource, root=None):
         ret = []
-        resource_list = root.with_prefix_resource(resource.path)
+        if root is not None:
+            resource_list = root.with_prefix_resource(resource.path)
+        else:
+            resource_list = [resource]
         for key in self._relations.keys():
             if self._relations[key].transaction.resource in resource_list:
                 if self._relations[key].non_counter > defines.MAX_NON_NOTIFICATIONS \
