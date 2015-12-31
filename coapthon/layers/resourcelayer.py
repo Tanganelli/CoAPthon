@@ -55,7 +55,7 @@ class ResourceLayer(object):
         resource.path = path
         resource.observe_count = resource_node.observe_count
 
-        transaction.response.code = defines.Codes.CREATED.number
+        transaction.response.code = defines.Codes.CHANGED.number
         resource.changed = True
         resource.observe_count += 1
         transaction.resource = resource

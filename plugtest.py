@@ -877,7 +877,7 @@ I say, looked for all the world like a strip of that same patchwork quilt. Indee
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "/obs"

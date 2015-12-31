@@ -253,7 +253,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["CON"]
         expected._mid = None
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.options = None
 
@@ -852,7 +852,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = None
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "big"
@@ -906,7 +906,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "storage/new_res"
@@ -930,7 +930,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "storage/new_res"
@@ -1163,7 +1163,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = path
@@ -1208,7 +1208,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
         expected.location_path = path
@@ -1438,7 +1438,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = None
-        expected.code = defines.Codes.CREATED.number
+        expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
 
