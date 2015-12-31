@@ -8,6 +8,7 @@ import threading
 
 from coapthon.messages.message import Message
 from coapthon import defines
+from coapthon.messages.response import Response
 from coapthon.utils import Tree, create_logging
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.observelayer import ObserveLayer
@@ -145,15 +146,16 @@ class CoAP(object):
                     t = threading.Thread(target=self.receive_request, args=args)
                     t.start()
                 # self.receive_datagram(data, client_address)
-                elif isinstance(message, Message):
+                elif isinstance(message, Response):
+                    logger.error("Received response from %s", message.source)
+
+                else:  # is Message
                     transaction = self._messageLayer.receive_empty(message)
                     if transaction is not None:
                         with transaction:
                             self._blockLayer.receive_empty(message, transaction)
                             self._observeLayer.receive_empty(message, transaction)
 
-                else:  # is Response
-                    logger.error("Received response from %s", message.source)
             except RuntimeError:
                 print "Exception with Executor"
         self._socket.close()
