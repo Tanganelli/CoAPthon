@@ -530,7 +530,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = None
-        expected.code = defines.Codes.CHANGED.number
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "/Server1/storage/new_res"
