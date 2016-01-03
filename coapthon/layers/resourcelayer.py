@@ -52,10 +52,14 @@ class ResourceLayer(object):
             transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
             return transaction
 
-        resource.path = path
+        if resource.path is None:
+            resource.path = path
         resource.observe_count = resource_node.observe_count
 
-        transaction.response.code = defines.Codes.CHANGED.number
+        if resource is resource_node:
+            transaction.response.code = defines.Codes.CHANGED.number
+        else:
+            transaction.response.code = defines.Codes.CREATED.number
         resource.changed = True
         resource.observe_count += 1
         transaction.resource = resource
@@ -64,14 +68,14 @@ class ResourceLayer(object):
         if resource.etag is not None:
             transaction.response.etag = resource.etag
 
-        transaction.response.location_path = path
+        transaction.response.location_path = resource.path
 
         if resource.location_query is not None and len(resource.location_query) > 0:
             transaction.response.location_query = resource.location_query
 
         transaction.response.payload = None
 
-        self._parent.root[path] = resource
+        self._parent.root[resource.path] = resource
 
         return transaction
 
@@ -109,7 +113,7 @@ class ResourceLayer(object):
         if resource.etag is not None:
             transaction.response.etag = resource.etag
 
-        transaction.response.location_path = lp
+        transaction.response.location_path = resource.path
 
         if resource.location_query is not None and len(resource.location_query) > 0:
             transaction.response.location_query = resource.location_query
@@ -119,7 +123,7 @@ class ResourceLayer(object):
         resource.changed = True
         transaction.resource = resource
 
-        self._parent.root[lp] = resource
+        self._parent.root[resource.path] = resource
 
         return transaction
 

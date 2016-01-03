@@ -906,7 +906,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CHANGED.number
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "storage/new_res"
@@ -930,7 +930,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CHANGED.number
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
         expected.location_path = "storage/new_res"
@@ -1208,7 +1208,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CHANGED.number
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
         expected.payload = None
         expected.location_path = path
