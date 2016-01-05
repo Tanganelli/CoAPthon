@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 from coapthon.messages.message import Message
 from coapthon import defines
@@ -15,7 +16,7 @@ class MessageLayer(object):
         if starting_mid is not None:
             self._current_mid = starting_mid
         else:
-            self._current_mid = 1
+            self._current_mid = random.randint(1, 1000)
 
     def purge(self):
         for k in self._transactions.keys():

@@ -188,7 +188,7 @@ class Tests(unittest.TestCase):
         expected = Response()
         expected.type = defines.Types["ACK"]
         expected._mid = self.current_mid
-        expected.code = defines.Codes.CHANGED.number
+        expected.code = defines.Codes.CREATED.number
         expected.token = None
 
         exchange2 = (req, expected)
