@@ -137,11 +137,11 @@ class CoAP(object):
                         logger.debug("message duplicated, transaction completed")
                         if transaction.response is not None:
                             self.send_datagram(transaction.response)
-                        return
+                        continue
                     elif transaction.request.duplicated and not transaction.completed:
                         logger.debug("message duplicated, transaction NOT completed")
                         self._send_ack(transaction)
-                        return
+                        continue
                     args = (transaction, )
                     t = threading.Thread(target=self.receive_request, args=args)
                     t.start()
