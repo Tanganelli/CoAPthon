@@ -218,8 +218,7 @@ class BlockLayer(object):
             self._block2_receive[key_token].num += 1
             if m == 0:
                 # TODO remove from _block2_receive
-                # del self._block2_receive[key_token]
-                pass
+                del self._block2_receive[key_token]
 
         return transaction
 
