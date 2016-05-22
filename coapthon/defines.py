@@ -155,6 +155,7 @@ Types = {
 
 CodeItem = collections.namedtuple('CodeItem', 'number name')
 
+
 class Codes(object):
     ERROR_LOWER_BOUND = 128
 
