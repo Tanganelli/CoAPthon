@@ -231,3 +231,36 @@ Content_types = {
     "application/exi": 47,
     "application/json": 50
 }
+
+COAP_PREFACE = "coap://"
+LOCALHOST = "127.0.0.1"
+HC_PROXY_DEFAULT_PORT = 8080  # TODO there is a standard for this?
+COAP_DEFAULT_PORT = 5683
+DEFAULT_HC_PATH = "/"
+BAD_REQUEST = 400  # "Bad Request" error code
+NOT_IMPLEMENTED = 501  # "Not Implemented" error code
+
+# Dictionary to map CoAP to HTTP requests code
+CoAP_HTTP = {
+
+    "CREATED": "201",
+    "DELETED": "200",
+    "VALID": "304",
+    "CHANGED": "200",
+    "CONTENT": "200",
+    "BAD_REQUEST": "400",
+    "FORBIDDEN": "403",
+    "NOT_FOUND": "404",
+    "METHOD_NOT_ALLOWED": "400",
+    "NOT_ACCEPTABLE": "406",
+    "PRECONDITION_FAILED": "412",
+    "REQUEST_ENTITY_TOO_LARGE": "413",
+    "UNSUPPORTED_CONTENT_FORMAT": "415",
+    "INTERNAL_SERVER_ERROR": "500",
+    "NOT_IMPLEMENTED": "501",
+    "BAD_GATEWAY": "502",
+    "SERVICE_UNAVAILABLE": "503",
+    "GATEWAY_TIMEOUT": "504",
+    "PROXY_NOT_SUPPORTED": "502"
+
+}
