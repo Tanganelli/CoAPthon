@@ -56,6 +56,7 @@ class CoAP(object):
 
         # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._receiver_thread = threading.Thread(target=self.receive_datagram)
+        self._receiver_thread.daemon = True
         self._receiver_thread.start()
 
     @property
