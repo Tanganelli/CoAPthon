@@ -144,18 +144,18 @@ class BlockLayer(object):
                         logger.error("Content-type Error")
                         return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     item.byte += size
-                    item.num = num
+                    item.num = num + 1
                     item.size = size
                     item.m = m
                     item.payload += transaction.response.payload
                 else:
-                    item = BlockItem(size, num, m, size, transaction.response.payload,
+                    item = BlockItem(size, num + 1, m, size, transaction.response.payload,
                                      transaction.response.content_type)
                     self._block2_sent[key_token] = item
                 request = transaction.request
                 del request.mid
                 del request.block2
-                request.block2 = (item.num + 1, 0, item.size)
+                request.block2 = (item.num, 0, item.size)
             else:
                 transaction.block_transfer = False
                 if key_token in self._block2_sent:
