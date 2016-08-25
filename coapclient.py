@@ -10,6 +10,7 @@ from coapthon.client.helperclient import HelperClient
 from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 from coapthon.utils import parse_uri
+import socket
 
 client = None
 
@@ -98,6 +99,7 @@ def main():  # pragma: no cover
         sys.exit(2)
 
     host, port, path = parse_uri(path)
+    host = socket.gethostbyname(host)
     client = HelperClient(server=(host, port))
     if op == "GET":
         if path is None:
