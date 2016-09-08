@@ -3,6 +3,8 @@ import logging
 import threading
 import time
 
+import datetime
+
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
@@ -77,10 +79,13 @@ class ObservableResource(Resource):
         return self
 
     def update(self, first=False):
+        self.payload = str(datetime.datetime.now())
         if not self._coap_server.stopped.isSet():
+
             timer = threading.Timer(self.period, self.update)
             timer.setDaemon(True)
             timer.start()
+
             if not first and self._coap_server is not None:
                 logger.debug("Periodic Update")
                 self._coap_server.notify(self)

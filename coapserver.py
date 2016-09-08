@@ -6,6 +6,7 @@ from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
 from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, Child, \
     MultipleEncodingResource
+from plugtest_resources import ObservableResource
 
 __author__ = 'giacomo'
 
@@ -23,6 +24,7 @@ class CoAPServer(CoAP):
         self.add_resource('encoding/', MultipleEncodingResource())
         self.add_resource('etag/', ETAGResource())
         self.add_resource('child/', Child())
+
         print "CoAP Server start on " + host + ":" + str(port)
         print self.root.dump()
 

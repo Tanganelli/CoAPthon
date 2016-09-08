@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import random
 import socket
 import threading
 from coapthon.messages.message import Message
@@ -30,6 +31,7 @@ class CoAP(object):
         self._server = server
         self._callback = callback
         self.stopped = threading.Event()
+        self.to_be_stopped = []
 
         self._messageLayer = MessageLayer(self._currentMID)
         self._blockLayer = BlockLayer()
@@ -75,6 +77,9 @@ class CoAP(object):
             request = self._observeLayer.send_request(request)
             request = self._blockLayer.send_request(request)
             transaction = self._messageLayer.send_request(request)
+            if transaction.request.type == defines.Types["CON"]:
+                self._start_retransmission(transaction, transaction.request)
+
             self.send_datagram(transaction.request)
         elif isinstance(message, Message):
             message = self._observeLayer.send_empty(message)
@@ -88,6 +93,56 @@ class CoAP(object):
         message = serializer.serialize(message)
 
         self._socket.sendto(message, (host, port))
+
+    def _start_retransmission(self, transaction, message):
+        """
+        Start the retransmission task.
+
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the message that needs retransmission
+        :type message: Message
+        :param message: the message that needs the retransmission task
+        """
+        with transaction:
+            if message.type == defines.Types['CON']:
+                future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
+                transaction.retransmit_thread = threading.Thread(target=self._retransmit,
+                                                                 args=(transaction, message, future_time, 0))
+                transaction.retransmit_stop = threading.Event()
+                self.to_be_stopped.append(transaction.retransmit_stop)
+                transaction.retransmit_thread.start()
+
+    def _retransmit(self, transaction, message, future_time, retransmit_count):
+        """
+        Thread function to retransmit the message in the future
+
+        :param transaction: the transaction that owns the message that needs retransmission
+        :param message: the message that needs the retransmission task
+        :param future_time: the amount of time to wait before a new attempt
+        :param retransmit_count: the number of retransmissions
+        """
+        with transaction:
+            while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
+                    and not self.stopped.isSet():
+                transaction.retransmit_stop.wait(timeout=future_time)
+                if not message.acknowledged and not message.rejected and not self.stopped.isSet():
+                    logger.debug("retransmit Request")
+                    retransmit_count += 1
+                    future_time *= 2
+                    self.send_datagram(message)
+
+            if message.acknowledged or message.rejected:
+                message.timeouted = False
+            else:
+                logger.warning("Give up on message {message}".format(message=message.line_print))
+                message.timeouted = True
+
+            try:
+                self.to_be_stopped.remove(transaction.retransmit_stop)
+            except ValueError:
+                pass
+            transaction.retransmit_stop = None
+            transaction.retransmit_thread = None
 
     def receive_datagram(self):
         logger.debug("Start receiver Thread")
