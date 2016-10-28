@@ -1,3 +1,0 @@
-flextls
-Sphinx==1.2.2
-cachetools==2.0.0
