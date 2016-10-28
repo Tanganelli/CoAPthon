@@ -18,6 +18,7 @@ from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.observelayer import ObserveLayer
 from coapthon.layers.requestlayer import RequestLayer
 from coapthon.layers.resourcelayer import ResourceLayer
+from coapthon.layers.cachelayer import CacheLayer
 from coapthon.messages.request import Request
 from coapthon.layers.messagelayer import MessageLayer
 from coapthon.resources.resource import Resource
@@ -234,11 +235,29 @@ class CoAP(object):
 
             transaction = self._observeLayer.receive_request(transaction)
 
-            transaction = self._forwardLayer.receive_request_reverse(transaction)
+            """
+            call to the cache layer to check if there's a cached response for the request
+            if not, call the forward layer
+            """
+            if self._cacheLayer is not None:
+                transaction = self._cacheLayer.receive_request(transaction)
 
-            transaction = self._observeLayer.send_response(transaction)
+                if transaction.cacheHit is False:
+                    print transaction.request
+                    transaction = self._forwardLayer.receive_request(transaction)
+                    print transaction.response
 
-            transaction = self._blockLayer.send_response(transaction)
+                transaction = self._observeLayer.send_response(transaction)
+
+                transaction = self._blockLayer.send_response(transaction)
+
+                transaction = self._cacheLayer.send_response(transaction)
+            else:
+                transaction = self._forwardLayer.receive_request(transaction)
+
+                transaction = self._observeLayer.send_response(transaction)
+
+                transaction = self._blockLayer.send_response(transaction)
 
             self._stop_separate_timer(transaction.separate_timer)
 
