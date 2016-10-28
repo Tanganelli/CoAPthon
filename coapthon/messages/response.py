@@ -79,6 +79,7 @@ class Response(Message):
         option = Option()
         option.number = defines.OptionRegistry.MAX_AGE.number
         option.value = int(value)
+        self.del_option_by_number(defines.OptionRegistry.MAX_AGE.number)
         self.add_option(option)
 
     @max_age.deleter
