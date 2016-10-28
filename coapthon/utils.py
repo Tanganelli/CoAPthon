@@ -4,6 +4,52 @@ import string
 __author__ = 'giacomo'
 
 
+def check_nocachekey(option):
+    """
+    checks if an option is a NoCacheKey option or Etag
+
+    :param option:
+    :return:
+    """
+    return ((option.number & 0x1E) == 0x1C) | (option.number == 4)
+
+
+def check_code(code):
+    """
+    checks if the response code is one of the valid ones defined in the rfc
+
+    :param code:
+    :return:
+    """
+    if (65 <= code <= 69) or (128 <= code <= 134) or (code == 140) or (code == 141) or (code == 143) or (
+            160 <= code <= 165):
+        return
+
+    else:
+        raise InvalidResponseCode
+
+"""
+exception used to signal an invalid response code
+"""
+
+
+class InvalidResponseCode:
+    def __init__(self, code):
+        self.inv_code = code
+
+
+def is_uri_option(number):
+    """
+    checks if the option is part of uri-path, uri-host, uri-port, uri-query
+
+    :param number:
+    :return:
+    """
+    if number == 3 | number == 7 | number == 11 | number == 15:
+        return True
+    return False
+
+
 def generate_random_token(size):
     return ''.join(random.choice(string.ascii_letters) for _ in range(size))
 
