@@ -1,10 +1,3 @@
-"""
--guardare resource.py per implementazione
--svuotare
-
-"""
-
-
 from cachetools import LRUCache
 from coapthon.caching.coapcache import CoapCache
 

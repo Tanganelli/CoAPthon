@@ -4,7 +4,6 @@ from coapthon import utils
 from coapthon.messages.response import *
 from coapthon.messages.request import *
 from coapthon.messages.message import Message
-from coapthon.caching.cacheexceptions import *
 from coaplrucache import CoapLRUCache
 import time
 from cachetools.keys import hashkey
@@ -13,7 +12,6 @@ __author__ = 'Emilio Vallati'
 
 
 class Cache(object):
-
     def __init__(self, mode, max_dim):
         """
 
