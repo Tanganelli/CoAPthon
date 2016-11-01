@@ -44,8 +44,8 @@ class MessageLayer(object):
             host, port = request.source
         except AttributeError:
             return
-        key_mid = hash(str(host) + str(port) + str(request.mid))
-        key_token = hash(str(host) + str(port) + str(request.token))
+        key_mid = hash(str(host).lower() + str(port).lower() + str(request.mid).lower())
+        key_token = hash(str(host).lower() + str(port).lower() + str(request.token).lower())
 
         if key_mid in self._transactions.keys():
             # Duplicated
@@ -71,10 +71,10 @@ class MessageLayer(object):
             host, port = response.source
         except AttributeError:
             return
-        key_mid = hash(str(host) + str(port) + str(response.mid))
-        key_mid_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(response.mid))
-        key_token = hash(str(host) + str(port) + str(response.token))
-        key_token_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(response.token))
+        key_mid = hash(str(host).lower() + str(port).lower() + str(response.mid).lower())
+        key_mid_multicast = hash(str(defines.ALL_COAP_NODES).lower() + str(port).lower() + str(response.mid).lower())
+        key_token = hash(str(host).lower() + str(port).lower() + str(response.token).lower())
+        key_token_multicast = hash(str(defines.ALL_COAP_NODES).lower() + str(port).lower() + str(response.token).lower())
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
         elif key_token in self._transactions_token:
@@ -196,7 +196,7 @@ class MessageLayer(object):
                 host, port = transaction.response.destination
             except AttributeError:
                 return
-            key_mid = hash(str(host) + str(port) + str(transaction.response.mid))
+            key_mid = hash(str(host).lower() + str(port).lower() + str(transaction.response.mid).lower())
             self._transactions[key_mid] = transaction
 
         transaction.request.acknowledged = True
@@ -215,8 +215,8 @@ class MessageLayer(object):
                 host, port = message.destination
             except AttributeError:
                 return
-            key_mid = hash(str(host) + str(port) + str(message.mid))
-            key_token = hash(str(host) + str(port) + str(message.token))
+            key_mid = hash(str(host).lower() + str(port).lower() + str(message.mid).lower())
+            key_token = hash(str(host).lower() + str(port).lower() + str(message.token).lower())
             if key_mid in self._transactions:
                 transaction = self._transactions[key_mid]
                 related = transaction.response
