@@ -15,6 +15,9 @@ class Transaction(object):
         self.retransmit_stop = None
         self._lock = threading.RLock()
 
+        self.cacheHit = False
+        self.cached_element = None
+
     def __enter__(self):
         self._lock.acquire()
 

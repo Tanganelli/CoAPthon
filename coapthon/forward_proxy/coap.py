@@ -16,6 +16,7 @@ from coapthon.resources.remoteResource import RemoteResource
 from coapthon.utils import Tree, create_logging
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.observelayer import ObserveLayer
+from coapthon.layers.cachelayer import CacheLayer
 from coapthon.layers.resourcelayer import ResourceLayer
 from coapthon.messages.request import Request
 from coapthon.layers.messagelayer import MessageLayer
@@ -31,17 +32,23 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, multicast=False, starting_mid=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None, cache=True):
 
         self.stopped = threading.Event()
         self.stopped.clear()
         self.to_be_stopped = []
         self.purge = threading.Thread(target=self.purge)
         self.purge.start()
+        self.cache_enable = cache
 
         self._messageLayer = MessageLayer(starting_mid)
         self._blockLayer = BlockLayer()
         self._observeLayer = ObserveLayer()
+
+        if self.cache_enable:
+            self._cacheLayer = CacheLayer(defines.FORWARD_PROXY)
+        else:
+            self._cacheLayer = None
 
         self._forwardLayer = ForwardLayer(self)
         self.resourceLayer = ResourceLayer(self)
@@ -107,10 +114,10 @@ class CoAP(object):
             except socket.timeout:
                 continue
             try:
-
                 self.receive_datagram((data, client_address))
             except RuntimeError:
                 print "Exception with Executor"
+        print "closing socket"
         self._socket.close()
 
     def close(self):
@@ -131,6 +138,8 @@ class CoAP(object):
         :rtype : Message
         """
         data, client_address = args
+
+        print "receiving datagram"
 
         serializer = Serializer()
         message = serializer.deserialize(data, client_address)
@@ -172,11 +181,29 @@ class CoAP(object):
 
             transaction = self._observeLayer.receive_request(transaction)
 
-            transaction = self._forwardLayer.receive_request(transaction)
+            """
+            call to the cache layer to check if there's a cached response for the request
+            if not, call the forward layer
+            """
+            if self._cacheLayer is not None:
+                transaction = self._cacheLayer.receive_request(transaction)
 
-            transaction = self._observeLayer.send_response(transaction)
+                if transaction.cacheHit is False:
+                    print transaction.request
+                    transaction = self._forwardLayer.receive_request(transaction)
+                    print transaction.response
 
-            transaction = self._blockLayer.send_response(transaction)
+                transaction = self._observeLayer.send_response(transaction)
+
+                transaction = self._blockLayer.send_response(transaction)
+
+                transaction = self._cacheLayer.send_response(transaction)
+            else:
+                transaction = self._forwardLayer.receive_request(transaction)
+
+                transaction = self._observeLayer.send_response(transaction)
+
+                transaction = self._blockLayer.send_response(transaction)
 
             self._stop_separate_timer(transaction.separate_timer)
 

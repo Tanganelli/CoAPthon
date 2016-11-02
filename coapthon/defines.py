@@ -92,6 +92,10 @@ OPAQUE = 2
 # The unknown.
 UNKNOWN = 3
 
+# Cache modes
+FORWARD_PROXY = 0
+REVERSE_PROXY = 1
+
 OptionItem = collections.namedtuple('OptionItem', 'number name value_type repeatable default')
 
 

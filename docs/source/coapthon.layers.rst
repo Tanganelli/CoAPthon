@@ -52,6 +52,13 @@ coapthon.layers.resourcelayer module
     :undoc-members:
     :show-inheritance:
 
+coapthon.layers.cachelayer module
+---------------------------------
+
+.. automodule:: coapthon.layers.cachelayer
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------
