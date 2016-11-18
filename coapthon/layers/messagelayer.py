@@ -8,6 +8,13 @@ from coapthon.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
+def str_append_hash(*args):
+    """ Convert each argument to a lower case string, appended, then hash """
+    ret_hash = ""
+    for i in args:
+        ret_hash += str(i).lower()
+
+    return hash(ret_hash)
 
 class MessageLayer(object):
     def __init__(self, starting_mid):
@@ -44,8 +51,8 @@ class MessageLayer(object):
             host, port = request.source
         except AttributeError:
             return
-        key_mid = hash(str(host).lower() + str(port).lower() + str(request.mid).lower())
-        key_token = hash(str(host).lower() + str(port).lower() + str(request.token).lower())
+        key_mid = str_append_hash(host, port, request.mid)
+        key_token = str_append_hash(host, port, request.token)
 
         if key_mid in self._transactions.keys():
             # Duplicated
@@ -71,10 +78,10 @@ class MessageLayer(object):
             host, port = response.source
         except AttributeError:
             return
-        key_mid = hash(str(host).lower() + str(port).lower() + str(response.mid).lower())
-        key_mid_multicast = hash(str(defines.ALL_COAP_NODES).lower() + str(port).lower() + str(response.mid).lower())
-        key_token = hash(str(host).lower() + str(port).lower() + str(response.token).lower())
-        key_token_multicast = hash(str(defines.ALL_COAP_NODES).lower() + str(port).lower() + str(response.token).lower())
+        key_mid = str_append_hash(host, port, response.mid)
+        key_mid_multicast = str_append_hash(defines.ALL_COAP_NODES, port, response.mid)
+        key_token = str_append_hash(host, port, response.token)
+        key_token_multicast = str_append_hash(defines.ALL_COAP_NODES, port, response.token)
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
         elif key_token in self._transactions_token:
@@ -109,10 +116,10 @@ class MessageLayer(object):
             host, port = message.source
         except AttributeError:
             return
-        key_mid = hash(str(host) + str(port) + str(message.mid))
-        key_mid_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(message.mid))
-        key_token = hash(str(host) + str(port) + str(message.token))
-        key_token_multicast = hash(str(defines.ALL_COAP_NODES) + str(port) + str(message.token))
+        key_mid = str_append_hash(host, port, message.mid)
+        key_mid_multicast = str_append_hash(defines.ALL_COAP_NODES, port, message.mid)
+        key_token = str_append_hash(host, port, message.token)
+        key_token_multicast = str_append_hash(defines.ALL_COAP_NODES, port, message.token)
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
         elif key_token in self._transactions_token:
@@ -163,10 +170,10 @@ class MessageLayer(object):
             transaction.request.mid = self._current_mid
             self._current_mid += 1 % 65535
 
-        key_mid = hash(str(host) + str(port) + str(request.mid))
+        key_mid = str_append_hash(host, port, request.mid)
         self._transactions[key_mid] = transaction
 
-        key_token = hash(str(host) + str(port) + str(request.token))
+        key_token = str_append_hash(host, port, request.token)
         self._transactions_token[key_token] = transaction
 
         return self._transactions[key_mid]
@@ -196,7 +203,7 @@ class MessageLayer(object):
                 host, port = transaction.response.destination
             except AttributeError:
                 return
-            key_mid = hash(str(host).lower() + str(port).lower() + str(transaction.response.mid).lower())
+            key_mid = str_append_hash(host, port, transaction.response.mid)
             self._transactions[key_mid] = transaction
 
         transaction.request.acknowledged = True
@@ -215,8 +222,8 @@ class MessageLayer(object):
                 host, port = message.destination
             except AttributeError:
                 return
-            key_mid = hash(str(host).lower() + str(port).lower() + str(message.mid).lower())
-            key_token = hash(str(host).lower() + str(port).lower() + str(message.token).lower())
+            key_mid = str_append_hash(host, port, message.mid)
+            key_token = str_append_hash(host, port, message.token)
             if key_mid in self._transactions:
                 transaction = self._transactions[key_mid]
                 related = transaction.response
