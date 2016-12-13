@@ -99,7 +99,9 @@ class Message(object):
         :type value: String
         :param value: the Token
         """
-        # TODO check if longer that acceptable
+        if value is None:
+            self._token = value
+            return
         if not isinstance(value, str):
             value = str(value)
         if len(value) > 256:

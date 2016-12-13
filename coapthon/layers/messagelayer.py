@@ -196,6 +196,7 @@ class MessageLayer(object):
                 transaction.response.type = defines.Types["NON"]
             else:
                 transaction.response.type = defines.Types["CON"]
+                transaction.response.token = transaction.request.token
 
         if transaction.response.mid is None:
             transaction.response.mid = self._current_mid
@@ -239,14 +240,13 @@ class MessageLayer(object):
             if transaction.request == related:
                 transaction.request.acknowledged = True
                 transaction.completed = True
-                message._mid = transaction.request.mid
+                message.mid = transaction.request.mid
                 message.code = 0
-                message.token = transaction.request.token
                 message.destination = transaction.request.source
             elif transaction.response == related:
                 transaction.response.acknowledged = True
                 transaction.completed = True
-                message._mid = transaction.response.mid
+                message.mid = transaction.response.mid
                 message.code = 0
                 message.token = transaction.response.token
                 message.destination = transaction.response.source
