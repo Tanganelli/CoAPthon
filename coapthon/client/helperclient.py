@@ -41,7 +41,7 @@ class HelperClient(object):
             self.protocol.send_message(message)
         self.stop()
 
-    def get(self, path, callback=None):  # pragma: no cover
+    def get(self, path, callback=None, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -52,10 +52,10 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def observe(self, path, callback):  # pragma: no cover
+    def observe(self, path, callback, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -67,10 +67,10 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def delete(self, path, callback=None):  # pragma: no cover
+    def delete(self, path, callback=None, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.DELETE.number
@@ -80,10 +80,10 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def post(self, path, payload, callback=None):  # pragma: no cover
+    def post(self, path, payload, callback=None, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.POST.number
@@ -95,10 +95,10 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def put(self, path, payload, callback=None):  # pragma: no cover
+    def put(self, path, payload, callback=None, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.PUT.number
@@ -109,10 +109,10 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def discover(self, callback=None):  # pragma: no cover
+    def discover(self, callback=None, timeout=None):  # pragma: no cover
         request = Request()
         request.destination = self.server
         request.code = defines.Codes.GET.number
@@ -122,7 +122,7 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
     def send_request(self, request, callback=None):  # pragma: no cover
