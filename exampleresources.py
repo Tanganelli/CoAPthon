@@ -17,7 +17,6 @@ class BasicResource(Resource):
         self.interface_type = "if1"
 
     def render_GET(self, request):
-        self.etag = hex(1234)
         return self
 
     def render_PUT(self, request):
