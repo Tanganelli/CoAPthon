@@ -1,16 +1,10 @@
 #!/usr/bin/env python
-from Queue import Queue
 import getopt
-import random
-import sys
-import threading
-from coapthon import defines
-from coapthon.client.coap import CoAP
-from coapthon.client.helperclient import HelperClient
-from coapthon.messages.message import Message
-from coapthon.messages.request import Request
-from coapthon.utils import parse_uri
 import socket
+import sys
+
+from coapthon.client.helperclient import HelperClient
+from coapthon.utils import parse_uri
 
 client = None
 
