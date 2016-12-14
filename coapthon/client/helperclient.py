@@ -125,13 +125,13 @@ class HelperClient(object):
             response = self.queue.get(block=True, timeout=timeout)
             return response
 
-    def send_request(self, request, callback=None):  # pragma: no cover
+    def send_request(self, request, callback=None, timeout=None):  # pragma: no cover
         if callback is not None:
             thread = threading.Thread(target=self._thread_body, args=(request, callback))
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
     def send_empty(self, empty):  # pragma: no cover
