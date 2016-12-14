@@ -109,13 +109,19 @@ def parse_uri(uri):
     t = tmp.split("/", 1)
     tmp = t[0]
     path = t[1]
-    t = tmp.split(":", 1)
-    try:
-        host = t[0]
-        port = int(t[1])
-    except IndexError:
-        host = tmp
-        port = 5683
+    assert isinstance(tmp, str)
+    if tmp.startswith("["):
+        t = tmp.split("]")
+        host = t[0][1:]
+        port = int(t[1][1:])
+    else:
+        t = tmp.split(":", 1)
+        try:
+            host = t[0]
+            port = int(t[1])
+        except IndexError:
+            host = tmp
+            port = 5683
 
     return str(host), port, path
 

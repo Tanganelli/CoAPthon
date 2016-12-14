@@ -99,7 +99,11 @@ def main():  # pragma: no cover
         sys.exit(2)
 
     host, port, path = parse_uri(path)
-    host = socket.gethostbyname(host)
+    try:
+        tmp = socket.gethostbyname(host)
+        host = tmp
+    except socket.gaierror:
+        pass
     client = HelperClient(server=(host, port))
     if op == "GET":
         if path is None:

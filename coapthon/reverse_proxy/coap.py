@@ -105,9 +105,14 @@ class CoAP(object):
 
     def discover_remote(self, destination, name):
         assert (isinstance(destination, str))
-        split = destination.split(":", 1)
-        host = split[0]
-        port = int(split[1])
+        if destination.startswith("["):
+            split = destination.split("]", 1)
+            host = split[0][1:]
+            port = int(split[1][1:])
+        else:
+            split = destination.split(":", 1)
+            host = split[0]
+            port = int(split[1])
         server = (host, port)
         client = HelperClient(server)
         response = client.discover()

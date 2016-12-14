@@ -70,17 +70,29 @@ class CoAP(object):
             # (not strictly needed)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 255)
+            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
+
             # Bind it to the port
             self._socket.bind(('', self.server_address[1]))
 
-            group_bin = socket.inet_pton(addrinfo[1], addrinfo[4][0])
             # Join group
-            if addrinfo[0] == socket.AF_INET: # IPv4
+            if addrinfo[0] == socket.AF_INET:  # IPv4
+                addrinfo_multicast = socket.getaddrinfo(defines.ALL_COAP_NODES, None)[0]
+                group_bin = socket.inet_pton(addrinfo_multicast[1], addrinfo_multicast[4][0])
                 mreq = group_bin + struct.pack('=I', socket.INADDR_ANY)
                 self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+                self._unicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._unicast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._unicast_socket.bind(self.server_address)
             else:
+                addrinfo_multicast = socket.getaddrinfo(defines.ALL_COAP_NODES_IPV6, None)[0]
+                group_bin = socket.inet_pton(addrinfo_multicast[1], addrinfo_multicast[4][0])
                 mreq = group_bin + struct.pack('@I', 0)
                 self._socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
+                self._unicast_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                self._unicast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._unicast_socket.bind(self.server_address)
 
         else:
             if addrinfo[0] == socket.AF_INET:  # IPv4
@@ -226,8 +238,10 @@ class CoAP(object):
             logger.debug("send_datagram - " + str(message))
             serializer = Serializer()
             message = serializer.serialize(message)
-
-            self._socket.sendto(message, (host, port))
+            if self.multicast:
+                self._unicast_socket.sendto(message, (host, port))
+            else:
+                self._socket.sendto(message, (host, port))
 
     def add_resource(self, path, resource):
         """
