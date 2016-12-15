@@ -33,7 +33,7 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, xml_file, multicast=False, starting_mid=None):
+    def __init__(self, server_address, xml_file, multicast=False, starting_mid=None, cache=False):
 
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -47,6 +47,11 @@ class CoAP(object):
 
         self._forwardLayer = ForwardLayer(self)
         self.resourceLayer = ResourceLayer(self)
+        self.cache_enable = cache
+        if self.cache_enable:
+            self._cacheLayer = CacheLayer(defines.REVERSE_PROXY)
+        else:
+            self._cacheLayer = None
 
         # Resource directory
         root = Resource('root', self, visible=False, observable=False, allow_children=True)
@@ -249,7 +254,7 @@ class CoAP(object):
 
                 if transaction.cacheHit is False:
                     print transaction.request
-                    transaction = self._forwardLayer.receive_request(transaction)
+                    transaction = self._forwardLayer.receive_request_reverse(transaction)
                     print transaction.response
 
                 transaction = self._observeLayer.send_response(transaction)
@@ -258,7 +263,7 @@ class CoAP(object):
 
                 transaction = self._cacheLayer.send_response(transaction)
             else:
-                transaction = self._forwardLayer.receive_request(transaction)
+                transaction = self._forwardLayer.receive_request_reverse(transaction)
 
                 transaction = self._observeLayer.send_response(transaction)
 
