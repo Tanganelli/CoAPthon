@@ -105,6 +105,8 @@ class Tests(unittest.TestCase):
             if expected is not None:
                 datagram, source = sock.recvfrom(4096)
                 received_message = serializer.deserialize(datagram, source)
+                print received_message.pretty_print()
+                print expected.pretty_print()
                 if expected.type is not None:
                     self.assertEqual(received_message.type, expected.type)
                 if expected.mid is not None:
@@ -652,6 +654,8 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7, exchange8])
+
+        #self._test_plugtest([exchange1])
 
     def test_post_block_big(self):
         print "TEST_POST_BLOCK_BIG"

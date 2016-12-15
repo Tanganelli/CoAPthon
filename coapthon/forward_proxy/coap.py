@@ -32,7 +32,7 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, multicast=False, starting_mid=None, cache=True):
+    def __init__(self, server_address, multicast=False, starting_mid=None, cache=False):
 
         self.stopped = threading.Event()
         self.stopped.clear()

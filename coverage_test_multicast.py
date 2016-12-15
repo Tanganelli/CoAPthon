@@ -17,10 +17,10 @@ __version__ = "2.0"
 class Tests(unittest.TestCase):
 
     def setUp(self):
-        self.server_address = ("224.0.1.187", 5683)
+        self.server_address = ("127.0.0.1", 5683)
         self.current_mid = random.randint(1, 1000)
         self.server_mid = random.randint(1000, 2000)
-        self.server = CoAPServer("224.0.1.187", 5683, multicast=True)
+        self.server = CoAPServer("127.0.0.1", 5683, multicast=True)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
         self.queue = Queue()
