@@ -119,8 +119,23 @@ class ResourceLayer(object):
             transaction.response.location_query = resource.location_query
 
         transaction.response.code = defines.Codes.CREATED.number
-        transaction.response.payload = None
+        try:
+            transaction.response.payload = resource.payload
+            if resource.actual_content_type is not None \
+                    and resource.actual_content_type != defines.Content_types["text/plain"]:
+                transaction.response.content_type = resource.actual_content_type
+        except KeyError:
+            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+            return transaction.response
+
+        assert (isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+        if resource.max_age is not None:
+            transaction.response.max_age = resource.max_age
+
         resource.changed = True
+
         transaction.resource = resource
 
         self._parent.root[resource.path] = resource
@@ -200,7 +215,22 @@ class ResourceLayer(object):
             transaction.response.etag = resource.etag
 
         transaction.response.code = defines.Codes.CHANGED.number
-        transaction.response.payload = None
+
+        try:
+            transaction.response.payload = resource.payload
+            if resource.actual_content_type is not None \
+                    and resource.actual_content_type != defines.Content_types["text/plain"]:
+                transaction.response.content_type = resource.actual_content_type
+        except KeyError:
+            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+            return transaction.response
+
+        assert (isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+        if resource.max_age is not None:
+            transaction.response.max_age = resource.max_age
+
         resource.changed = True
         resource.observe_count += 1
         transaction.resource = resource
