@@ -6,6 +6,8 @@ from coapthon.messages.option import Option
 from coapthon import defines
 from coapthon.messages.message import Message
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Serializer(object):
 

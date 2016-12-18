@@ -6,6 +6,8 @@ import sys
 from coapthon.client.helperclient import HelperClient
 from coapthon.utils import parse_uri
 
+__author__ = 'Giacomo Tanganelli'
+
 client = None
 
 

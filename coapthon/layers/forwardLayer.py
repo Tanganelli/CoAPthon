@@ -6,6 +6,7 @@ from coapthon import defines
 from coapthon.resources.remoteResource import RemoteResource
 from coapthon.utils import parse_uri
 
+__author__ = 'Giacomo Tanganelli'
 
 class ForwardLayer(object):
     def __init__(self, server):

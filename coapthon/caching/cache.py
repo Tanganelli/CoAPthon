@@ -1,12 +1,8 @@
-
-from coapthon import defines
-from coapthon import utils
-from coapthon.messages.response import *
-from coapthon.messages.request import *
-from coapthon.messages.message import Message
-from coaplrucache import CoapLRUCache
 import time
-from cachetools.keys import hashkey
+
+from coaplrucache import CoapLRUCache
+from coapthon import utils
+from coapthon.messages.request import *
 
 __author__ = 'Emilio Vallati'
 

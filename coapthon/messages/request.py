@@ -2,6 +2,8 @@ from coapthon import defines
 from coapthon.messages.message import Message
 from coapthon.messages.option import Option
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Request(Message):
     def __init__(self):

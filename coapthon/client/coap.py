@@ -1,21 +1,22 @@
-import logging
 import logging.config
 import random
 import socket
 import threading
-from coapthon.messages.message import Message
-from coapthon.messages.response import Response
+
+import os.path
+
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.messagelayer import MessageLayer
 from coapthon.layers.observelayer import ObserveLayer
 from coapthon.layers.requestlayer import RequestLayer
+from coapthon.messages.message import Message
 from coapthon.messages.request import Request
+from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
-import os.path
 from coapthon.utils import create_logging
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 if not os.path.isfile("logging.conf"):

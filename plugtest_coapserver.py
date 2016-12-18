@@ -5,7 +5,7 @@ from plugtest_resources import TestResource, SeparateResource, ObservableResourc
     LongResource
 from coapthon.server.coap import CoAP
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class CoAPServerPlugTest(CoAP):

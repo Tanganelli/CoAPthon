@@ -7,7 +7,7 @@ from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
 from coapthon.utils import generate_random_token
 
-__author__ = 'jacko'
+__author__ = 'Giacomo Tanganelli'
 
 
 class HelperClient(object):

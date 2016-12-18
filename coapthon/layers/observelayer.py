@@ -2,6 +2,8 @@ import logging
 import time
 from coapthon import defines
 
+__author__ = 'Giacomo Tanganelli'
+
 logger = logging.getLogger(__name__)
 
 

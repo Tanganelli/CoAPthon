@@ -4,7 +4,6 @@ from coapthon import defines
 from coapthon.resources.resource import Resource
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
 
 
 class BasicResource(Resource):

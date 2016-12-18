@@ -1,6 +1,6 @@
 from coapthon.resources.resource import Resource
 
-__author__ = 'jacko'
+__author__ = 'Giacomo Tanganelli'
 
 
 class RemoteResource(Resource):

@@ -8,7 +8,7 @@ import datetime
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 logger = logging.getLogger(__name__)

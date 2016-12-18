@@ -1,6 +1,8 @@
 from coapthon import defines
 from coapthon.utils import byte_len
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Option(object):
     def __init__(self):
@@ -103,5 +105,3 @@ class Option(object):
         :rtype : Boolean
         """
         return self.__dict__ == other.__dict__
-
-

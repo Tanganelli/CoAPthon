@@ -1,5 +1,7 @@
 import threading
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Transaction(object):
     def __init__(self, request=None, response=None, resource=None, timestamp=None):

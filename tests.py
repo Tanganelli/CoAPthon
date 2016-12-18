@@ -10,7 +10,6 @@ from coapthon.serializer import Serializer
 from plugtest_coapserver import CoAPServerPlugTest
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
 
 
 class Tests(unittest.TestCase):

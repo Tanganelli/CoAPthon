@@ -1,5 +1,7 @@
 from coapthon import defines
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Resource(object):
     """

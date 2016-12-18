@@ -5,6 +5,7 @@ from coapthon.messages.response import Response
 
 logger = logging.getLogger(__name__)
 
+__author__ = 'Giacomo Tanganelli'
 
 class BlockItem(object):
     def __init__(self, byte, num, m, size, payload=None, content_type=None):

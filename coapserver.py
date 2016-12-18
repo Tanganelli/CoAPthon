@@ -2,13 +2,12 @@
 
 import getopt
 import sys
-from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
-from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, Child, \
+from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, \
+    Child, \
     MultipleEncodingResource
-from plugtest_resources import ObservableResource
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class CoAPServer(CoAP):

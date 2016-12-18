@@ -1,28 +1,29 @@
-import logging
 import logging.config
-import os
 import random
-import re
 import socket
+import struct
 import threading
 import xml.etree.ElementTree as ElementTree
-import struct
+
+import os
+import re
 
 from coapclient import HelperClient
-from coapthon.layers.forwardLayer import ForwardLayer
-from coapthon.messages.message import Message
 from coapthon import defines
-from coapthon.resources.remoteResource import RemoteResource
-from coapthon.utils import Tree, create_logging
 from coapthon.layers.blocklayer import BlockLayer
-from coapthon.layers.observelayer import ObserveLayer
-from coapthon.layers.requestlayer import RequestLayer
-from coapthon.layers.resourcelayer import ResourceLayer
 from coapthon.layers.cachelayer import CacheLayer
-from coapthon.messages.request import Request
+from coapthon.layers.forwardLayer import ForwardLayer
 from coapthon.layers.messagelayer import MessageLayer
+from coapthon.layers.observelayer import ObserveLayer
+from coapthon.layers.resourcelayer import ResourceLayer
+from coapthon.messages.message import Message
+from coapthon.messages.request import Request
+from coapthon.resources.remoteResource import RemoteResource
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
+from coapthon.utils import Tree, create_logging
+
+__author__ = 'Giacomo Tanganelli'
 
 
 if not os.path.isfile("logging.conf"):

@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 import getopt
-import logging
 import sys
 from coapthon.reverse_proxy.coap import CoAP
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class CoAPReverseProxy(CoAP):

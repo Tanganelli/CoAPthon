@@ -1,7 +1,6 @@
 import collections
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "3.0"
 
 ''' CoAP Parameters '''
 

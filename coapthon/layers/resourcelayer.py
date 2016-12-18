@@ -1,7 +1,7 @@
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class ResourceLayer(object):
@@ -21,6 +21,7 @@ class ResourceLayer(object):
         """
         Render a POST on an already created resource.
 
+        :param path: the path of the resource
         :param transaction: the transaction
         :return: the transaction
         """
@@ -83,8 +84,7 @@ class ResourceLayer(object):
         """
         Render a POST on a new resource.
 
-        :param request: the request
-        :param response: the response
+        :param transaction: the transaction
         :param parent_resource: the parent of the resource
         :param lp: the location_path attribute of the resource
         :return: the response
@@ -151,8 +151,7 @@ class ResourceLayer(object):
         Render a POST request.
 
         :param path: the path of the request
-        :param request: the request
-        :param response: the response
+        :param transaction: the transaction
         :return: the response
         """
         t = self._parent.root.with_prefix(path)
@@ -178,9 +177,7 @@ class ResourceLayer(object):
         """
         Render a PUT request.
 
-        :param request: the request
-        :param response: the response
-        :param resource: the resource
+        :param transaction: the transaction
         :return: the response
         """
         # If-Match
@@ -256,8 +253,7 @@ class ResourceLayer(object):
         """
         Render a DELETE request.
 
-        :param request: the request
-        :param response: the response
+        :param transaction: the transaction
         :param path: the path
         :return: the response
         """

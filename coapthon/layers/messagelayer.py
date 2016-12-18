@@ -6,7 +6,10 @@ from coapthon import defines
 from coapthon.messages.request import Request
 from coapthon.transaction import Transaction
 
+__author__ = 'Giacomo Tanganelli'
+
 logger = logging.getLogger(__name__)
+
 
 def str_append_hash(*args):
     """ Convert each argument to a lower case string, appended, then hash """
@@ -15,6 +18,7 @@ def str_append_hash(*args):
         ret_hash += str(i).lower()
 
     return hash(ret_hash)
+
 
 class MessageLayer(object):
     def __init__(self, starting_mid):

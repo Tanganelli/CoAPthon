@@ -1,28 +1,25 @@
-import logging
 import logging.config
-import os
 import random
-import re
 import socket
-import threading
-import xml.etree.ElementTree as ElementTree
 import struct
+import threading
 
-from coapclient import HelperClient
-from coapthon.layers.forwardLayer import ForwardLayer
-from coapthon.messages.message import Message
+import os
+
 from coapthon import defines
-from coapthon.resources.remoteResource import RemoteResource
-from coapthon.utils import Tree, create_logging
 from coapthon.layers.blocklayer import BlockLayer
-from coapthon.layers.observelayer import ObserveLayer
 from coapthon.layers.cachelayer import CacheLayer
-from coapthon.layers.resourcelayer import ResourceLayer
-from coapthon.messages.request import Request
+from coapthon.layers.forwardLayer import ForwardLayer
 from coapthon.layers.messagelayer import MessageLayer
+from coapthon.layers.observelayer import ObserveLayer
+from coapthon.layers.resourcelayer import ResourceLayer
+from coapthon.messages.message import Message
+from coapthon.messages.request import Request
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
+from coapthon.utils import Tree, create_logging
 
+__author__ = 'Giacomo Tanganelli'
 
 if not os.path.isfile("logging.conf"):
     create_logging()
@@ -283,9 +280,7 @@ class CoAP(object):
 
         :type transaction: Transaction
         :param transaction:
-        :type message: Message
-        :param message:
-        :rtype : Future
+        :rtype : Timer
         """
         t = threading.Timer(defines.ACK_TIMEOUT, self._send_ack, (transaction,))
         t.start()
@@ -295,8 +290,8 @@ class CoAP(object):
     def _stop_separate_timer(timer):
         """
 
-        :type future: Future
-        :param future:
+        :type timer: Timer
+        :param timer: The timer object
         """
         timer.cancel()
 
@@ -305,7 +300,7 @@ class CoAP(object):
         """
         Sends an ACK message for the request.
 
-        :param request: [request, sleep_time] or request
+        :param transaction: The transaction to be acknowledged
         """
 
         ack = Message()

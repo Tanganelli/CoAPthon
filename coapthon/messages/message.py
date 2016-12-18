@@ -3,7 +3,6 @@ from coapthon import defines
 from coapthon.messages.option import Option
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "3.0"
 
 
 class Message(object):

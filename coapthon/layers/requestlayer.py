@@ -1,6 +1,8 @@
 from coapthon.messages.response import Response
 from coapthon import defines
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class RequestLayer(object):
     def __init__(self, server):
