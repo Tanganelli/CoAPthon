@@ -119,14 +119,18 @@ class ResourceLayer(object):
             transaction.response.location_query = resource.location_query
 
         transaction.response.code = defines.Codes.CREATED.number
-        try:
-            transaction.response.payload = resource.payload
-            if resource.actual_content_type is not None \
-                    and resource.actual_content_type != defines.Content_types["text/plain"]:
-                transaction.response.content_type = resource.actual_content_type
-        except KeyError:
-            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
-            return transaction.response
+        if resource.reply_payload:
+            try:
+                transaction.response.payload = resource.payload
+                if resource.actual_content_type is not None \
+                        and resource.actual_content_type != defines.Content_types["text/plain"]:
+                    transaction.response.content_type = resource.actual_content_type
+            except KeyError:
+                transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+                return transaction.response
+        else:
+            transaction.response.payload = None
+        resource.reply_payload = False
 
         assert (isinstance(resource, Resource))
         if resource.etag is not None:
@@ -215,15 +219,18 @@ class ResourceLayer(object):
             transaction.response.etag = resource.etag
 
         transaction.response.code = defines.Codes.CHANGED.number
-
-        try:
-            transaction.response.payload = resource.payload
-            if resource.actual_content_type is not None \
-                    and resource.actual_content_type != defines.Content_types["text/plain"]:
-                transaction.response.content_type = resource.actual_content_type
-        except KeyError:
-            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
-            return transaction.response
+        if resource.reply_payload:
+            try:
+                transaction.response.payload = resource.payload
+                if resource.actual_content_type is not None \
+                        and resource.actual_content_type != defines.Content_types["text/plain"]:
+                    transaction.response.content_type = resource.actual_content_type
+            except KeyError:
+                transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+                return transaction.response
+        else:
+            transaction.response.payload = None
+        resource.reply_payload = False
 
         assert (isinstance(resource, Resource))
         if resource.etag is not None:

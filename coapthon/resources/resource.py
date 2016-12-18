@@ -46,7 +46,19 @@ class Resource(object):
         self._coap_server = coap_server
 
         self._deleted = False
+
         self._changed = False
+
+        self._reply_payload = False
+
+    @property
+    def reply_payload(self):
+        return self._reply_payload
+
+    @reply_payload.setter
+    def reply_payload(self, b):
+        assert isinstance(b, bool)
+        self._reply_payload = b
 
     @property
     def deleted(self):

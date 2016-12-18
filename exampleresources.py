@@ -204,3 +204,8 @@ class ETAGResource(Resource):
         self.count += 1
         self.etag = str(self.count)
         return self
+
+    def render_PUT(self, request):
+        self.payload = request.payload
+        self.reply_payload = True
+        return self
