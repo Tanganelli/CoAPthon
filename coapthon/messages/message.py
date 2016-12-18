@@ -593,7 +593,11 @@ class Message(object):
             msg += "{name}: {value}, ".format(name=opt.name, value=opt.value)
         msg += "]"
         if self.payload is not None:
-            msg += " {payload}...{length} bytes".format(payload=self.payload[0:20], length=len(self.payload))
+            if isinstance(self.payload, dict):
+                tmp = self.payload.values()[0][0:20]
+            else:
+                tmp = self.payload[0:20]
+            msg += " {payload}...{length} bytes".format(payload=tmp, length=len(self.payload))
         else:
             msg += " No payload"
         return msg
