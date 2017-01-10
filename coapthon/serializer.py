@@ -83,6 +83,9 @@ class Serializer(object):
                         value = 0
                         for b in tmp:
                             value = (value << 8) | struct.unpack("B", b)[0]
+                    elif option_item.value_type == defines.OPAQUE:
+                        tmp = values[pos: pos + option_length]
+                        value = bytearray(tmp)
                     else:
                         tmp = values[pos: pos + option_length]
                         value = ""
