@@ -24,6 +24,7 @@ What is implemented
 - CoAP client
 - CoAP to CoAP Forwarding proxy
 - CoAP to CoAP Reverse Proxy
+- HTTP to CoAP Proxy
 - Observe feature
 - CoRE Link Format parsing
 - Multicast server discovery
