@@ -42,54 +42,36 @@ class HelperClient(object):
         self.stop()
 
     def get(self, path, callback=None, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = path
+        request = self.mk_request(defines.Codes.GET, path)
 
         return self.send_request(request, callback, timeout)
 
     def observe(self, path, callback, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = path
+        request = self.mk_request(defines.Codes.GET, path)
         request.observe = 0
 
         return self.send_request(request, callback, timeout)
 
     def delete(self, path, callback=None, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.DELETE.number
-        request.uri_path = path
+        request = self.mk_request(defines.Codes.DELETE, path)
 
         return self.send_request(request, callback, timeout)
 
     def post(self, path, payload, callback=None, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.POST.number
+        request = self.mk_request(defines.Codes.POST, path)
         request.token = generate_random_token(2)
-        request.uri_path = path
         request.payload = payload
 
         return self.send_request(request, callback, timeout)
 
     def put(self, path, payload, callback=None, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.PUT.number
-        request.uri_path = path
+        request = self.mk_request(defines.Codes.PUT, path)
         request.payload = payload
 
         return self.send_request(request, callback, timeout)
 
     def discover(self, callback=None, timeout=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = defines.DISCOVERY_URL
+        request = self.mk_request(defines.Codes.GET, defines.DISCOVERY_URL)
 
         return self.send_request(request, callback, timeout)
 
@@ -104,3 +86,11 @@ class HelperClient(object):
 
     def send_empty(self, empty):  # pragma: no cover
         self.protocol.send_message(empty)
+
+    def mk_request(self, method, path):
+        request = Request()
+        request.destination = self.server
+        request.code = method.number
+        request.uri_path = path
+
+        return request
