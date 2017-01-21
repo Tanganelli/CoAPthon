@@ -19,11 +19,7 @@ from coapthon.utils import create_logging
 __author__ = 'Giacomo Tanganelli'
 
 
-if not os.path.isfile("logging.conf"):
-    create_logging()
-
 logger = logging.getLogger(__name__)
-logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
