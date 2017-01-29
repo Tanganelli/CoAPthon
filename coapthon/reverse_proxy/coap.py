@@ -8,8 +8,8 @@ import xml.etree.ElementTree as ElementTree
 import os
 import re
 
-from coapclient import HelperClient
 from coapthon import defines
+from coapthon.client.helperclient import HelperClient
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.cachelayer import CacheLayer
 from coapthon.layers.forwardLayer import ForwardLayer
