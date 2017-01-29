@@ -30,6 +30,8 @@ class Resource(object):
 
         # Indicates whether this resource is observable by clients.
         self._observable = observable
+        if self._observable:
+            self._attributes["obs"] = ""
 
         self._allow_children = allow_children
 
@@ -385,6 +387,11 @@ class Resource(object):
         if not isinstance(sz, str):
             sz = str(sz)
         self._attributes["sz"] = sz
+
+    @property
+    def observing(self):
+        if self._observable:
+            return "obs"
 
     def init_resource(self, request, res):
         res.location_query = request.uri_query
