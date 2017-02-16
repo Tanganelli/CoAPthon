@@ -29,6 +29,12 @@ class MessageLayer(object):
         else:
             self._current_mid = random.randint(1, 1000)
 
+    def fetch_mid(self):
+        current_mid = self._current_mid
+        self._current_mid += 1
+        self._current_mid %= 65535
+        return current_mid
+
     def purge(self):
         for k in self._transactions.keys():
             now = time.time()
@@ -171,9 +177,7 @@ class MessageLayer(object):
             transaction.request.type = defines.Types["CON"]
 
         if transaction.request.mid is None:
-            transaction.request.mid = self._current_mid
-            self._current_mid += 1 
-            self._current_mid %= 65535
+            transaction.request.mid = self.fetch_mid()
 
         key_mid = str_append_hash(host, port, request.mid)
         self._transactions[key_mid] = transaction
@@ -203,9 +207,7 @@ class MessageLayer(object):
                 transaction.response.token = transaction.request.token
 
         if transaction.response.mid is None:
-            transaction.response.mid = self._current_mid
-            self._current_mid += 1 
-            self._current_mid %= 65535
+            transaction.response.mid = self.fetch_mid()
             try:
                 host, port = transaction.response.destination
             except AttributeError:
@@ -220,6 +222,7 @@ class MessageLayer(object):
         """
 
         :param transaction:
+        :param related:
         :type message: Message
         :param message:
         """
@@ -270,4 +273,3 @@ class MessageLayer(object):
                 message.token = transaction.response.token
                 message.destination = transaction.response.source
         return message
-

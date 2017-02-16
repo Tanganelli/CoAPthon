@@ -21,6 +21,7 @@ from coapthon.utils import Tree, create_logging
 
 __author__ = 'Giacomo Tanganelli'
 
+
 if not os.path.isfile("logging.conf"):
     create_logging()
 
@@ -29,7 +30,7 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server_address, multicast=False, starting_mid=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
 
         """
         Initialize the server.
@@ -62,7 +63,12 @@ class CoAP(object):
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
-        if self.multicast:  # pragma: no cover
+        if sock is not None:
+
+            # Use given socket, could be a DTLS socket
+            self._socket = sock
+
+        elif self.multicast:  # pragma: no cover
 
             # Create a socket
             self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)
@@ -138,8 +144,7 @@ class CoAP(object):
                     rst.destination = client_address
                     rst.type = defines.Types["RST"]
                     rst.code = message
-                    rst.mid = self._messageLayer._current_mid
-                    self._messageLayer._current_mid += 1 % 65535
+                    rst.mid = self._messageLayer.fetch_mid()
                     self.send_datagram(rst)
                     continue
 
@@ -188,8 +193,7 @@ class CoAP(object):
         """
         Receive datagram from the udp socket.
 
-        :param data: the udp message
-        :param client_address: the ip and port of the client
+        :param transaction:
         """
 
         with transaction:

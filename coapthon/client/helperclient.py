@@ -11,9 +11,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class HelperClient(object):
-    def __init__(self, server):
+    def __init__(self, server, sock=None):
         self.server = server
-        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response)
+        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock)
         self.queue = Queue()
 
     def _wait_response(self, message):
@@ -23,6 +23,10 @@ class HelperClient(object):
     def stop(self):
         self.protocol.stopped.set()
         self.queue.put(None)
+        self.protocol.close()
+
+    def close(self):
+        self.stop()
 
     def _thread_body(self, request, callback):
         self.protocol.send_message(request)
