@@ -152,8 +152,10 @@ class CoAP(object):
                 attributes = attributes.split(";")
                 for att in attributes:
                     a = att.split("=")
-                    # TODO check correctness
-                    dict_att[a[0]] = a[1]
+                    if len(a) > 1:
+                        dict_att[a[0]] = a[1]
+                    else:
+                        dict_att[a[0]] = a[0]
                 link_format = link_format[result.end(0) + 1:]
             # TODO handle observing
             resource = RemoteResource('server', remote_server, path, coap_server=self, visible=True, observable=False,
