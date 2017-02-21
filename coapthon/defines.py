@@ -79,7 +79,8 @@ corelinkformat = {
     'ct': 'content_type',
     'rt': 'resource_type',
     'if': 'interface_type',
-    'sz': 'maximum_size_estimated'
+    'sz': 'maximum_size_estimated',
+    'obs': 'observing'
 }
 
 # The integer.
