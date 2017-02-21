@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class CoAP(object):
-    def __init__(self, server, starting_mid, callback):
+    def __init__(self, server, starting_mid, callback, sock=None):
         self._currentMID = starting_mid
         self._server = server
         self._callback = callback
@@ -43,20 +43,25 @@ class CoAP(object):
         #     data = socket.getaddrinfo(server[0], server[1])
         #     self._server = (data[0], data[1])
 
-        host, port = self._server
-        addrinfo = socket.getaddrinfo(host, None)[0]
+        addrinfo = socket.getaddrinfo(self._server[0], None)[0]
 
-        if addrinfo[0] == socket.AF_INET:
+        if sock is not None:
+            self._socket = sock
+
+        elif addrinfo[0] == socket.AF_INET:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         else:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._receiver_thread = threading.Thread(target=self.receive_datagram)
-        self._receiver_thread.daemon = True
-        self._receiver_thread.start()
+        self._receiver_thread = threading.Thread(target=self.receive_datagram,
+                                                 name=threading.current_thread().name+'-Receive_Datagram')
+
+    def close(self):
+        self._receiver_thread.join()
+        self._socket.close()
 
     @property
     def current_mid(self):
@@ -91,6 +96,9 @@ class CoAP(object):
 
         self._socket.sendto(message, (host, port))
 
+        if not self._receiver_thread.isAlive():
+            self._receiver_thread.start()
+
     def _start_retransmission(self, transaction, message):
         """
         Start the retransmission task.
@@ -104,6 +112,7 @@ class CoAP(object):
             if message.type == defines.Types['CON']:
                 future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
                 transaction.retransmit_thread = threading.Thread(target=self._retransmit,
+                                                                 name=threading.current_thread().name+'-Retransmit',
                                                                  args=(transaction, message, future_time, 0))
                 transaction.retransmit_stop = threading.Event()
                 self.to_be_stopped.append(transaction.retransmit_stop)
@@ -153,7 +162,7 @@ class CoAP(object):
                 return
             else:  # pragma: no cover
                 if len(datagram) == 0:
-                    print 'orderly shutdown on server end'
+                    logger.debug("orderly shutdown on server end")
                     return
 
             serializer = Serializer()
