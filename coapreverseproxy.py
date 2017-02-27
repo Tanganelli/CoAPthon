@@ -8,8 +8,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class CoAPReverseProxy(CoAP):
-    def __init__(self, host, port, xml_file, multicast=False):
-        CoAP.__init__(self, (host, port), xml_file=xml_file, multicast=multicast)
+    def __init__(self, host, port, xml_file, multicast=False, cache=False, starting_mid=None):
+        CoAP.__init__(self, (host, port), xml_file=xml_file, multicast=multicast, starting_mid=starting_mid,
+                      cache=cache)
 
         print "CoAP Proxy start on " + host + ":" + str(port)
 

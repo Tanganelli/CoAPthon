@@ -53,17 +53,6 @@ class Resource(object):
 
         self._changed = False
 
-        self._reply_payload = False
-
-    @property
-    def reply_payload(self):
-        return self._reply_payload
-
-    @reply_payload.setter
-    def reply_payload(self, b):
-        assert isinstance(b, bool)
-        self._reply_payload = b
-
     @property
     def deleted(self):
         return self._deleted
@@ -407,7 +396,17 @@ class Resource(object):
         Method to be redefined to render a GET request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_GET_advanced(self, request, response):
+        """
+        Method to be redefined to render a GET request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -416,7 +415,17 @@ class Resource(object):
         Method to be redefined to render a PUTT request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_PUT_advanced(self, request, response):
+        """
+        Method to be redefined to render a PUTT request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -425,7 +434,17 @@ class Resource(object):
         Method to be redefined to render a POST request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_POST_advanced(self, request, response):
+        """
+        Method to be redefined to render a POST request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -434,8 +453,20 @@ class Resource(object):
         Method to be redefined to render a DELETE request on the resource.
 
         :param request: the request
+        :return: a boolean
         """
         raise NotImplementedError
+
+    def render_DELETE_advanced(self, request, response):
+        """
+        Method to be redefined to render a DELETE request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with a boolean and the response
+        """
+        raise NotImplementedError
+
 
 
 
