@@ -209,3 +209,6 @@ class Tests(unittest.TestCase):
 
         self.current_mid += 1
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
+
+if __name__ == '__main__':
+    unittest.main()
