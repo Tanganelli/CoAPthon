@@ -94,12 +94,18 @@ class MessageLayer(object):
         key_token_multicast = str_append_hash(defines.ALL_COAP_NODES, port, response.token)
         if key_mid in self._transactions.keys():
             transaction = self._transactions[key_mid]
+            if response.token != transaction.request.token:
+                logger.warning("Tokens does not match -  response message " + str(host) + ":" + str(port))
+                return None, False
         elif key_token in self._transactions_token:
             transaction = self._transactions_token[key_token]
         elif key_mid_multicast in self._transactions.keys():
             transaction = self._transactions[key_mid_multicast]
         elif key_token_multicast in self._transactions_token:
             transaction = self._transactions_token[key_token_multicast]
+            if response.token != transaction.request.token:
+                logger.warning("Tokens does not match -  response message " + str(host) + ":" + str(port))
+                return None, False
         else:
             logger.warning("Un-Matched incoming response message " + str(host) + ":" + str(port))
             return None, False
