@@ -12,6 +12,7 @@ class Resource(object):
         Initialize a new Resource.
 
         :param name: the name of the resource.
+        :param coap_server: the server that own the resource
         :param visible: if the resource is visible
         :param observable: if the resource is observable
         :param allow_children: if the resource could has children
@@ -55,18 +56,42 @@ class Resource(object):
 
     @property
     def deleted(self):
+        """
+        Check if the resource has been deleted. For observing purpose.
+
+        :rtype: bool
+        :return: True, if deleted
+        """
         return self._deleted
 
     @deleted.setter
     def deleted(self, b):
+        """
+        Set the deleted parameter. For observing purpose.
+
+        :type b: bool
+        :param b: True, if deleted
+        """
         self._deleted = b
 
     @property
     def changed(self):
+        """
+        Check if the resource has been changed. For observing purpose.
+
+        :rtype: bool
+        :return: True, if changed
+        """
         return self._changed
 
     @changed.setter
     def changed(self, b):
+        """
+        Set the changed parameter. For observing purpose.
+
+        :type b: bool
+        :param b: True, if changed
+        """
         self._changed = b
 
     @property
@@ -74,7 +99,7 @@ class Resource(object):
         """
         Get the last valid ETag of the resource.
 
-        :return: the ETag value or None if the resource doesn't have any ETag
+        :return: the last ETag value or None if the resource doesn't have any ETag
         """
         if self._etag:
             return self._etag[-1]
@@ -379,15 +404,32 @@ class Resource(object):
 
     @property
     def observing(self):
+        """
+        Get the CoRE Link Format obs attribute of the resource.
+
+        :return: the CoRE Link Format obs attribute
+        """
         if self._observable:
             return "obs"
 
     def init_resource(self, request, res):
+        """
+        Helper function to initialize a new resource.
+
+        :param request: the request that generate the new resource
+        :param res: the resource
+        :return: the edited resource
+        """
         res.location_query = request.uri_query
         res.payload = (request.content_type, request.payload)
         return res
 
     def edit_resource(self, request):
+        """
+        Helper function to edit a resource
+
+        :param request: the request that edit the resource
+        """
         self.location_query = request.uri_query
         self.payload = (request.content_type, request.payload)
 

@@ -22,6 +22,11 @@ def str_append_hash(*args):
 
 class MessageLayer(object):
     def __init__(self, starting_mid):
+        """
+        Handles matching between messages (Message ID) and request/response (Token)
+
+        :param starting_mid: the first mid used to send messages.
+        """
         self._transactions = {}
         self._transactions_token = {}
         if starting_mid is not None:
@@ -30,6 +35,11 @@ class MessageLayer(object):
             self._current_mid = random.randint(1, 1000)
 
     def fetch_mid(self):
+        """
+        Gets the next valid MID.
+
+        :return: the mid to use
+        """
         current_mid = self._current_mid
         self._current_mid += 1
         self._current_mid %= 65535
@@ -51,10 +61,12 @@ class MessageLayer(object):
 
     def receive_request(self, request):
         """
+        Handle duplicates and store received messages.
 
         :type request: Request
         :param request: the incoming request
         :rtype : Transaction
+        :return: the edited transaction
         """
         logger.debug("receive_request - " + str(request))
         try:
@@ -78,10 +90,12 @@ class MessageLayer(object):
 
     def receive_response(self, response):
         """
+        Pair responses with requests.
 
         :type response: Response
-        :param response:
+        :param response: the received response
         :rtype : Transaction
+        :return: the transaction to which the response belongs to
         """
         logger.debug("receive_response - " + str(response))
         try:
@@ -122,10 +136,12 @@ class MessageLayer(object):
 
     def receive_empty(self, message):
         """
+        Pair ACKs with requests.
 
         :type message: Message
-        :param message:
+        :param message: the received message
         :rtype : Transaction
+        :return: the transaction to which the message belongs to
         """
         logger.debug("receive_empty - " + str(message))
         try:
@@ -166,9 +182,12 @@ class MessageLayer(object):
 
     def send_request(self, request):
         """
+        Create the transaction and fill it with the outgoing request.
 
         :type request: Request
-        :param request:
+        :param request: the request to send
+        :rtype : Transaction
+        :return: the created transaction
         """
         logger.debug("send_request - " + str(request))
         assert isinstance(request, Request)
@@ -195,9 +214,12 @@ class MessageLayer(object):
 
     def send_response(self, transaction):
         """
+        Set the type, the token and eventually the MID for the outgoing response
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the response
+        :rtype : Transaction
+        :return: the edited transaction
         """
         logger.debug("send_response - " + str(transaction.response))
         if transaction.response.type is None:
@@ -226,11 +248,13 @@ class MessageLayer(object):
 
     def send_empty(self, transaction, related, message):
         """
+        Manage ACK or RST related to a transaction. Sets if the transaction has been acknowledged or rejected.
 
-        :param transaction:
-        :param related:
+        :param transaction: the transaction
+        :param related: if the ACK/RST message is related to the request or the response. Must be equal to
+        transaction.request or to transaction.response or None
         :type message: Message
-        :param message:
+        :param message: the ACK or RST message to send
         """
         logger.debug("send_empty - " + str(message))
         if transaction is None:

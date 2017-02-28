@@ -35,14 +35,6 @@ class CoAP(object):
         self._observeLayer = ObserveLayer()
         self._requestLayer = RequestLayer(self)
 
-        # try:
-        #     # legal
-        #     socket.inet_aton(server[0])
-        # except socket.error:
-        #     # Not legal
-        #     data = socket.getaddrinfo(server[0], server[1])
-        #     self._server = (data[0], data[1])
-
         addrinfo = socket.getaddrinfo(self._server[0], None)[0]
 
         if sock is not None:

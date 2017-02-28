@@ -10,10 +10,12 @@ class RequestLayer(object):
 
     def receive_request(self, transaction):
         """
+        Handle request and execute the requested method
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction with the response to the request
         """
         method = transaction.request.code
         if method == defines.Codes.GET.number:
@@ -30,18 +32,22 @@ class RequestLayer(object):
 
     def send_request(self, request):
         """
+         Dummy function. Used to do not broke the layered architecture.
 
         :type request: Request
-        :param request:
+        :param request: the request
+        :return: the request unmodified
         """
         return request
 
     def _handle_get(self, transaction):
         """
+        Handle GET requests
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
         transaction.response = Response()
@@ -64,10 +70,12 @@ class RequestLayer(object):
 
     def _handle_put(self, transaction):
         """
+        Handle PUT requests
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
         transaction.response = Response()
@@ -87,10 +95,12 @@ class RequestLayer(object):
 
     def _handle_post(self, transaction):
         """
+        Handle POST requests
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
         transaction.response = Response()
@@ -103,10 +113,12 @@ class RequestLayer(object):
 
     def _handle_delete(self, transaction):
         """
+        Handle DELETE requests
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
         transaction.response = Response()
