@@ -22,9 +22,10 @@ What is implemented
 
 - CoAP server
 - CoAP client
-- CoAP to CoAP Forwarding proxy
+- CoAP to CoAP Forward proxy
 - CoAP to CoAP Reverse Proxy
-- HTTP to CoAP Proxy
+- HTTP to CoAP Forward Proxy
+- Caching feature
 - Observe feature
 - CoRE Link Format parsing
 - Multicast server discovery
@@ -56,14 +57,25 @@ Archlinux
 $ sudo pacman -S python-pip
 ```
 
-Once you have the pip program issue the following commands:
+To install last release:
+------------------------
 
 ```sh
+$ sudo pip install CoAPthon
+```
+
+To install master branch:
+-------------------------
+
+```sh
+$ git clone https://github.com/Tanganelli/CoAPthon.git
 $ cd CoAPthon
 $ python setup.py sdist
 $ sudo pip install dist/CoAPthon-4.0.0.tar.gz -r requirements.txt
 ```
 
+Running:
+--------
 The library is installed in the default path as well as the bins that you can use and customize. In order to start
 the example CoAP server issue:
 
@@ -112,7 +124,7 @@ class CoAPServer(CoAP):
         self.add_resource('basic/', BasicResource())
 
 def main():
-    server = CoAPServer("127.0.0.1", 5683)
+    server = CoAPServer("0.0.0.0", 5683)
     try:
         server.listen(10)
     except KeyboardInterrupt:
@@ -151,6 +163,145 @@ class BasicResource(Resource):
     def render_DELETE(self, request):
         return True
 
+```
+
+Advanced Use
+------------
+
+### Separate Responses
+ To always reply following the separate mode:
+```Python
+from coapthon.resources.resource import Resource
+
+class Separate(Resource):
+
+    def __init__(self, name="Separate", coap_server=None):
+        super(Separate, self).__init__(name, coap_server, visible=True, observable=True, allow_children=True)
+        self.payload = "Separate"
+        self.max_age = 60
+
+    def render_GET(self, request):
+        return self, self.render_GET_separate
+
+    def render_GET_separate(self, request):
+        time.sleep(5)
+        return self
+
+    def render_POST(self, request):
+        return self, self.render_POST_separate
+
+    def render_POST_separate(self, request):
+        self.payload = request.payload
+        return self
+
+    def render_PUT(self, request):
+        return self, self.render_PUT_separate
+
+    def render_PUT_separate(self, request):
+        self.payload = request.payload
+        return self
+
+    def render_DELETE(self, request):
+        return self, self.render_DELETE_separate
+
+    def render_DELETE_separate(self, request):
+        return True
+
+```
+
+### Advanced interface
+Resources can be implemented also through a more advanced interface.
+
+```Python
+class AdvancedResource(Resource):
+    def __init__(self, name="Advanced"):
+        super(AdvancedResource, self).__init__(name)
+        self.payload = "Advanced resource"
+
+    def render_GET_advanced(self, request, response):
+        response.payload = self.payload
+        response.max_age = 20
+        response.code = defines.Codes.CONTENT.number
+        return self, response
+
+    def render_POST_advanced(self, request, response):
+        self.payload = request.payload
+        from coapthon.messages.response import Response
+        assert(isinstance(response, Response))
+        response.payload = "Response changed through POST"
+        response.code = defines.Codes.CREATED.number
+        return self, response
+
+    def render_PUT_advanced(self, request, response):
+        self.payload = request.payload
+        from coapthon.messages.response import Response
+        assert(isinstance(response, Response))
+        response.payload = "Response changed through PUT"
+        response.code = defines.Codes.CHANGED.number
+        return self, response
+
+    def render_DELETE_advanced(self, request, response):
+        response.payload = "Response deleted"
+        response.code = defines.Codes.DELETED.number
+        return True, response
+
+```
+
+### Separate mode with advanced interface
+
+```Python
+class AdvancedResourceSeparate(Resource):
+    def __init__(self, name="Advanced"):
+        super(AdvancedResourceSeparate, self).__init__(name)
+        self.payload = "Advanced resource"
+
+    def render_GET_advanced(self, request, response):
+        return self, response, self.render_GET_separate
+
+    def render_POST_advanced(self, request, response):
+        return self, response, self.render_POST_separate
+
+    def render_PUT_advanced(self, request, response):
+
+        return self, response, self.render_PUT_separate
+
+    def render_DELETE_advanced(self, request, response):
+        return self, response, self.render_DELETE_separate
+
+    def render_GET_separate(self, request, response):
+        time.sleep(5)
+        response.payload = self.payload
+        response.max_age = 20
+        return self, response
+
+    def render_POST_separate(self, request, response):
+        self.payload = request.payload
+        response.payload = "Response changed through POST"
+        return self, response
+
+    def render_PUT_separate(self, request, response):
+        self.payload = request.payload
+        response.payload = "Response changed through PUT"
+        return self, response
+
+    def render_DELETE_separate(self, request, response):
+        response.payload = "Response deleted"
+        return True, response
+```
+CoAP client
+-----------
+
+```Python
+from coapthon.client.helperclient import HelperClient
+
+host = "127.0.0.1"
+port = 5683
+path ="basic"
+
+client = HelperClient(server=(host, port))
+response = client.get(path)
+print response.pretty_print()
+client.stop()
 ```
 
 Build the documentation
