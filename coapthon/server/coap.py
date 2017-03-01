@@ -31,13 +31,13 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 class CoAP(object):
     def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
-
         """
         Initialize the server.
 
         :param server_address: Server address for incoming connections
         :param multicast: if the ip is a multicast address
         :param starting_mid: used for testing purposes
+        :param sock: if a socket has been created externally, it can be used directly
         """
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -193,9 +193,9 @@ class CoAP(object):
 
     def receive_request(self, transaction):
         """
-        Receive datagram from the udp socket.
+        Handle requests coming from the udp socket.
 
-        :param transaction:
+        :param transaction: the transaction created to manage the request
         """
 
         with transaction:
@@ -236,9 +236,10 @@ class CoAP(object):
 
     def send_datagram(self, message):
         """
+        Send a message through the udp socket.
 
         :type message: Message
-        :param message:
+        :param message: the message to send
         """
         if not self.stopped.isSet():
             host, port = message.destination

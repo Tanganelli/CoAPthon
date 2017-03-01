@@ -3,8 +3,6 @@ import random
 import socket
 import threading
 
-import os.path
-
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.messagelayer import MessageLayer
@@ -14,7 +12,7 @@ from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
-from coapthon.utils import create_logging
+
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -24,6 +22,14 @@ logger = logging.getLogger(__name__)
 
 class CoAP(object):
     def __init__(self, server, starting_mid, callback, sock=None):
+        """
+        Initialize the client.
+
+        :param server: Server address for incoming connections
+        :param callback:the calback function to be invoked when a response is received
+        :param starting_mid: used for testing purposes
+        :param sock: if a socket has been created externally, it can be used directly
+        """
         self._currentMID = starting_mid
         self._server = server
         self._callback = callback
@@ -52,20 +58,38 @@ class CoAP(object):
                                                  name=threading.current_thread().name+'-Receive_Datagram')
 
     def close(self):
+        """
+        Stop the client.
+
+        """
         self._receiver_thread.join()
         self._socket.close()
 
     @property
     def current_mid(self):
+        """
+        Return the current MID.
+
+        :return: the current mid
+        """
         return self._currentMID
 
     @current_mid.setter
     def current_mid(self, c):
+        """
+        Set the current MID.
+
+        :param c: the mid to set
+        """
         assert isinstance(c, int)
         self._currentMID = c
 
     def send_message(self, message):
+        """
+        Prepare a message to send on the UDP socket. Eventually set retransmissions.
 
+        :param message: the message to send
+        """
         if isinstance(message, Request):
             request = self._requestLayer.send_request(message)
             request = self._observeLayer.send_request(request)
@@ -81,6 +105,11 @@ class CoAP(object):
             self.send_datagram(message)
 
     def send_datagram(self, message):
+        """
+        Send a message over the UDP socket.
+
+        :param message: the message to send
+        """
         host, port = message.destination
         logger.debug("send_datagram - " + str(message))
         serializer = Serializer()
@@ -143,6 +172,9 @@ class CoAP(object):
             transaction.retransmit_thread = None
 
     def receive_datagram(self):
+        """
+        Receive datagram from the UDP socket and invoke the callback function.
+        """
         logger.debug("Start receiver Thread")
         while not self.stopped.isSet():
             self._socket.settimeout(1)
@@ -195,7 +227,6 @@ class CoAP(object):
                 self._messageLayer.receive_empty(message)
 
     def _send_ack(self, transaction):
-        # Handle separate
         """
         Sends an ACK message for the response.
 
@@ -210,7 +241,6 @@ class CoAP(object):
             self.send_datagram(ack)
 
     def _send_rst(self, transaction):  # pragma: no cover
-        # Handle separate
         """
         Sends an RST message for the response.
 
