@@ -21,12 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class CoAP(object):
+    """
+    Client class to perform requests to remote servers.
+    """
     def __init__(self, server, starting_mid, callback, sock=None):
         """
         Initialize the client.
 
         :param server: Server address for incoming connections
-        :param callback:the calback function to be invoked when a response is received
+        :param callback:the callback function to be invoked when a response is received
         :param starting_mid: used for testing purposes
         :param sock: if a socket has been created externally, it can be used directly
         """

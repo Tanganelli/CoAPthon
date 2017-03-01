@@ -10,7 +10,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Serializer(object):
-
+    """
+    Serializer class to serialize and deserialize CoAP message to/from udp streams.
+    """
     @staticmethod
     def deserialize(datagram, source):
         """
