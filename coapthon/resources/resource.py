@@ -5,7 +5,7 @@ __author__ = 'Giacomo Tanganelli'
 
 class Resource(object):
     """
-    The Resource class.
+    The Resource class. Represents the base class for all resources.
     """
     def __init__(self, name, coap_server=None, visible=True, observable=True, allow_children=True):
         """

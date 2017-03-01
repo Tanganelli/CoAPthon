@@ -24,10 +24,10 @@ class ObserveItem(object):
 
 
 class ObserveLayer(object):
+    """
+    Manage the observing feature. It store observing relationships.
+    """
     def __init__(self):
-        """
-        Manage the observing feature. It store observing relationships.
-        """
         self._relations = {}
 
     def send_request(self, request):

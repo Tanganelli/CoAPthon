@@ -6,6 +6,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Request(Message):
+    """
+    Class to handle the Requests.
+    """
     def __init__(self):
         """
         Initialize a Request message.

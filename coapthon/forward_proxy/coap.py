@@ -29,6 +29,9 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
+    """
+    Implementation of the Forward Proxy
+    """
     def __init__(self, server_address, multicast=False, starting_mid=None, cache=False, sock=None):
         """
         Initialize the Forward Proxy.

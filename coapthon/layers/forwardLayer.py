@@ -10,6 +10,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class ForwardLayer(object):
+    """
+    Class used by Proxies to forward messages.
+    """
     def __init__(self, server):
         self._server = server
 

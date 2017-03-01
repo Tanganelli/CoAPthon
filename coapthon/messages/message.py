@@ -6,6 +6,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Message(object):
+    """
+    Class to handle the Messages.
+    """
     def __init__(self):
         """
         Data structure that represent a CoAP message

@@ -6,6 +6,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Response(Message):
+    """
+    Class to handle the Responses.
+    """
     @property
     def location_path(self):
         """

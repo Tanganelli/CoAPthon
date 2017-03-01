@@ -30,6 +30,9 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
+    """
+    Implementation of the CoAP server
+    """
     def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
         """
         Initialize the server.

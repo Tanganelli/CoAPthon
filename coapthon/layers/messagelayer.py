@@ -21,9 +21,12 @@ def str_append_hash(*args):
 
 
 class MessageLayer(object):
+    """
+    Handles matching between messages (Message ID) and request/response (Token)
+    """
     def __init__(self, starting_mid):
         """
-        Handles matching between messages (Message ID) and request/response (Token)
+        Set the layer internal structure.
 
         :param starting_mid: the first mid used to send messages.
         """

@@ -29,10 +29,10 @@ class BlockItem(object):
 
 
 class BlockLayer(object):
+    """
+    Handle the Blockwise options. Hides all the exchange to both servers and clients.
+    """
     def __init__(self):
-        """
-        Handle the Blockwise options. Hides all the exchange to both servers and clients.
-        """
         self._block1_sent = {}
         self._block2_sent = {}
         self._block1_receive = {}

@@ -34,6 +34,9 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
+    """
+    Implementation of the Reverse Proxy
+    """
     def __init__(self, server_address, xml_file, multicast=False, starting_mid=None, cache=False, sock=None):
         """
         Initialize the Reverse Proxy.

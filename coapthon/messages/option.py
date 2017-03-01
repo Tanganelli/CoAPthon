@@ -5,6 +5,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Option(object):
+    """
+    Class to handle the CoAP Options.
+    """
     def __init__(self):
         """
         Data structure to store options.

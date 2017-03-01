@@ -5,6 +5,9 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class RequestLayer(object):
+    """
+    Class to handle the Request/Response layer
+    """
     def __init__(self, server):
         self._server = server
 

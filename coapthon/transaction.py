@@ -4,9 +4,12 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Transaction(object):
+    """
+    Transaction object to bind together a request, a response and a resource.
+    """
     def __init__(self, request=None, response=None, resource=None, timestamp=None):
         """
-        Initialize a Transaction object to bind together a request, a response and a resource.
+        Initialize a Transaction object.
 
         :param request: the request
         :param response: the response
