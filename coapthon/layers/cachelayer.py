@@ -24,28 +24,31 @@ class CacheLayer(object):
         """
 
         transaction.cached_element = self.cache.search_response(transaction.request)
-
         if transaction.cached_element is None:
             transaction.cacheHit = False
         else:
             transaction.response = transaction.cached_element.cached_response
             transaction.response.mid = transaction.request.mid
             transaction.cacheHit = True
+
             age = transaction.cached_element.creation_time + transaction.cached_element.max_age - time.time()
-            if age <= 0:
-                print "resource not fresh"
-                """
-                if the resource is not fresh, its Etag must be added to the request so that the server might validate it instead of sending a new one
-                """
-                transaction.cached_element.freshness = False
-                """
-                ensuring that the request goes to the server
-                """
-                transaction.cacheHit = False
-                print "requesting etag ", transaction.response.etag
-                transaction.request.etag = transaction.response.etag
+            if transaction.cached_element.freshness is True:
+                if age <= 0:
+                    print "resource not fresh"
+                    """
+                    if the resource is not fresh, its Etag must be added to the request so that the server might validate it instead of sending a new one
+                    """
+                    transaction.cached_element.freshness = False
+                    """
+                    ensuring that the request goes to the server
+                    """
+                    transaction.cacheHit = False
+                    print "requesting etag ", transaction.response.etag
+                    transaction.request.etag = transaction.response.etag
+                else:
+                    transaction.response.max_age = age
             else:
-                transaction.response.max_age = age
+                transaction.cacheHit = False
         return transaction
 
     def send_response(self, transaction):
@@ -91,7 +94,10 @@ class CacheLayer(object):
         mark the requested resource as not fresh
         """
         if code == Codes.CHANGED.number or code == Codes.CREATED.number or code == Codes.DELETED.number:
-            self.cache.mark(transaction.request)
+            target = self.cache.search_related(transaction.request)
+            if target is not None:
+                for element in target:
+                    self.cache.mark(element)
             return transaction
 
         """
