@@ -19,6 +19,9 @@ class CoapLRUCache(CoapCache):
         :param element:
         :return:
         """
+        print "updating cache"
+        print "key: ", key.hashkey
+        print "element: ", element
         self.cache.update([(key.hashkey, element)])
 
     def get(self, key):
@@ -36,7 +39,6 @@ class CoapLRUCache(CoapCache):
 
     def is_full(self):
         """
-
         :return:
         """
         if self.cache.currsize == self.cache.maxsize:
@@ -59,4 +61,9 @@ class CoapLRUCache(CoapCache):
         :return:
         """
         print "size = ", self.cache.currsize
+        list = self.cache.items()
+        for key, element in list:
+            print "element.max age ", element.max_age
+            print "element.uri", element.uri
+            print "element.freshness ", element.freshness
 
