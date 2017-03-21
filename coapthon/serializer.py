@@ -10,15 +10,18 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Serializer(object):
-
+    """
+    Serializer class to serialize and deserialize CoAP message to/from udp streams.
+    """
     @staticmethod
     def deserialize(datagram, source):
         """
         De-serialize a stream of byte to a message.
 
-        :type datagram: String
-        :param datagram:
-        :param source:
+        :param datagram: the incoming udp message
+        :param source: the source address and port (ip, port)
+        :return: the message
+        :rtype: Message
         """
         try:
             fmt = "!BBH"
@@ -117,9 +120,12 @@ class Serializer(object):
     @staticmethod
     def serialize(message):
         """
+        Serialize a message to a udp packet
 
         :type message: Message
-        :param message:
+        :param message: the message to be serialized
+        :rtype: stream of byte
+        :return: the message serialized
         """
         fmt = "!BBH"
 
@@ -318,15 +324,17 @@ class Serializer(object):
     @staticmethod
     def int_to_words(int_val, num_words=4, word_size=32):
         """
-        @param int_val: an arbitrary length Python integer to be split up.
+        Convert a int value to bytes.
+
+        :param int_val: an arbitrary length Python integer to be split up.
             Network byte order is assumed. Raises an IndexError if width of
             integer (in bits) exceeds word_size * num_words.
 
-        @param num_words: number of words expected in return value tuple.
+        :param num_words: number of words expected in return value tuple.
 
-        @param word_size: size/width of individual words (in bits).
+        :param word_size: size/width of individual words (in bits).
 
-        @return: a list of fixed width words based on provided parameters.
+        :return: a list of fixed width words based on provided parameters.
         """
         max_int = 2 ** (word_size*num_words) - 1
         max_word_size = 2 ** word_size - 1

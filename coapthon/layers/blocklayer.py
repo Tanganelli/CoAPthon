@@ -7,8 +7,19 @@ logger = logging.getLogger(__name__)
 
 __author__ = 'Giacomo Tanganelli'
 
+
 class BlockItem(object):
     def __init__(self, byte, num, m, size, payload=None, content_type=None):
+        """
+        Data structure to store Block parameters
+
+        :param byte: the last byte exchanged
+        :param num: the num field of the block option
+        :param m: the M bit of the block option
+        :param size: the size field of the block option
+        :param payload: the overall payload received in all blocks
+        :param content_type: the content-type of the payload
+        """
         self.byte = byte
         self.num = num
         self.m = m
@@ -18,6 +29,9 @@ class BlockItem(object):
 
 
 class BlockLayer(object):
+    """
+    Handle the Blockwise options. Hides all the exchange to both servers and clients.
+    """
     def __init__(self):
         self._block1_sent = {}
         self._block2_sent = {}
@@ -31,6 +45,7 @@ class BlockLayer(object):
         :type transaction: Transaction
         :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction
         """
         if transaction.request.block2 is not None:
             host, port = transaction.request.source
@@ -100,6 +115,7 @@ class BlockLayer(object):
         :type transaction: Transaction
         :param transaction: the transaction that owns the response
         :rtype : Transaction
+        :return: the edited transaction
         """
         host, port = transaction.response.source
         key_token = hash(str(host) + str(port) + str(transaction.response.token))
@@ -171,12 +187,14 @@ class BlockLayer(object):
 
     def receive_empty(self, empty, transaction):
         """
+        Dummy function. Used to do not broke the layered architecture.
 
         :type empty: Message
-        :param empty:
+        :param empty: the received empty message
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the empty message
         :rtype : Transaction
+        :return: the transaction
         """
         return transaction
 
@@ -187,6 +205,7 @@ class BlockLayer(object):
         :type transaction: Transaction
         :param transaction: the transaction that owns the response
         :rtype : Transaction
+        :return: the edited transaction
         """
         host, port = transaction.request.source
         key_token = hash(str(host) + str(port) + str(transaction.request.token))
@@ -218,7 +237,6 @@ class BlockLayer(object):
             self._block2_receive[key_token].byte += size
             self._block2_receive[key_token].num += 1
             if m == 0:
-                # TODO remove from _block2_receive
                 del self._block2_receive[key_token]
 
         return transaction
@@ -229,6 +247,7 @@ class BlockLayer(object):
 
         :type request: Request
         :param request: the outgoing request
+        :return: the edited request
         """
         assert isinstance(request, Request)
         if request.block1 or (request.payload is not None and len(request.payload) > defines.MAX_PAYLOAD):
@@ -256,6 +275,14 @@ class BlockLayer(object):
 
     @staticmethod
     def incomplete(transaction):
+        """
+        Notifies incomplete blockwise exchange.
+
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the response
+        :rtype : Transaction
+        :return: the edited transaction
+        """
         transaction.block_transfer = True
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
@@ -265,6 +292,14 @@ class BlockLayer(object):
 
     @staticmethod
     def error(transaction, code):  # pragma: no cover
+        """
+        Notifies generic error on blockwise exchange.
+
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the response
+        :rtype : Transaction
+        :return: the edited transaction
+        """
         transaction.block_transfer = True
         transaction.response = Response()
         transaction.response.destination = transaction.request.source

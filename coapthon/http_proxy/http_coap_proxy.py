@@ -11,29 +11,28 @@ from urlparse import urlparse
 __author__ = "Marco Ieni, Davide Foti"
 __email__ = "marcoieni94@gmail.com, davidefoti.uni@gmail.com"
 
-'''
-This program implements an HTTP-CoAP Proxy without using external libraries.
-It is assumed that URI is formatted like this:
-http://hc_proxy_ip:proxy_port/hc/coap://server_coap_ip:server_coap_port/resource
-You can run this program passing the parameters from the command line or you can use the HCProxy class in your own
-project.
-'''
-
 hc_path = DEFAULT_HC_PATH
 
 """ the class that realizes the HTTP-CoAP Proxy """
 
 
 class HCProxy:
+    """
+    This program implements an HTTP-CoAP Proxy without using external libraries.
+    It is assumed that URI is formatted like this:
+    http://hc_proxy_ip:proxy_port/hc/coap://server_coap_ip:server_coap_port/resource
+    You can run this program passing the parameters from the command line or you can use the HCProxy class in your own
+    project.
+    """
     def __init__(self, path=DEFAULT_HC_PATH, hc_port=HC_PROXY_DEFAULT_PORT, ip=LOCALHOST,
                  coap_port=COAP_DEFAULT_PORT):
         """
+        Initialize the HC proxy.
 
         :param path: the path of the hc_proxy server
         :param hc_port: the port of the hc_proxy server
         :param ip: the ip of the hc_proxy server
         :param coap_port: the coap server port you want to reach
-        :return:
         """
         global hc_path
         hc_path = HCProxy.get_formatted_path(path)
@@ -42,6 +41,9 @@ class HCProxy:
         self.coap_port = coap_port
 
     def run(self):
+        """
+        Start the proxy.
+        """
         server_address = (self.ip, self.hc_port)
         hc_proxy = HTTPServer(server_address, HCProxyHandler)
         print 'Starting HTTP-CoAP Proxy...'
@@ -49,6 +51,12 @@ class HCProxy:
 
     @staticmethod
     def get_formatted_path(path):
+        """
+        Uniform the path string
+
+        :param path: the path
+        :return: the uniform path
+        """
         if path[0] != '/':
             path = '/' + path
         if path[-1] != '/':
@@ -56,18 +64,26 @@ class HCProxy:
         return path
 
 
-""" Class that can manage and inbox the CoAP URI """
-
-
 class CoapUri:  # this class takes the URI from the HTTP URI
+    """ Class that can manage and inbox the CoAP URI """
     def __init__(self, coap_uri):
         self.uri = coap_uri
         self.host, self.port, self.path = parse_uri(coap_uri)
 
     def get_uri_as_list(self):
+        """
+        Split the uri into <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+
+        :return: the split uri
+        """
         return urlparse(self.uri)
 
     def get_payload(self):
+        """
+        Return the query string of the uri.
+
+        :return: the query string as a list
+        """
         temp = self.get_uri_as_list()
         query_string = temp[4]
         if query_string == "":
@@ -79,14 +95,21 @@ class CoapUri:  # this class takes the URI from the HTTP URI
         return self.uri
 
 
-""" It maps the requests from HTTP to CoAP """
-
-
 class HCProxyHandler(BaseHTTPRequestHandler):
+    """ It maps the requests from HTTP to CoAP """
+    coap_uri = None
+    client = None
+
     def set_coap_uri(self):
+        """
+        Create a CoAP Uri
+        """
         self.coap_uri = CoapUri(self.path[len(hc_path):])
 
     def do_initial_operations(self):
+        """
+        Setup the client for interact with remote server
+        """
         if not self.request_hc_path_corresponds():
             # the http URI of the request is not the same of the one specified by the admin for the hc proxy,
             # so I do not answer
@@ -97,6 +120,9 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.client = HelperClient(server=(self.coap_uri.host, self.coap_uri.port))
 
     def do_GET(self):
+        """
+        Perform a GET request
+        """
         self.do_initial_operations()
         coap_response = self.client.get(self.coap_uri.path)
         self.client.stop()
@@ -104,6 +130,9 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.set_http_response(coap_response)
 
     def do_HEAD(self):
+        """
+        Perform a HEAD request
+        """
         self.do_initial_operations()
         # the HEAD method is not present in CoAP, so we treat it
         # like if it was a GET and then we exclude the body from the response
@@ -114,6 +143,9 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.set_http_header(coap_response)
 
     def do_POST(self):
+        """
+        Perform a POST request
+        """
         # Doesn't do anything with posted data
         # print "uri: ", self.client_address, self.path
         self.do_initial_operations()
@@ -122,13 +154,15 @@ class HCProxyHandler(BaseHTTPRequestHandler):
             print "BAD POST REQUEST"
             self.send_error(BAD_REQUEST)
             return
-        print payload
         coap_response = self.client.post(self.coap_uri.path, payload)
         self.client.stop()
         print "Server response: ", coap_response.pretty_print()
         self.set_http_response(coap_response)
 
     def do_PUT(self):
+        """
+        Perform a PUT request
+        """
         self.do_initial_operations()
         payload = self.coap_uri.get_payload()
         if payload is None:
@@ -142,6 +176,9 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.set_http_response(coap_response)
 
     def do_DELETE(self):
+        """
+        Perform a DELETE request
+        """
         self.do_initial_operations()
         coap_response = self.client.delete(self.coap_uri.path)
         self.client.stop()
@@ -149,17 +186,27 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.set_http_response(coap_response)
 
     def do_CONNECT(self):
+        """
+        Perform a CONNECT request. Reply with error, not implemented in CoAP
+        """
         self.send_error(NOT_IMPLEMENTED)
 
     def do_OPTIONS(self):
+        """
+        Perform a OPTIONS request. Reply with error, not implemented in CoAP
+        """
         self.send_error(NOT_IMPLEMENTED)
 
     def do_TRACE(self):
+        """
+        Perform a TRACE request. Reply with error, not implemented in CoAP
+        """
         self.send_error(NOT_IMPLEMENTED)
 
     def request_hc_path_corresponds(self):
         """
-        tells if the hc path of the request corresponds to that specified by the admin
+        Tells if the hc path of the request corresponds to that specified by the admin
+
         :return: a boolean that says if it corresponds or not
         """
         uri_path = self.path.split(COAP_PREFACE)
@@ -173,6 +220,11 @@ class HCProxyHandler(BaseHTTPRequestHandler):
             return True
 
     def set_http_header(self, coap_response):
+        """
+        Sets http headers.
+
+        :param coap_response: the coap response
+        """
         print "Server: ", coap_response.source
         print "codice risposta: ", coap_response.code
         print "PROXED: ", CoAP_HTTP[Codes.LIST[coap_response.code].name]
@@ -182,6 +234,11 @@ class HCProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def set_http_body(self, coap_response):
+        """
+        Set http body.
+
+        :param coap_response: the coap response
+        """
         if coap_response.payload is not None:
             body = "<html><body><h1>", coap_response.payload, "</h1></body></html>"
             self.wfile.write("".join(body))
@@ -189,6 +246,11 @@ class HCProxyHandler(BaseHTTPRequestHandler):
             self.wfile.write("<html><body><h1>None</h1></body></html>")
 
     def set_http_response(self, coap_response):
+        """
+        Set http response.
+
+        :param coap_response: the coap response
+        """
         self.set_http_header(coap_response)
         self.set_http_body(coap_response)
         return

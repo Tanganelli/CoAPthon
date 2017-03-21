@@ -206,5 +206,76 @@ class ETAGResource(Resource):
 
     def render_PUT(self, request):
         self.payload = request.payload
-        self.reply_payload = True
         return self
+
+
+class AdvancedResource(Resource):
+    def __init__(self, name="Advanced"):
+        super(AdvancedResource, self).__init__(name)
+        self.payload = "Advanced resource"
+
+    def render_GET_advanced(self, request, response):
+        response.payload = self.payload
+        response.max_age = 20
+        response.code = defines.Codes.CONTENT.number
+        return self, response
+
+    def render_POST_advanced(self, request, response):
+        self.payload = request.payload
+        from coapthon.messages.response import Response
+        assert(isinstance(response, Response))
+        response.payload = "Response changed through POST"
+        response.code = defines.Codes.CREATED.number
+        return self, response
+
+    def render_PUT_advanced(self, request, response):
+        self.payload = request.payload
+        from coapthon.messages.response import Response
+        assert(isinstance(response, Response))
+        response.payload = "Response changed through PUT"
+        response.code = defines.Codes.CHANGED.number
+        return self, response
+
+    def render_DELETE_advanced(self, request, response):
+        response.payload = "Response deleted"
+        response.code = defines.Codes.DELETED.number
+        return True, response
+
+
+class AdvancedResourceSeparate(Resource):
+    def __init__(self, name="Advanced"):
+        super(AdvancedResourceSeparate, self).__init__(name)
+        self.payload = "Advanced resource"
+
+    def render_GET_advanced(self, request, response):
+        return self, response, self.render_GET_separate
+
+    def render_POST_advanced(self, request, response):
+        return self, response, self.render_POST_separate
+
+    def render_PUT_advanced(self, request, response):
+
+        return self, response, self.render_PUT_separate
+
+    def render_DELETE_advanced(self, request, response):
+        return self, response, self.render_DELETE_separate
+
+    def render_GET_separate(self, request, response):
+        time.sleep(5)
+        response.payload = self.payload
+        response.max_age = 20
+        return self, response
+
+    def render_POST_separate(self, request, response):
+        self.payload = request.payload
+        response.payload = "Response changed through POST"
+        return self, response
+
+    def render_PUT_separate(self, request, response):
+        self.payload = request.payload
+        response.payload = "Response changed through PUT"
+        return self, response
+
+    def render_DELETE_separate(self, request, response):
+        response.payload = "Response deleted"
+        return True, response

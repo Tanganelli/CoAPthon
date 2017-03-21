@@ -7,7 +7,9 @@ Subpackages
 .. toctree::
 
     coapthon.client
+    coapthon.chaching
     coapthon.forward_proxy
+    coapthon.http_proxy
     coapthon.layers
     coapthon.messages
     coapthon.resources
@@ -22,7 +24,6 @@ coapthon.defines module
 
 .. automodule:: coapthon.defines
     :members:
-    :undoc-members:
     :show-inheritance:
 
 coapthon.serializer module
@@ -30,7 +31,6 @@ coapthon.serializer module
 
 .. automodule:: coapthon.serializer
     :members:
-    :undoc-members:
     :show-inheritance:
 
 coapthon.transaction module
@@ -38,7 +38,6 @@ coapthon.transaction module
 
 .. automodule:: coapthon.transaction
     :members:
-    :undoc-members:
     :show-inheritance:
 
 coapthon.utils module
@@ -46,7 +45,6 @@ coapthon.utils module
 
 .. automodule:: coapthon.utils
     :members:
-    :undoc-members:
     :show-inheritance:
 
 
@@ -55,5 +53,4 @@ Module contents
 
 .. automodule:: coapthon
     :members:
-    :undoc-members:
     :show-inheritance:

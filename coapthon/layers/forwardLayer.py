@@ -8,16 +8,22 @@ from coapthon.utils import parse_uri
 
 __author__ = 'Giacomo Tanganelli'
 
+
 class ForwardLayer(object):
+    """
+    Class used by Proxies to forward messages.
+    """
     def __init__(self, server):
         self._server = server
 
     def receive_request(self, transaction):
         """
-
+        Setup the transaction for forwarding purposes on Forward Proxies.
+         
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the edited transaction
         """
         uri = transaction.request.proxy_uri
         host, port, path = parse_uri(uri)
@@ -28,6 +34,14 @@ class ForwardLayer(object):
         return self._forward_request(transaction, (host, port), path)
 
     def receive_request_reverse(self, transaction):
+        """
+        Setup the transaction for forwarding purposes on Reverse Proxies.
+         
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the request
+        :rtype : Transaction
+        :return: the edited transaction
+        """
         path = str("/" + transaction.request.uri_path)
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
@@ -59,6 +73,16 @@ class ForwardLayer(object):
 
     @staticmethod
     def _forward_request(transaction, destination, path):
+        """
+        Forward requests.
+
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the request
+        :param destination: the destination of the request (IP, port)
+        :param path: the path of the request.
+        :rtype : Transaction
+        :return: the edited transaction
+        """
         client = HelperClient(destination)
         request = Request()
         request.options = copy.deepcopy(transaction.request.options)
@@ -83,6 +107,17 @@ class ForwardLayer(object):
         return transaction
 
     def _handle_request(self, transaction, new_resource):
+        """
+        Forward requests. Used by reverse proxies to also create new virtual resources on the proxy 
+        in case of created resources
+        
+        :type new_resource: bool
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the request
+        :rtype : Transaction
+        :param new_resource: if the request will generate a new resource 
+        :return: the edited transaction
+        """
         client = HelperClient(transaction.resource.remote_server)
         request = Request()
         request.options = copy.deepcopy(transaction.request.options)
@@ -118,93 +153,3 @@ class ForwardLayer(object):
         if response.code == defines.Codes.DELETED.number:
             del self._server.root["/" + transaction.request.uri_path]
         return transaction
-
-    # def _handle_get(self, transaction):
-    #     """
-    #
-    #     :type transaction: Transaction
-    #     :param transaction:
-    #     :rtype : Transaction
-    #     """
-    #     path = str("/" + transaction.request.uri_path)
-    #     transaction.response = Response()
-    #     transaction.response.destination = transaction.request.source
-    #     transaction.response.token = transaction.request.token
-    #     if path == defines.DISCOVERY_URL:
-    #         transaction = self._server.resourceLayer.discover(transaction)
-    #     else:
-    #         try:
-    #             resource = self._server.root[path]
-    #         except KeyError:
-    #             resource = None
-    #         if resource is None or path == '/':
-    #             # Not Found
-    #             transaction.response.code = defines.Codes.NOT_FOUND.number
-    #         else:
-    #             transaction.resource = resource
-    #             transaction = self._server.resourceLayer.get_resource(transaction)
-    #     return transaction
-    #
-    # def _handle_put(self, transaction):
-    #     """
-    #
-    #     :type transaction: Transaction
-    #     :param transaction:
-    #     :rtype : Transaction
-    #     """
-    #     path = str("/" + transaction.request.uri_path)
-    #     transaction.response = Response()
-    #     transaction.response.destination = transaction.request.source
-    #     transaction.response.token = transaction.request.token
-    #     try:
-    #         resource = self._server.root[path]
-    #     except KeyError:
-    #         resource = None
-    #     if resource is None:
-    #         transaction.response.code = defines.Codes.NOT_FOUND.number
-    #     else:
-    #         transaction.resource = resource
-    #         # Update request
-    #         transaction = self._server.resourceLayer.update_resource(transaction)
-    #     return transaction
-    #
-    # def _handle_post(self, transaction):
-    #     """
-    #
-    #     :type transaction: Transaction
-    #     :param transaction:
-    #     :rtype : Transaction
-    #     """
-    #     path = str("/" + transaction.request.uri_path)
-    #     transaction.response = Response()
-    #     transaction.response.destination = transaction.request.source
-    #     transaction.response.token = transaction.request.token
-    #
-    #     # Create request
-    #     transaction = self._server.resourceLayer.create_resource(path, transaction)
-    #     return transaction
-    #
-    # def _handle_delete(self, transaction):
-    #     """
-    #
-    #     :type transaction: Transaction
-    #     :param transaction:
-    #     :rtype : Transaction
-    #     """
-    #     path = str("/" + transaction.request.uri_path)
-    #     transaction.response = Response()
-    #     transaction.response.destination = transaction.request.source
-    #     transaction.response.token = transaction.request.token
-    #     try:
-    #         resource = self._server.root[path]
-    #     except KeyError:
-    #         resource = None
-    #
-    #     if resource is None:
-    #         transaction.response.code = defines.Codes.NOT_FOUND.number
-    #     else:
-    #         # Delete
-    #         transaction.resource = resource
-    #         transaction = self._server.resourceLayer.delete_resource(transaction, path)
-    #     return transaction
-

@@ -1206,7 +1206,7 @@ class Tests(unittest.TestCase):
         expected._mid = self.current_mid
         expected.code = defines.Codes.CHANGED.number
         expected.token = None
-        expected.payload = "echo payload"
+        expected.payload = None
 
         exchange4 = (req, expected)
         self.current_mid += 1

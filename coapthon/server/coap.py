@@ -30,14 +30,17 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
+    """
+    Implementation of the CoAP server
+    """
     def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
-
         """
         Initialize the server.
 
         :param server_address: Server address for incoming connections
         :param multicast: if the ip is a multicast address
         :param starting_mid: used for testing purposes
+        :param sock: if a socket has been created externally, it can be used directly
         """
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -71,30 +74,32 @@ class CoAP(object):
         elif self.multicast:  # pragma: no cover
 
             # Create a socket
-            self._socket = socket.socket(addrinfo[1], socket.SOCK_DGRAM)
-
-            # Allow multiple copies of this program on one machine
-            # (not strictly needed)
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 255)
-            self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
-
-            # Bind it to the port
-            self._socket.bind(('', self.server_address[1]))
+            # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_TTL, 255)
+            # self._socket.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_LOOP, 1)
 
             # Join group
             if addrinfo[0] == socket.AF_INET:  # IPv4
-                addrinfo_multicast = socket.getaddrinfo(defines.ALL_COAP_NODES, None)[0]
-                group_bin = socket.inet_pton(addrinfo_multicast[1], addrinfo_multicast[4][0])
-                mreq = group_bin + struct.pack('=I', socket.INADDR_ANY)
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+
+                # Allow multiple copies of this program on one machine
+                # (not strictly needed)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._socket.bind((defines.ALL_COAP_NODES, self.server_address[1]))
+                mreq = struct.pack("4sl", socket.inet_aton(defines.ALL_COAP_NODES), socket.INADDR_ANY)
                 self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
                 self._unicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._unicast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._unicast_socket.bind(self.server_address)
             else:
-                addrinfo_multicast = socket.getaddrinfo(defines.ALL_COAP_NODES_IPV6, None)[0]
-                group_bin = socket.inet_pton(addrinfo_multicast[1], addrinfo_multicast[4][0])
+                self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+
+                # Allow multiple copies of this program on one machine
+                # (not strictly needed)
+                self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._socket.bind((defines.ALL_COAP_NODES_IPV6, self.server_address[1]))
+
+                addrinfo_multicast = socket.getaddrinfo(defines.ALL_COAP_NODES_IPV6, 5683)[0]
+                group_bin = socket.inet_pton(socket.AF_INET6, addrinfo_multicast[4][0])
                 mreq = group_bin + struct.pack('@I', 0)
                 self._socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP, mreq)
                 self._unicast_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -191,9 +196,9 @@ class CoAP(object):
 
     def receive_request(self, transaction):
         """
-        Receive datagram from the udp socket.
+        Handle requests coming from the udp socket.
 
-        :param transaction:
+        :param transaction: the transaction created to manage the request
         """
 
         with transaction:
@@ -234,9 +239,10 @@ class CoAP(object):
 
     def send_datagram(self, message):
         """
+        Send a message through the udp socket.
 
         :type message: Message
-        :param message:
+        :param message: the message to send
         """
         if not self.stopped.isSet():
             host, port = message.destination

@@ -5,30 +5,41 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class Option(object):
+    """
+    Class to handle the CoAP Options.
+    """
     def __init__(self):
+        """
+        Data structure to store options.
+        """
         self._number = None
         self._value = None
 
     @property
     def number(self):
         """
+        Return the number of the option.
 
+        :return: the option number
         """
         return self._number
 
     @number.setter
     def number(self, value):
         """
+        Set the option number.
 
-        :type value: Integer
-        :param value:
+        :type value: int
+        :param value: the option number
         """
         self._number = value
 
     @property
     def value(self):
         """
+        Return the option value.
 
+        :return: the option value in the correct format depending on the option
         """
         if type(self._value) is None:
             self._value = bytearray()
@@ -43,9 +54,9 @@ class Option(object):
     @value.setter
     def value(self, value):
         """
+        Set the value of the option.
 
-        :type value: String
-        :param value:
+        :param value: the option value
         """
         if type(value) is str:
             value = bytearray(value, "utf-8")
@@ -58,8 +69,9 @@ class Option(object):
     @property
     def length(self):
         """
+        Return the value length
 
-        :rtype : Integer
+        :rtype : int
         """
         if isinstance(self._value, int):
             return byte_len(self._value)
@@ -69,8 +81,10 @@ class Option(object):
 
     def is_safe(self):
         """
+        Check if the option is safe.
 
-        :rtype : Boolean
+        :rtype : bool
+        :return: True, if option is safe
         """
         if self._number == defines.OptionRegistry.URI_HOST.number \
                 or self._number == defines.OptionRegistry.URI_PORT.number \
@@ -85,23 +99,29 @@ class Option(object):
     @property
     def name(self):
         """
+        Return option name.
 
         :rtype : String
+        :return: the option name
         """
         return defines.OptionRegistry.LIST[self._number].name
 
     def __str__(self):
         """
+        Return a string representing the option
 
         :rtype : String
+        :return: a message with the option name and the value
         """
         return self.name + ": " + str(self.value) + "\n"
 
     def __eq__(self, other):
         """
+        Return True if two option are equal
 
         :type other: Option
-        :param other:
+        :param other: the option to be compared against
         :rtype : Boolean
+        :return: True, if option are equal
         """
         return self.__dict__ == other.__dict__

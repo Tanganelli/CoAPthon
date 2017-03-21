@@ -9,6 +9,14 @@ logger = logging.getLogger(__name__)
 
 class ObserveItem(object):
     def __init__(self, timestamp, non_counter, allowed, transaction):
+        """
+        Data structure for the Observe option
+
+        :param timestamp: the timestamop of last message sent
+        :param non_counter: the number of NON notification sent
+        :param allowed: if the client is allowed as observer
+        :param transaction: the transaction
+        """
         self.timestamp = timestamp
         self.non_counter = non_counter
         self.allowed = allowed
@@ -16,13 +24,18 @@ class ObserveItem(object):
 
 
 class ObserveLayer(object):
+    """
+    Manage the observing feature. It store observing relationships.
+    """
     def __init__(self):
         self._relations = {}
 
     def send_request(self, request):
         """
+        Add itself to the observing list
 
-        :param request:
+        :param request: the request
+        :return: the request unmodified
         """
         if request.observe == 0:
             # Observe request
@@ -35,10 +48,12 @@ class ObserveLayer(object):
 
     def receive_response(self, transaction):
         """
+        Sets notification's parameters.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction
         :rtype : Transaction
+        :return: the modified transaction
         """
         host, port = transaction.response.source
         key_token = hash(str(host) + str(port) + str(transaction.response.token))
@@ -48,9 +63,11 @@ class ObserveLayer(object):
 
     def send_empty(self, message):
         """
+        Eventually remove from the observer list in case of a RST message.
 
         :type message: Message
-        :param message:
+        :param message: the message
+        :return: the message unmodified
         """
         host, port = message.destination
         key_token = hash(str(host) + str(port) + str(message.token))
@@ -60,10 +77,13 @@ class ObserveLayer(object):
 
     def receive_request(self, transaction):
         """
+        Manage the observe option in the request end eventually initialize the client for adding to
+        the list of observers or remove from the list.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the request
         :rtype : Transaction
+        :return: the modified transaction
         """
         if transaction.request.observe == 0:
             # Observe request
@@ -76,17 +96,27 @@ class ObserveLayer(object):
             else:
                 allowed = False
             self._relations[key_token] = ObserveItem(time.time(), non_counter, allowed, transaction)
+        elif transaction.request.observe == 1:
+            host, port = transaction.request.source
+            key_token = hash(str(host) + str(port) + str(transaction.request.token))
+            logger.info("Remove Subscriber")
+            try:
+                del self._relations[key_token]
+            except KeyError:
+                pass
 
         return transaction
 
     def receive_empty(self, empty, transaction):
         """
+        Manage the observe feature to remove a client in case of a RST message receveide in reply to a notification.
 
         :type empty: Message
-        :param empty:
+        :param empty: the received message
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the notification message
         :rtype : Transaction
+        :return: the modified transaction
         """
         if empty.type == defines.Types["RST"]:
             host, port = transaction.request.source
@@ -101,9 +131,11 @@ class ObserveLayer(object):
 
     def send_response(self, transaction):
         """
+        Finalize to add the client to the list of observer.
 
         :type transaction: Transaction
-        :param transaction:
+        :param transaction: the transaction that owns the response
+        :return: the transaction unmodified
         """
         host, port = transaction.request.source
         key_token = hash(str(host) + str(port) + str(transaction.request.token))
@@ -122,6 +154,14 @@ class ObserveLayer(object):
         return transaction
 
     def notify(self, resource, root=None):
+        """
+        Prepare notification for the resource to all interested observers.
+
+        :rtype: list
+        :param resource: the resource for which send a new notification
+        :param root: deprecated
+        :return: the list of transactions to be notified
+        """
         ret = []
         if root is not None:
             resource_list = root.with_prefix_resource(resource.path)
@@ -143,6 +183,11 @@ class ObserveLayer(object):
         return ret
 
     def remove_subscriber(self, message):
+        """
+        Remove a subscriber based on token.
+
+        :param message: the message
+        """
         logger.debug("Remove Subcriber")
         host, port = message.destination
         key_token = hash(str(host) + str(port) + str(message.token))
