@@ -170,6 +170,13 @@ class CoAP(object):
 
         print "receiving datagram"
 
+        try:
+            host, port = client_address
+        except ValueError:
+            host, port, tmp1, tmp2 = client_address
+
+        client_address = (host, port)
+        
         serializer = Serializer()
         message = serializer.deserialize(data, client_address)
         if isinstance(message, int):
