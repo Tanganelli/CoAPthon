@@ -10,7 +10,6 @@ from coapthon.serializer import Serializer
 from plugtest_coapserver import CoAPServerPlugTest
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "2.0"
 
 
 class Tests(unittest.TestCase):
@@ -80,6 +79,19 @@ class Tests(unittest.TestCase):
 
         self.current_mid += 1
         self._test_plugtest([(req, expected), (None, expected2), (None, expected2), (None, expected2)])
+
+    def test_etag_deserialize(self):
+        req = Request()
+        req.type = defines.Types["CON"]
+        req._mid = 1
+        req.etag = bytearray([0xc5])
+
+        serializer = Serializer()
+        serialized = serializer.serialize(req)
+        received_message = serializer.deserialize(serialized, ("127.0.0.1", 5683))
+
+        self.assertEqual(req.etag, received_message.etag)
+
 
 if __name__ == '__main__':
     unittest.main()

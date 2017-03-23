@@ -38,6 +38,7 @@ class Tests(unittest.TestCase):
             if message is not None:
                 received_message = client.send_request(message)
             if expected is not None:
+
                 if expected.type is not None:
                     self.assertEqual(received_message.type, expected.type)
                 if expected.mid is not None:
@@ -1127,8 +1128,9 @@ class Tests(unittest.TestCase):
         exchange10 = (req, expected)
         self.current_mid += 1
 
-        self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7,
-                                exchange8, exchange9, exchange10])
+        # self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7,
+        #                         exchange8, exchange9, exchange10])
+        self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_ETAG(self):
         print "TEST_ETAG"
@@ -1191,7 +1193,25 @@ class Tests(unittest.TestCase):
         exchange3 = (req, expected)
         self.current_mid += 1
 
-        self._test_with_client([exchange1, exchange2, exchange3])
+        req = Request()
+        req.code = defines.Codes.PUT.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.payload = "echo payload"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CHANGED.number
+        expected.token = None
+        expected.payload = None
+
+        exchange4 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_child(self):
         print "TEST_CHILD"

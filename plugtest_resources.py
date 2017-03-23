@@ -8,7 +8,7 @@ import datetime
 from coapthon import defines
 from coapthon.resources.resource import Resource
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class ObservableResource(Resource):
         return self
 
     def update(self, first=False):
-        self.payload = str(datetime.datetime.now())
+        self.payload = "Observable Resource"
         if not self._coap_server.stopped.isSet():
 
             timer = threading.Timer(self.period, self.update)

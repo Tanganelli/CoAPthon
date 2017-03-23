@@ -3,11 +3,16 @@ from coapthon import defines
 from coapthon.messages.option import Option
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "3.0"
 
 
 class Message(object):
+    """
+    Class to handle the Messages.
+    """
     def __init__(self):
+        """
+        Data structure that represent a CoAP message
+        """
         self._type = None
         self._mid = None
         self._token = None
@@ -26,10 +31,21 @@ class Message(object):
 
     @property
     def version(self):
+        """
+        Return the CoAP version
+
+        :return: the version
+        """
         return self._version
 
     @version.setter
     def version(self, v):
+        """
+        Sets the CoAP version
+
+        :param v: the version
+        :raise AttributeError: if value is not 1
+        """
         if not isinstance(v, int) or v != 1:
             raise AttributeError
         self._version = v
@@ -80,6 +96,9 @@ class Message(object):
 
     @mid.deleter
     def mid(self):
+        """
+        Unset the MID of the message.
+        """
         self._mid = None
 
     @property
@@ -98,8 +117,11 @@ class Message(object):
 
         :type value: String
         :param value: the Token
+        :raise AttributeError: if value is longer than 256
         """
-        # TODO check if longer that acceptable
+        if value is None:
+            self._token = value
+            return
         if not isinstance(value, str):
             value = str(value)
         if len(value) > 256:
@@ -108,18 +130,25 @@ class Message(object):
 
     @token.deleter
     def token(self):
+        """
+        Unset the Token of the message.
+        """
         self._token = None
 
     @property
     def options(self):
         """
+        Return the options of the CoAP message.
 
+        :rtype: list
+        :return: the options
         """
         return self._options
 
     @options.setter
     def options(self, value):
         """
+        Set the options of the CoAP message.
 
         :type value: list
         :param value: list of options
@@ -155,13 +184,17 @@ class Message(object):
     @property
     def destination(self):
         """
+        Return the destination of the message.
 
+        :rtype: tuple
+        :return: (ip, port)
         """
         return self._destination
 
     @destination.setter
     def destination(self, value):
         """
+        Set the destination of the message.
 
         :type value: tuple
         :param value: (ip, port)
@@ -174,13 +207,17 @@ class Message(object):
     @property
     def source(self):
         """
+        Return the source of the message.
 
+        :rtype: tuple
+        :return: (ip, port)
         """
         return self._source
 
     @source.setter
     def source(self, value):
         """
+        Set the source of the message.
 
         :type value: tuple
         :param value: (ip, port)
@@ -193,13 +230,17 @@ class Message(object):
     @property
     def code(self):
         """
+        Return the code of the message.
 
+        :rtype: Codes
+        :return: the code
         """
         return self._code
 
     @code.setter
     def code(self, value):
         """
+        Set the code of the message.
 
         :type value: Codes
         :param value: the code
@@ -306,16 +347,17 @@ class Message(object):
     @property
     def timestamp(self):
         """
-
+        Return the timestamp of the message.
         """
         return self._timestamp
 
     @timestamp.setter
     def timestamp(self, value):
         """
+        Set the timestamp of the message.
 
-        :type value: Message
-        :param value:
+        :type value: timestamp
+        :param value: the timestamp
         """
         self._timestamp = value
 
@@ -391,6 +433,7 @@ class Message(object):
         """
         Get the ETag option of the message.
 
+        :rtype: list
         :return: the ETag values or [] if not specified by the request
         """
         value = []
@@ -450,6 +493,10 @@ class Message(object):
 
     @content_type.deleter
     def content_type(self):
+        """
+        Delete the Content-Type option of a response.
+        """
+
         self.del_option_by_number(defines.OptionRegistry.CONTENT_TYPE.number)
 
     @property
@@ -483,6 +530,9 @@ class Message(object):
 
     @observe.deleter
     def observe(self):
+        """
+        Delete the Observe option.
+        """
         self.del_option_by_number(defines.OptionRegistry.OBSERVE.number)
 
     @property
@@ -532,13 +582,17 @@ class Message(object):
 
     @block1.deleter
     def block1(self):
+        """
+        Delete the Block1 option.
+        """
         self.del_option_by_number(defines.OptionRegistry.BLOCK1.number)
 
     @property
     def block2(self):
         """
+        Get the Block2 option.
 
-        :rtype : String
+        :return: the Block2 value
         """
         value = None
         for option in self.options:
@@ -548,6 +602,11 @@ class Message(object):
 
     @block2.setter
     def block2(self, value):
+        """
+        Set the Block2 option.
+
+        :param value: the Block2 value
+        """
         option = Option()
         option.number = defines.OptionRegistry.BLOCK2.number
         num, m, size = value
@@ -575,10 +634,18 @@ class Message(object):
 
     @block2.deleter
     def block2(self):
+        """
+        Delete the Block2 option.
+        """
         self.del_option_by_number(defines.OptionRegistry.BLOCK2.number)
 
     @property
     def line_print(self):
+        """
+        Return the message as a one-line string.
+
+        :return: the string representing the message
+        """
         inv_types = {v: k for k, v in defines.Types.iteritems()}
 
         if self._code is None:
@@ -591,7 +658,11 @@ class Message(object):
             msg += "{name}: {value}, ".format(name=opt.name, value=opt.value)
         msg += "]"
         if self.payload is not None:
-            msg += " {payload}...{length} bytes".format(payload=self.payload[0:20], length=len(self.payload))
+            if isinstance(self.payload, dict):
+                tmp = self.payload.values()[0][0:20]
+            else:
+                tmp = self.payload[0:20]
+            msg += " {payload}...{length} bytes".format(payload=tmp, length=len(self.payload))
         else:
             msg += " No payload"
         return msg

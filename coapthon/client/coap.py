@@ -1,32 +1,38 @@
-import logging
 import logging.config
 import random
 import socket
 import threading
-from coapthon.messages.message import Message
-from coapthon.messages.response import Response
+
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
 from coapthon.layers.messagelayer import MessageLayer
 from coapthon.layers.observelayer import ObserveLayer
 from coapthon.layers.requestlayer import RequestLayer
+from coapthon.messages.message import Message
 from coapthon.messages.request import Request
+from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
-import os.path
-from coapthon.utils import create_logging
-
-__author__ = 'giacomo'
 
 
-if not os.path.isfile("logging.conf"):
-    create_logging()
+__author__ = 'Giacomo Tanganelli'
+
 
 logger = logging.getLogger(__name__)
-logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
-    def __init__(self, server, starting_mid, callback):
+    """
+    Client class to perform requests to remote servers.
+    """
+    def __init__(self, server, starting_mid, callback, sock=None):
+        """
+        Initialize the client.
+
+        :param server: Server address for incoming connections
+        :param callback:the callback function to be invoked when a response is received
+        :param starting_mid: used for testing purposes
+        :param sock: if a socket has been created externally, it can be used directly
+        """
         self._currentMID = starting_mid
         self._server = server
         self._callback = callback
@@ -38,40 +44,55 @@ class CoAP(object):
         self._observeLayer = ObserveLayer()
         self._requestLayer = RequestLayer(self)
 
-        # try:
-        #     # legal
-        #     socket.inet_aton(server[0])
-        # except socket.error:
-        #     # Not legal
-        #     data = socket.getaddrinfo(server[0], server[1])
-        #     self._server = (data[0], data[1])
+        addrinfo = socket.getaddrinfo(self._server[0], None)[0]
 
-        host, port = self._server
-        addrinfo = socket.getaddrinfo(host, None)[0]
+        if sock is not None:
+            self._socket = sock
 
-        if addrinfo[0] == socket.AF_INET:
+        elif addrinfo[0] == socket.AF_INET:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         else:
             self._socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._receiver_thread = threading.Thread(target=self.receive_datagram)
-        self._receiver_thread.daemon = True
-        self._receiver_thread.start()
+        self._receiver_thread = threading.Thread(target=self.receive_datagram,
+                                                 name=threading.current_thread().name+'-Receive_Datagram')
+
+    def close(self):
+        """
+        Stop the client.
+
+        """
+        self._receiver_thread.join()
+        self._socket.close()
 
     @property
     def current_mid(self):
+        """
+        Return the current MID.
+
+        :return: the current mid
+        """
         return self._currentMID
 
     @current_mid.setter
     def current_mid(self, c):
+        """
+        Set the current MID.
+
+        :param c: the mid to set
+        """
         assert isinstance(c, int)
         self._currentMID = c
 
     def send_message(self, message):
+        """
+        Prepare a message to send on the UDP socket. Eventually set retransmissions.
 
+        :param message: the message to send
+        """
         if isinstance(message, Request):
             request = self._requestLayer.send_request(message)
             request = self._observeLayer.send_request(request)
@@ -87,12 +108,20 @@ class CoAP(object):
             self.send_datagram(message)
 
     def send_datagram(self, message):
+        """
+        Send a message over the UDP socket.
+
+        :param message: the message to send
+        """
         host, port = message.destination
         logger.debug("send_datagram - " + str(message))
         serializer = Serializer()
         message = serializer.serialize(message)
 
         self._socket.sendto(message, (host, port))
+
+        if not self._receiver_thread.isAlive():
+            self._receiver_thread.start()
 
     def _start_retransmission(self, transaction, message):
         """
@@ -107,6 +136,7 @@ class CoAP(object):
             if message.type == defines.Types['CON']:
                 future_time = random.uniform(defines.ACK_TIMEOUT, (defines.ACK_TIMEOUT * defines.ACK_RANDOM_FACTOR))
                 transaction.retransmit_thread = threading.Thread(target=self._retransmit,
+                                                                 name=threading.current_thread().name+'-Retransmit',
                                                                  args=(transaction, message, future_time, 0))
                 transaction.retransmit_stop = threading.Event()
                 self.to_be_stopped.append(transaction.retransmit_stop)
@@ -145,6 +175,9 @@ class CoAP(object):
             transaction.retransmit_thread = None
 
     def receive_datagram(self):
+        """
+        Receive datagram from the UDP socket and invoke the callback function.
+        """
         logger.debug("Start receiver Thread")
         while not self.stopped.isSet():
             self._socket.settimeout(1)
@@ -156,7 +189,7 @@ class CoAP(object):
                 return
             else:  # pragma: no cover
                 if len(datagram) == 0:
-                    print 'orderly shutdown on server end'
+                    logger.debug("orderly shutdown on server end")
                     return
 
             serializer = Serializer()
@@ -197,7 +230,6 @@ class CoAP(object):
                 self._messageLayer.receive_empty(message)
 
     def _send_ack(self, transaction):
-        # Handle separate
         """
         Sends an ACK message for the response.
 
@@ -212,7 +244,6 @@ class CoAP(object):
             self.send_datagram(ack)
 
     def _send_rst(self, transaction):  # pragma: no cover
-        # Handle separate
         """
         Sends an RST message for the response.
 

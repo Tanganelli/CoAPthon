@@ -1,16 +1,12 @@
 #!/usr/bin/env python
-from Queue import Queue
 import getopt
-import random
-import sys
-import threading
-from coapthon import defines
-from coapthon.client.coap import CoAP
-from coapthon.client.helperclient import HelperClient
-from coapthon.messages.message import Message
-from coapthon.messages.request import Request
-from coapthon.utils import parse_uri
 import socket
+import sys
+
+from coapthon.client.helperclient import HelperClient
+from coapthon.utils import parse_uri
+
+__author__ = 'Giacomo Tanganelli'
 
 client = None
 
@@ -99,7 +95,11 @@ def main():  # pragma: no cover
         sys.exit(2)
 
     host, port, path = parse_uri(path)
-    host = socket.gethostbyname(host)
+    try:
+        tmp = socket.gethostbyname(host)
+        host = tmp
+    except socket.gaierror:
+        pass
     client = HelperClient(server=(host, port))
     if op == "GET":
         if path is None:

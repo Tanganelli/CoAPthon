@@ -1,5 +1,6 @@
 __author__ = 'Emilio Vallati'
 
+
 class CoapCache:
     def __init__(self, max_dim):
         """

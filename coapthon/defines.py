@@ -1,9 +1,8 @@
 import collections
 
 __author__ = 'Giacomo Tanganelli'
-__version__ = "3.0"
 
-''' CoAP Parameters '''
+""" CoAP Parameters """
 
 ACK_TIMEOUT = 2  # standard 2
 
@@ -35,7 +34,7 @@ MAX_NON_NOTIFICATIONS = 10
 
 BLOCKWISE_SIZE = 1024
 
-'''  Message Format '''
+"""  Message Format """
 
 # number of bits used for the encoding of the CoAP version field.
 VERSION_BITS = 2
@@ -80,7 +79,8 @@ corelinkformat = {
     'ct': 'content_type',
     'rt': 'resource_type',
     'if': 'interface_type',
-    'sz': 'maximum_size_estimated'
+    'sz': 'maximum_size_estimated',
+    'obs': 'observing'
 }
 
 # The integer.
@@ -99,9 +99,10 @@ REVERSE_PROXY = 1
 OptionItem = collections.namedtuple('OptionItem', 'number name value_type repeatable default')
 
 
-# (NAME, VALUE_TYPE, REPEATABLE, DEFAULT)
 class OptionRegistry(object):
-
+    """
+    All CoAP options. Every option is represented as: (NUMBER, NAME, VALUE_TYPE, REPEATABLE, DEFAULT)
+    """
     def __init__(self):
         pass
 
@@ -161,6 +162,9 @@ CodeItem = collections.namedtuple('CodeItem', 'number name')
 
 
 class Codes(object):
+    """
+    CoAP codes. Every code is represented as (NUMBER, NAME)
+    """
     ERROR_LOWER_BOUND = 128
 
     EMPTY = CodeItem(0, 'EMPTY')

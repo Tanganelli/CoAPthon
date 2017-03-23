@@ -18,12 +18,14 @@ G.Tanganelli, C. Vallati, E.Mingozzi, "CoAPthon: Easy Development of CoAP-based 
 Software available at https://github.com/Tanganelli/CoAPthon
 
 What is implemented
--------------------
+===================
 
 - CoAP server
 - CoAP client
-- CoAP to CoAP Forwarding proxy
+- CoAP to CoAP Forward proxy
 - CoAP to CoAP Reverse Proxy
+- HTTP to CoAP Forward Proxy
+- Caching feature
 - Observe feature
 - CoRE Link Format parsing
 - Multicast server discovery

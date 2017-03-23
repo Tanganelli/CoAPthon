@@ -2,13 +2,12 @@
 
 import getopt
 import sys
-from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
-from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, Child, \
-    MultipleEncodingResource
-from plugtest_resources import ObservableResource
+from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, \
+    Child, \
+    MultipleEncodingResource, AdvancedResource, AdvancedResourceSeparate
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class CoAPServer(CoAP):
@@ -24,6 +23,8 @@ class CoAPServer(CoAP):
         self.add_resource('encoding/', MultipleEncodingResource())
         self.add_resource('etag/', ETAGResource())
         self.add_resource('child/', Child())
+        self.add_resource('advanced/', AdvancedResource())
+        self.add_resource('advancedSeparate/', AdvancedResourceSeparate())
 
         print "CoAP Server start on " + host + ":" + str(port)
         print self.root.dump()
@@ -34,10 +35,11 @@ def usage():  # pragma: no cover
 
 
 def main(argv):  # pragma: no cover
-    ip = "127.0.0.1"
+    ip = "0.0.0.0"
     port = 5683
+    multicast = False
     try:
-        opts, args = getopt.getopt(argv, "hi:p:", ["ip=", "port="])
+        opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -49,8 +51,10 @@ def main(argv):  # pragma: no cover
             ip = arg
         elif opt in ("-p", "--port"):
             port = int(arg)
+        elif opt in ("-m", "--multicast"):
+            multicast = True
 
-    server = CoAPServer(ip, port)
+    server = CoAPServer(ip, port, multicast)
     try:
         server.listen(10)
     except KeyboardInterrupt:

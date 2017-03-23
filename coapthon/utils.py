@@ -1,7 +1,7 @@
 import random
 import string
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 def check_nocachekey(option):
@@ -109,18 +109,23 @@ def parse_uri(uri):
     t = tmp.split("/", 1)
     tmp = t[0]
     path = t[1]
-    t = tmp.split(":", 1)
-    try:
-        host = t[0]
-        port = int(t[1])
-    except IndexError:
-        host = tmp
-        port = 5683
+    if tmp.startswith("["):
+        t = tmp.split("]")
+        host = t[0][1:]
+        port = int(t[1][1:])
+    else:
+        t = tmp.split(":", 1)
+        try:
+            host = t[0]
+            port = int(t[1])
+        except IndexError:
+            host = tmp
+            port = 5683
 
     return str(host), port, path
 
 
-def create_logging():
+def create_logging():  # pragma: no cover
     with open("logging.conf", "w") as f:
         f.writelines("[loggers]\n")
         f.writelines("keys=root\n\n")

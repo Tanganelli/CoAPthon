@@ -1,11 +1,10 @@
+import time
 
-from coapthon import defines
+from coaplrucache import CoapLRUCache
 from coapthon import utils
-from coapthon.messages.response import *
 from coapthon.messages.request import *
 from coapthon.messages.message import Message
-from coaplrucache import CoapLRUCache
-import time
+
 
 __author__ = 'Emilio Vallati'
 

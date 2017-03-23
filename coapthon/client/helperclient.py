@@ -7,30 +7,67 @@ from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
 from coapthon.utils import generate_random_token
 
-__author__ = 'jacko'
+__author__ = 'Giacomo Tanganelli'
 
 
 class HelperClient(object):
-    def __init__(self, server):
+    """
+    Helper Client class to perform requests to remote servers in a simplified way.
+    """
+    def __init__(self, server, sock=None):
+        """
+        Initialize a client to perform request to a server.
+
+        :param server: the remote CoAP server
+        :param sock: if a socket has been created externally, it can be used directly
+        """
         self.server = server
-        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response)
+        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock)
         self.queue = Queue()
 
     def _wait_response(self, message):
+        """
+        Private function to get responses from the server.
+
+        :param message: the received message
+        """
         if message.code != defines.Codes.CONTINUE.number:
             self.queue.put(message)
 
     def stop(self):
+        """
+        Stop the client.
+        """
         self.protocol.stopped.set()
         self.queue.put(None)
+        self.protocol.close()
+
+    def close(self):
+        """
+        Close the client.
+        """
+        self.stop()
 
     def _thread_body(self, request, callback):
+        """
+        Private function. Send a request, wait for response and call the callback function.
+
+        :param request: the request to send
+        :param callback: the callback function
+        """
         self.protocol.send_message(request)
         while not self.protocol.stopped.isSet():
             response = self.queue.get(block=True)
             callback(response)
 
     def cancel_observing(self, response, send_rst):  # pragma: no cover
+        """
+        Delete observing on the remote server.
+
+        :param response: the last received response
+        :param send_rst: if explicitly send RST message
+        :type send_rst: bool
+        """
         if send_rst:
             message = Message()
             message.destination = self.server
@@ -41,98 +78,126 @@ class HelperClient(object):
             self.protocol.send_message(message)
         self.stop()
 
-    def get(self, path, callback=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = path
+    def get(self, path, callback=None, timeout=None):  # pragma: no cover
+        """
+        Perform a GET on a certain path.
 
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
+        :param path: the path
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.GET, path)
 
-    def observe(self, path, callback):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = path
+        return self.send_request(request, callback, timeout)
+
+    def observe(self, path, callback, timeout=None):  # pragma: no cover
+        """
+        Perform a GET with observe on a certain path.
+
+        :param path: the path
+        :param callback: the callback function to invoke upon notifications
+        :param timeout: the timeout of the request
+        :return: the response to the observe request
+        """
+        request = self.mk_request(defines.Codes.GET, path)
         request.observe = 0
 
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
+        return self.send_request(request, callback, timeout)
 
-    def delete(self, path, callback=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.DELETE.number
-        request.uri_path = path
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
+    def delete(self, path, callback=None, timeout=None):  # pragma: no cover
+        """
+        Perform a DELETE on a certain path.
 
-    def post(self, path, payload, callback=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.POST.number
+        :param path: the path
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.DELETE, path)
+
+        return self.send_request(request, callback, timeout)
+
+    def post(self, path, payload, callback=None, timeout=None):  # pragma: no cover
+        """
+        Perform a POST on a certain path.
+
+        :param path: the path
+        :param payload: the request payload
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.POST, path)
         request.token = generate_random_token(2)
-        request.uri_path = path
         request.payload = payload
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
 
-    def put(self, path, payload, callback=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.PUT.number
-        request.uri_path = path
+        return self.send_request(request, callback, timeout)
+
+    def put(self, path, payload, callback=None, timeout=None):  # pragma: no cover
+        """
+        Perform a PUT on a certain path.
+
+        :param path: the path
+        :param payload: the request payload
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.PUT, path)
         request.payload = payload
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
 
-    def discover(self, callback=None):  # pragma: no cover
-        request = Request()
-        request.destination = self.server
-        request.code = defines.Codes.GET.number
-        request.uri_path = defines.DISCOVERY_URL
-        if callback is not None:
-            thread = threading.Thread(target=self._thread_body, args=(request, callback))
-            thread.start()
-        else:
-            self.protocol.send_message(request)
-            response = self.queue.get(block=True)
-            return response
+        return self.send_request(request, callback, timeout)
 
-    def send_request(self, request, callback=None):  # pragma: no cover
+    def discover(self, callback=None, timeout=None):  # pragma: no cover
+        """
+        Perform a Discover request on the server.
+
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.GET, defines.DISCOVERY_URL)
+
+        return self.send_request(request, callback, timeout)
+
+    def send_request(self, request, callback=None, timeout=None):  # pragma: no cover
+        """
+        Send a request to the remote server.
+
+        :param request: the request to send
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
         if callback is not None:
             thread = threading.Thread(target=self._thread_body, args=(request, callback))
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True)
+            response = self.queue.get(block=True, timeout=timeout)
             return response
 
     def send_empty(self, empty):  # pragma: no cover
+        """
+        Send empty message.
+
+        :param empty: the empty message
+        """
         self.protocol.send_message(empty)
+
+    def mk_request(self, method, path):
+        """
+        Create a request.
+
+        :param method: the CoAP method
+        :param path: the path of the request
+        :return:  the request
+        """
+        request = Request()
+        request.destination = self.server
+        request.code = method.number
+        request.uri_path = path
+        return request
+
+

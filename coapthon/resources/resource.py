@@ -1,15 +1,18 @@
 from coapthon import defines
 
+__author__ = 'Giacomo Tanganelli'
+
 
 class Resource(object):
     """
-    The Resource class.
+    The Resource class. Represents the base class for all resources.
     """
     def __init__(self, name, coap_server=None, visible=True, observable=True, allow_children=True):
         """
         Initialize a new Resource.
 
         :param name: the name of the resource.
+        :param coap_server: the server that own the resource
         :param visible: if the resource is visible
         :param observable: if the resource is observable
         :param allow_children: if the resource could has children
@@ -28,6 +31,8 @@ class Resource(object):
 
         # Indicates whether this resource is observable by clients.
         self._observable = observable
+        if self._observable:
+            self._attributes["obs"] = ""
 
         self._allow_children = allow_children
 
@@ -46,22 +51,47 @@ class Resource(object):
         self._coap_server = coap_server
 
         self._deleted = False
+
         self._changed = False
 
     @property
     def deleted(self):
+        """
+        Check if the resource has been deleted. For observing purpose.
+
+        :rtype: bool
+        :return: True, if deleted
+        """
         return self._deleted
 
     @deleted.setter
     def deleted(self, b):
+        """
+        Set the deleted parameter. For observing purpose.
+
+        :type b: bool
+        :param b: True, if deleted
+        """
         self._deleted = b
 
     @property
     def changed(self):
+        """
+        Check if the resource has been changed. For observing purpose.
+
+        :rtype: bool
+        :return: True, if changed
+        """
         return self._changed
 
     @changed.setter
     def changed(self, b):
+        """
+        Set the changed parameter. For observing purpose.
+
+        :type b: bool
+        :param b: True, if changed
+        """
         self._changed = b
 
     @property
@@ -69,7 +99,7 @@ class Resource(object):
         """
         Get the last valid ETag of the resource.
 
-        :return: the ETag value or None if the resource doesn't have any ETag
+        :return: the last ETag value or None if the resource doesn't have any ETag
         """
         if self._etag:
             return self._etag[-1]
@@ -372,12 +402,34 @@ class Resource(object):
             sz = str(sz)
         self._attributes["sz"] = sz
 
+    @property
+    def observing(self):
+        """
+        Get the CoRE Link Format obs attribute of the resource.
+
+        :return: the CoRE Link Format obs attribute
+        """
+        if self._observable:
+            return "obs"
+
     def init_resource(self, request, res):
+        """
+        Helper function to initialize a new resource.
+
+        :param request: the request that generate the new resource
+        :param res: the resource
+        :return: the edited resource
+        """
         res.location_query = request.uri_query
         res.payload = (request.content_type, request.payload)
         return res
 
     def edit_resource(self, request):
+        """
+        Helper function to edit a resource
+
+        :param request: the request that edit the resource
+        """
         self.location_query = request.uri_query
         self.payload = (request.content_type, request.payload)
 
@@ -386,7 +438,17 @@ class Resource(object):
         Method to be redefined to render a GET request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_GET_advanced(self, request, response):
+        """
+        Method to be redefined to render a GET request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -395,7 +457,17 @@ class Resource(object):
         Method to be redefined to render a PUTT request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_PUT_advanced(self, request, response):
+        """
+        Method to be redefined to render a PUTT request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -404,7 +476,17 @@ class Resource(object):
         Method to be redefined to render a POST request on the resource.
 
         :param request: the request
-        :return: the response
+        :return: the resource
+        """
+        raise NotImplementedError
+
+    def render_POST_advanced(self, request, response):
+        """
+        Method to be redefined to render a POST request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with (the resource, the response)
         """
         raise NotImplementedError
 
@@ -413,8 +495,20 @@ class Resource(object):
         Method to be redefined to render a DELETE request on the resource.
 
         :param request: the request
+        :return: a boolean
         """
         raise NotImplementedError
+
+    def render_DELETE_advanced(self, request, response):
+        """
+        Method to be redefined to render a DELETE request on the resource.
+
+        :param response: the partially filled response
+        :param request: the request
+        :return: a tuple with a boolean and the response
+        """
+        raise NotImplementedError
+
 
 
 

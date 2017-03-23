@@ -7,7 +7,7 @@ Submodules
 coapthon.client.coap module
 ---------------------------
 
-.. automodule:: coapthon.client.coap
+.. automodule:: coapthon.http_proxy.HCProxy
     :members:
     :show-inheritance:
 
@@ -15,6 +15,6 @@ coapthon.client.coap module
 Module contents
 ---------------
 
-.. automodule:: coapthon.client
+.. automodule:: coapthon.http_proxy
     :members:
     :show-inheritance:

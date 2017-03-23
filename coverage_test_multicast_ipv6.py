@@ -17,10 +17,10 @@ __version__ = "2.0"
 class Tests(unittest.TestCase):
 
     def setUp(self):
-        self.server_address = (defines.ALL_COAP_NODES, 5683)
+        self.server_address = (defines.ALL_COAP_NODES_IPV6, 5683)
         self.current_mid = random.randint(1, 1000)
         self.server_mid = random.randint(1000, 2000)
-        self.server = CoAPServer("0.0.0.0", 5683, multicast=True)
+        self.server = CoAPServer("::1", 5683, multicast=True)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
         self.queue = Queue()

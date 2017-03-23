@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
 import getopt
-import logging
 import sys
 from coapthon.forward_proxy.coap import CoAP
 
-__author__ = 'giacomo'
+__author__ = 'Giacomo Tanganelli'
 
 
 class CoAPForwardProxy(CoAP):
@@ -20,7 +19,7 @@ def usage():  # pragma: no cover
 
 
 def main(argv):  # pragma: no cover
-    ip = "127.0.0.1"
+    ip = "0.0.0.0"
     port = 5684
     try:
         opts, args = getopt.getopt(argv, "hi:p:", ["ip=", "port="])
