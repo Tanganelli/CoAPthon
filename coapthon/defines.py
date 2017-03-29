@@ -237,7 +237,8 @@ Content_types = {
     "application/xml": 41,
     "application/octet-stream": 42,
     "application/exi": 47,
-    "application/json": 50
+    "application/json": 50,
+    "application/cbor": 60
 }
 
 COAP_PREFACE = "coap://"
