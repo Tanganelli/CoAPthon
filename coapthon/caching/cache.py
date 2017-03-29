@@ -3,11 +3,14 @@ import time
 from coaplrucache import CoapLRUCache
 from coapthon import utils
 from coapthon.messages.request import *
+from coapthon.messages.message import Message
+
 
 __author__ = 'Emilio Vallati'
 
 
 class Cache(object):
+
     def __init__(self, mode, max_dim):
         """
 
@@ -55,10 +58,39 @@ class Cache(object):
             new_key = ReverseCacheKey(request)
 
         print "max age = ", response.max_age
-        new_element = CacheElement(new_key, response, response.max_age)
+        new_element = CacheElement(new_key, response, request, response.max_age)
 
         self.cache.update(new_key, new_element)
         print "cache size = ", self.cache.debug_print()
+
+
+
+    def search_related(self, request):
+        print "searching similar payload"
+        if self.cache.is_empty() is True:
+            print "empty cache"
+            return None
+
+        print "cache not empty"
+
+        """
+        extracting everything from the cache
+        """
+        result = []
+        items = self.cache.cache.items()
+        for key, item in items:
+            print "key = ", key
+            print "item = ", item
+
+        for key, item in items:
+            element = self.cache.get(item.key)
+            print "element.uri: ", element.uri
+            print "uri path: ", request.proxy_uri
+            if request.proxy_uri == element.uri:
+                result.append(item)
+
+        return result
+
 
     def search_response(self, request):
         """
@@ -88,6 +120,7 @@ class Cache(object):
 
         return response
 
+
     def validate(self, request, response):
         """
         refreshes a resource when a validation response is received
@@ -102,17 +135,21 @@ class Cache(object):
             element.freshness = True
             element.max_age = response.max_age
             element.creation_time = time.time()
+            element.uri = request.proxy_uri
 
-    def mark(self, request):
+    def mark(self, element):
         """
         marks the requested resource in the cache as not fresh
         :param request:
         :return:
         """
-        element = self.search_response(request)
+        print "element.response = ", element.cached_response
+        print "element.uri = ", element.uri
+        print "element.freshness = ", element.freshness
         if element is not None:
+            print "unfreshening"
             element.freshness = False
-
+        self.cache.debug_print()
 
 """
 class for the element contained in the cache
@@ -120,7 +157,7 @@ class for the element contained in the cache
 
 
 class CacheElement(object):
-    def __init__(self, cache_key, response, max_age=60):
+    def __init__(self, cache_key, response, request,  max_age=60):
         """
 
         :param cache_key: the key used to search for the element in the cache
@@ -132,6 +169,7 @@ class CacheElement(object):
         self.cached_response = response
         self.max_age = max_age
         self.creation_time = time.time()
+        self.uri = request.proxy_uri
 
     def debug_print(self):
         print "freshness = ", self.freshness
@@ -153,15 +191,19 @@ class CacheKey(object):
         :param request:
         """
         print "creating key"
-        self._payload = request.payload
+        if (request.payload is not None):
+            self._payload = request.payload
+        else:
+            self._payload = None
         self._method = request.code
+
         """
         making a list of the options that do not have a nocachekey option number and are not uri-path, uri-host, uri-port, uri-query
         """
 
         self._options = []
         for option in request.options:
-            if (utils.check_nocachekey(option) is False) & (utils.is_uri_option(option.number) is False):
+            if (utils.check_nocachekey(option) is False) and (utils.is_uri_option(option.number) is False):
                 self._options.append(option)
 
         """
@@ -169,7 +211,10 @@ class CacheKey(object):
         """
 
         option_str = ', '.join(map(str, self._options))
-        self.hashkey = (self._payload, self._method, option_str)
+        self._list = [self._payload, self._method, option_str]
+
+        self.hashkey = ', '.join(map(str, self._list))
+        self.debug_print()
 
     def debug_print(self):
         print "payload = ", self._payload
@@ -177,6 +222,7 @@ class CacheKey(object):
         print "options = "
         for option in self._options:
             print option
+
 
 """
 class for the key used to search elements in the cache (reverse-proxy only)
@@ -199,7 +245,6 @@ class ReverseCacheKey(object):
         self._options = []
         for option in request.options:
             if utils.check_nocachekey(option) is False:
-                print "appending"
                 self._options.append(option)
 
         """
@@ -215,3 +260,5 @@ class ReverseCacheKey(object):
         print "options = "
         for option in self._options:
             print option
+
+
