@@ -305,7 +305,7 @@ class Resource(object):
         value = []
         if isinstance(lst, str):
             ct = defines.Content_types[lst]
-            value.append(ct)
+            self.add_content_type(ct)
         elif isinstance(lst, list):
             for ct in lst:
                 self.add_content_type(ct)
