@@ -73,9 +73,14 @@ class Serializer(object):
                     try:
                         option_item = defines.OptionRegistry.LIST[current_option]
                     except KeyError:
-                        # If the option is unknown (vendor-specific, proprietary) - just skip it
-                        #log.err("unrecognized option %d" % current_option)
-                        pass
+                        (opt_critical, opt_unsafe, opt_nocache) = defines.get_option_flags(current_option)
+                        if opt_critical:
+                            raise AttributeError
+                        else:
+                            # If the non-critical option is unknown
+                            # (vendor-specific, proprietary) - just skip it
+                            #log.err("unrecognized option %d" % current_option)
+                            pass
                     else:
                         if option_length == 0:
                             value = None
@@ -277,7 +282,6 @@ class Serializer(object):
         """
         h_nibble = (byte & 0xF0) >> 4
         l_nibble = byte & 0x0F
-        print "h_nibble %x, l_nibble %x" % (h_nibble, l_nibble)
         inc_pos = 0
         value = 0
         length = 0
