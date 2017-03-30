@@ -25,11 +25,8 @@ class Serializer(object):
         """
         try:
             fmt = "!BBH"
-            pos = 4
+            pos = struct.calcsize(fmt)
             length = len(datagram)
-            while pos < length:
-                fmt += "c"
-                pos += 1
             s = struct.Struct(fmt)
             values = s.unpack_from(datagram)
             first = values[0]
@@ -51,56 +48,60 @@ class Serializer(object):
             message.version = version
             message.type = message_type
             message.mid = mid
-            pos = 3
             if token_length > 0:
-                message.token = "".join(values[pos: pos + token_length])
+                fmt = "%ss" % token_length
+                s = struct.Struct(fmt)
+                token_value = s.unpack_from(datagram[pos:])[0]
+                message.token = token_value
             else:
                 message.token = None
 
             pos += token_length
             current_option = 0
+            values = datagram[pos:]
             length_packet = len(values)
+            pos = 0
             while pos < length_packet:
                 next_byte = struct.unpack("B", values[pos])[0]
                 pos += 1
                 if next_byte != int(defines.PAYLOAD_MARKER):
                     # the first 4 bits of the byte represent the option delta
                     # delta = self._reader.read(4).uint
-                    delta = (next_byte & 0xF0) >> 4
-                    # the second 4 bits represent the option length
-                    # length = self._reader.read(4).uint
-                    length = (next_byte & 0x0F)
-                    num, pos = Serializer.read_option_value_from_nibble(delta, pos, values)
-                    option_length, pos = Serializer.read_option_value_from_nibble(length, pos, values)
+                    num, option_length, pos = Serializer.read_option_value_len_from_byte(next_byte, pos, values)
                     current_option += num
                     # read option
                     try:
                         option_item = defines.OptionRegistry.LIST[current_option]
                     except KeyError:
-                        # log.err("unrecognized option")
-                        raise AttributeError
-                    if option_length == 0:
-                        value = None
-                    elif option_item.value_type == defines.INTEGER:
-                        tmp = values[pos: pos + option_length]
-                        value = 0
-                        for b in tmp:
-                            value = (value << 8) | struct.unpack("B", b)[0]
-                    elif option_item.value_type == defines.OPAQUE:
-                        tmp = values[pos: pos + option_length]
-                        value = bytearray(tmp)
+                        # If the option is unknown (vendor-specific, proprietary) - just skip it
+                        #log.err("unrecognized option %d" % current_option)
+                        pass
                     else:
-                        tmp = values[pos: pos + option_length]
-                        value = ""
-                        for b in tmp:
-                            value += str(b)
+                        if option_length == 0:
+                            value = None
+                        elif option_item.value_type == defines.INTEGER:
+                            tmp = values[pos: pos + option_length]
+                            value = 0
+                            for b in tmp:
+                                value = (value << 8) | struct.unpack("B", b)[0]
+                        elif option_item.value_type == defines.OPAQUE:
+                            tmp = values[pos: pos + option_length]
+                            value = bytearray(tmp)
+                        else:
+                            tmp = values[pos: pos + option_length]
+                            value = ""
+                            for b in tmp:
+                                value += str(b)
 
-                    pos += option_length
-                    option = Option()
-                    option.number = current_option
-                    option.value = Serializer.convert_to_raw(current_option, value, option_length)
+                        option = Option()
+                        option.number = current_option
+                        option.value = Serializer.convert_to_raw(current_option, value, option_length)
 
-                    message.add_option(option)
+                        message.add_option(option)
+                        if option.number == defines.OptionRegistry.CONTENT_TYPE.number:
+                            message.payload_type = option.value
+                    finally:
+                        pos += option_length
                 else:
 
                     if length_packet <= pos:
@@ -255,15 +256,54 @@ class Serializer(object):
         if nibble <= 12:
             return nibble, pos
         elif nibble == 13:
-            tmp = struct.unpack("B", values[pos])[0] + 13
+            tmp = struct.unpack("!B", values[pos])[0] + 13
             pos += 1
             return tmp, pos
         elif nibble == 14:
-            tmp = struct.unpack("B", values[pos])[0] + 269
+            s = struct.Struct("!H")
+            tmp = s.unpack_from(values[pos:])[0] + 269
             pos += 2
             return tmp, pos
         else:
             raise AttributeError("Unsupported option nibble " + str(nibble))
+
+    @staticmethod
+    def read_option_value_len_from_byte(byte, pos, values):
+        """
+        Calculates the value and length used in the extended option fields.
+
+        :param byte: 1-byte option header value.
+        :return: the value and length, calculated from the header including the extended fields.
+        """
+        h_nibble = (byte & 0xF0) >> 4
+        l_nibble = byte & 0x0F
+        print "h_nibble %x, l_nibble %x" % (h_nibble, l_nibble)
+        inc_pos = 0
+        value = 0
+        length = 0
+        if h_nibble <= 12:
+            value = h_nibble
+        elif h_nibble == 13:
+            value = struct.unpack("!B", values[pos])[0] + 13
+            pos += 1
+        elif h_nibble == 14:
+            s = struct.Struct("!H")
+            value = s.unpack_from(values[pos:])[0] + 269
+            pos += 2
+        else:
+            raise AttributeError("Unsupported option number nibble " + str(h_nibble))
+
+        if l_nibble <= 12:
+            length = l_nibble
+        elif l_nibble == 13:
+            length = struct.unpack("!B", values[pos])[0] + 13
+            pos += 1
+        elif l_nibble == 14:
+            length = s.unpack_from(values[pos:])[0] + 269
+            pos += 2
+        else:
+            raise AttributeError("Unsupported option length nibble " + str(l_nibble))
+        return value, length, pos
 
     @staticmethod
     def convert_to_raw(number, value, length):
