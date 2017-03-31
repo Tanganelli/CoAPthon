@@ -1,10 +1,8 @@
-import logging.config
+import logging
 import random
 import socket
 import struct
 import threading
-
-import os
 
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
@@ -17,23 +15,20 @@ from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
-from coapthon.utils import Tree, create_logging
+from coapthon.utils import Tree
+
 
 __author__ = 'Giacomo Tanganelli'
 
 
-if not os.path.isfile("logging.conf"):
-    create_logging()
-
 logger = logging.getLogger(__name__)
-logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
     """
     Implementation of the CoAP server
     """
-    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None, cb_ignore_listen_exception=None):
         """
         Initialize the server.
 
@@ -41,6 +36,7 @@ class CoAP(object):
         :param multicast: if the ip is a multicast address
         :param starting_mid: used for testing purposes
         :param sock: if a socket has been created externally, it can be used directly
+        :param cb_ignore_listen_exception: Callback function to handle exception raised during the socket listen operation
         """
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -63,6 +59,7 @@ class CoAP(object):
 
         self.server_address = server_address
         self.multicast = multicast
+        self._cb_ignore_listen_exception = cb_ignore_listen_exception
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
@@ -139,6 +136,11 @@ class CoAP(object):
                     client_address = (client_address[0], client_address[1])
             except socket.timeout:
                 continue
+            except Exception as e:
+                if self._cb_ignore_listen_exception is not None and callable(self._cb_ignore_listen_exception):
+                    if self._cb_ignore_listen_exception(e, self):
+                        continue
+                raise
             try:
                 serializer = Serializer()
                 message = serializer.deserialize(data, client_address)
@@ -192,7 +194,6 @@ class CoAP(object):
         self.stopped.set()
         for event in self.to_be_stopped:
             event.set()
-        self._socket.close()
 
     def receive_request(self, transaction):
         """
