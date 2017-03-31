@@ -14,15 +14,18 @@ class HelperClient(object):
     """
     Helper Client class to perform requests to remote servers in a simplified way.
     """
-    def __init__(self, server, sock=None):
+    def __init__(self, server, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None):
         """
         Initialize a client to perform request to a server.
 
         :param server: the remote CoAP server
         :param sock: if a socket has been created externally, it can be used directly
+        :param cb_ignore_read_exception: Callback function to handle exception raised during the socket read operation
+        :param cb_ignore_write_exception: Callback function to handle exception raised during the socket write operation 
         """
         self.server = server
-        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock)
+        self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock,
+                             cb_ignore_read_exception=cb_ignore_read_exception, cb_ignore_write_exception=cb_ignore_write_exception)
         self.queue = Queue()
 
     def _wait_response(self, message):
@@ -31,16 +34,15 @@ class HelperClient(object):
 
         :param message: the received message
         """
-        if message.code != defines.Codes.CONTINUE.number:
+        if message is None or message.code != defines.Codes.CONTINUE.number:
             self.queue.put(message)
 
     def stop(self):
         """
         Stop the client.
         """
-        self.protocol.stopped.set()
-        self.queue.put(None)
         self.protocol.close()
+        self.queue.put(None)
 
     def close(self):
         """
@@ -78,7 +80,7 @@ class HelperClient(object):
             self.protocol.send_message(message)
         self.stop()
 
-    def get(self, path, callback=None, timeout=None):  # pragma: no cover
+    def get(self, path, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a GET on a certain path.
 
@@ -88,10 +90,15 @@ class HelperClient(object):
         :return: the response
         """
         request = self.mk_request(defines.Codes.GET, path)
+        request.token = generate_random_token(2)
+
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
 
         return self.send_request(request, callback, timeout)
 
-    def observe(self, path, callback, timeout=None):  # pragma: no cover
+    def observe(self, path, callback, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a GET with observe on a certain path.
 
@@ -103,9 +110,13 @@ class HelperClient(object):
         request = self.mk_request(defines.Codes.GET, path)
         request.observe = 0
 
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
+
         return self.send_request(request, callback, timeout)
 
-    def delete(self, path, callback=None, timeout=None):  # pragma: no cover
+    def delete(self, path, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a DELETE on a certain path.
 
@@ -116,9 +127,13 @@ class HelperClient(object):
         """
         request = self.mk_request(defines.Codes.DELETE, path)
 
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
+
         return self.send_request(request, callback, timeout)
 
-    def post(self, path, payload, callback=None, timeout=None):  # pragma: no cover
+    def post(self, path, payload, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a POST on a certain path.
 
@@ -132,9 +147,13 @@ class HelperClient(object):
         request.token = generate_random_token(2)
         request.payload = payload
 
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
+
         return self.send_request(request, callback, timeout)
 
-    def put(self, path, payload, callback=None, timeout=None):  # pragma: no cover
+    def put(self, path, payload, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a PUT on a certain path.
 
@@ -145,11 +164,16 @@ class HelperClient(object):
         :return: the response
         """
         request = self.mk_request(defines.Codes.PUT, path)
+        request.token = generate_random_token(2)
         request.payload = payload
+
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
 
         return self.send_request(request, callback, timeout)
 
-    def discover(self, callback=None, timeout=None):  # pragma: no cover
+    def discover(self, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a Discover request on the server.
 
@@ -158,6 +182,10 @@ class HelperClient(object):
         :return: the response
         """
         request = self.mk_request(defines.Codes.GET, defines.DISCOVERY_URL)
+
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
 
         return self.send_request(request, callback, timeout)
 
