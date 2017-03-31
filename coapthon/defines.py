@@ -1,5 +1,6 @@
 import collections
 import array
+import struct
 
 __author__ = 'Giacomo Tanganelli'
 
