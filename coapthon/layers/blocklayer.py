@@ -225,8 +225,7 @@ class BlockLayer(object):
 
                 self._block2_receive[key_token] = BlockItem(byte, num, m, size)
 
-            ret = transaction.response.payload[byte:byte + size]
-            if len(ret) == size:
+            if len(transaction.response.payload) > (byte + size):
                 m = 1
             else:
                 m = 0
