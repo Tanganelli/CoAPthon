@@ -26,7 +26,6 @@ class Serializer(object):
         try:
             fmt = "!BBH"
             pos = struct.calcsize(fmt)
-            length = len(datagram)
             s = struct.Struct(fmt)
             values = s.unpack_from(datagram)
             first = values[0]
@@ -73,7 +72,7 @@ class Serializer(object):
                     try:
                         option_item = defines.OptionRegistry.LIST[current_option]
                     except KeyError:
-                        (opt_critical, opt_unsafe, opt_nocache) = defines.get_option_flags(current_option)
+                        (opt_critical, _, _) = defines.get_option_flags(current_option)
                         if opt_critical:
                             raise AttributeError
                         else:
@@ -282,7 +281,6 @@ class Serializer(object):
         """
         h_nibble = (byte & 0xF0) >> 4
         l_nibble = byte & 0x0F
-        inc_pos = 0
         value = 0
         length = 0
         if h_nibble <= 12:
