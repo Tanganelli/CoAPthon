@@ -1,4 +1,6 @@
 import collections
+import array
+import struct
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -106,25 +108,26 @@ class OptionRegistry(object):
     def __init__(self):
         pass
 
-    RESERVED = OptionItem(0, "Reserved", UNKNOWN, True, None)
-    IF_MATCH = OptionItem(1, "If-Match", OPAQUE, True, None)
-    URI_HOST = OptionItem(3, "Uri-Host", STRING, True, None)
-    ETAG = OptionItem(4, "ETag", OPAQUE, True, None)
-    IF_NONE_MATCH = OptionItem(5, "If-None-Match", INTEGER, False, None)
-    OBSERVE = OptionItem(6, "Observe", INTEGER, False, 0)
-    URI_PORT = OptionItem(7, "Uri-Port", INTEGER, False, 5683)
-    LOCATION_PATH = OptionItem(8, "Location-Path", STRING, True, None)
-    URI_PATH = OptionItem(11, "Uri-Path", STRING, True, None)
-    CONTENT_TYPE = OptionItem(12, "Content-Type", INTEGER, False, 0)
-    MAX_AGE = OptionItem(14, "Max-Age", INTEGER, False, 60)
-    URI_QUERY = OptionItem(15, "Uri-Query", STRING, True, None)
-    ACCEPT = OptionItem(17, "Accept", INTEGER, False, 0)
-    LOCATION_QUERY = OptionItem(20, "Location-Query", STRING, True, None)
-    BLOCK2 = OptionItem(23, "Block2", INTEGER, False, None)
-    BLOCK1 = OptionItem(27, "Block1", INTEGER, False, None)
-    PROXY_URI = OptionItem(35, "Proxy-Uri", STRING, False, None)
-    PROXY_SCHEME = OptionItem(39, "Proxy-Schema", STRING, False, None)
-    SIZE1 = OptionItem(60, "Size1", INTEGER, False, None)
+    RESERVED =      OptionItem(0, "Reserved",       UNKNOWN, True, None)
+    IF_MATCH =      OptionItem(1, "If-Match",       OPAQUE,  True, None)
+    URI_HOST =      OptionItem(3, "Uri-Host",       STRING,  True, None)
+    ETAG =          OptionItem(4, "ETag",           OPAQUE,  True, None)
+    IF_NONE_MATCH = OptionItem(5, "If-None-Match",  INTEGER, False, None)
+    OBSERVE =       OptionItem(6, "Observe",        INTEGER, False, 0)
+    URI_PORT =      OptionItem(7, "Uri-Port",       INTEGER, False, 5683)
+    LOCATION_PATH = OptionItem(8, "Location-Path",  STRING,  True, None)
+    URI_PATH =      OptionItem(11, "Uri-Path",      STRING,  True, None)
+    CONTENT_TYPE =  OptionItem(12, "Content-Type",  INTEGER, False, 0)
+    MAX_AGE =       OptionItem(14, "Max-Age",       INTEGER, False, 60)
+    URI_QUERY =     OptionItem(15, "Uri-Query",     STRING,  True, None)
+    ACCEPT =        OptionItem(17, "Accept",        INTEGER, False, 0)
+    LOCATION_QUERY = OptionItem(20,"Location-Query",STRING,  True, None)
+    BLOCK2 =        OptionItem(23, "Block2",        INTEGER, False, None)
+    BLOCK1 =        OptionItem(27, "Block1",        INTEGER, False, None)
+    PROXY_URI =     OptionItem(35, "Proxy-Uri",     STRING,  False, None)
+    PROXY_SCHEME =  OptionItem(39, "Proxy-Schema",  STRING,  False, None)
+    SIZE1 =         OptionItem(60, "Size1",         INTEGER, False, None)
+    RM_MESSAGE_SWITCHING = OptionItem(65524, "Routing", OPAQUE, False, None)
 
     LIST = {
         0: RESERVED,
@@ -145,10 +148,32 @@ class OptionRegistry(object):
         27: BLOCK1,
         35: PROXY_URI,
         39: PROXY_SCHEME,
-        60: SIZE1
+        60: SIZE1,
+        65524: RM_MESSAGE_SWITCHING
 
     }
 
+    @staticmethod
+    def get_option_flags(option_num):
+        """
+        Get Critical, UnSafe, NoCacheKey flags from the option number
+        as per RFC 7252, section 5.4.6
+
+        :param option_num: option number
+        :return: option flags
+        :rtype: 3-tuple (critical, unsafe, no-cache)
+        """
+        opt_bytes = array.array('B', '\0\0')
+        if option_num < 256:
+            s = struct.Struct("!B")
+            opt_bytes = s.pack_into(opt_bytes, 0, option_num)
+        else:
+            s = struct.Struct("!H")
+            opt_bytes = s.pack_into(opt_bytes, 0, option_num)
+        critical = (opt_bytes[0] & 0x01) > 0
+        unsafe = (opt_bytes[0] & 0x02) > 0
+        nocache = ((opt_bytes[0] & 0x1e) == 0x1c)
+        return (critical, unsafe, nocache)
 
 Types = {
     'CON': 0,
