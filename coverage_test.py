@@ -941,6 +941,76 @@ class Tests(unittest.TestCase):
 
         self._test_with_client([exchange1, exchange2, exchange3])
 
+    def test_long_options(self):
+        """
+        Test processing of options with extended length
+        """
+        print "TEST_LONG_OPTIONS"
+
+        path = "/storage/"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        option = Option()
+        # This option should be silently ignored by the server
+        # since it is not critical
+        option.number = defines.OptionRegistry.RM_MESSAGE_SWITCHING.number
+        option.value = "\1\1\1\1\0\0"
+        options = req.options
+        req.add_option(option)
+        req.payload = "test"
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.payload = None
+
+        exchange1 = (req, expected)
+        self.current_mid += 1
+
+        self._test_with_client([exchange1])
+
+        # This option (244) should be silently ignored by the server
+        req = ("\x40\x01\x01\x01\xd6\xe7\x01\x01\x01\x01\x00\x00", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = None
+        expected.code = defines.Codes.NOT_FOUND.number
+        expected.token = None
+        expected.payload = None
+
+        exchange21 = (req, expected)
+        self.current_mid += 1
+
+        # This option (245) should cause BAD REQUEST, as unrecognizable critical
+        req = ("\x40\x01\x01\x01\xd6\xe8\x01\x01\x01\x01\x00\x00", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange22 = (req, expected)
+        self.current_mid += 1
+
+        # This option (65525) should cause BAD REQUEST, as unrecognizable critical
+        req = ("\x40\x01\x01\x01\xe6\xfe\xe8\x01\x01\x01\x01\x00\x00", self.server_address)
+
+        expected = Response()
+        expected.type = defines.Types["RST"]
+        expected._mid = None
+        expected.code = defines.Codes.BAD_REQUEST.number
+
+        exchange23 = (req, expected)
+        self.current_mid += 1
+
+        self._test_datagram([exchange21, exchange22, exchange23])
+
     def test_content_type(self):
         print "TEST_CONTENT_TYPE"
         path = "/storage/new_res"
