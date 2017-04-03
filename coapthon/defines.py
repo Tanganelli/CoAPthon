@@ -166,10 +166,10 @@ class OptionRegistry(object):
         opt_bytes = array.array('B', '\0\0')
         if option_num < 256:
             s = struct.Struct("!B")
-            opt_bytes = s.pack_into(opt_bytes, 0, option_num)
+            s.pack_into(opt_bytes, 0, option_num)
         else:
-            s = struct.Struct("!H")
-            opt_bytes = s.pack_into(opt_bytes, 0, option_num)
+            s = struct.Struct("H")
+            s.pack_into(opt_bytes, 0, option_num)
         critical = (opt_bytes[0] & 0x01) > 0
         unsafe = (opt_bytes[0] & 0x02) > 0
         nocache = ((opt_bytes[0] & 0x1e) == 0x1c)

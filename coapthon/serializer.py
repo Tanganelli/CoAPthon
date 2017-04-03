@@ -72,9 +72,9 @@ class Serializer(object):
                     try:
                         option_item = defines.OptionRegistry.LIST[current_option]
                     except KeyError:
-                        (opt_critical, _, _) = defines.get_option_flags(current_option)
+                        (opt_critical, _, _) = defines.OptionRegistry.get_option_flags(current_option)
                         if opt_critical:
-                            raise AttributeError
+                            raise AttributeError("Critical option %s unknown" % current_option)
                         else:
                             # If the non-critical option is unknown
                             # (vendor-specific, proprietary) - just skip it
@@ -110,7 +110,7 @@ class Serializer(object):
 
                     if length_packet <= pos:
                         # log.err("Payload Marker with no payload")
-                        raise AttributeError
+                        raise AttributeError("Packet length %s, pos %s" % (length_packet, pos))
                     message.payload = ""
                     payload = values[pos:]
                     for b in payload:
@@ -171,15 +171,15 @@ class Serializer(object):
                 fmt += "B"
                 values.append(optiondelta - 13)
             elif optiondeltanibble == 14:
-                fmt += "B"
-                values.append(optiondelta - 296)
+                fmt += "H"
+                values.append(optiondelta - 269)
 
             # write extended option length field (0 - 2 bytes)
             if optionlengthnibble == 13:
                 fmt += "B"
                 values.append(optionlength - 13)
             elif optionlengthnibble == 14:
-                fmt += "B"
+                fmt += "H"
                 values.append(optionlength - 269)
 
             # write option value
