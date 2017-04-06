@@ -247,7 +247,7 @@ class CoAP(object):
 
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
-                    self._start_retrasmission(transaction, transaction.response)
+                    self._start_retransmission(transaction, transaction.response)
                 self.send_datagram(transaction.response)
 
         elif isinstance(message, Message):
@@ -274,7 +274,7 @@ class CoAP(object):
 
             self._socket.sendto(message, (host, port))
 
-    def _start_retrasmission(self, transaction, message):
+    def _start_retransmission(self, transaction, message):
         """
         Start the retransmission task.
 
