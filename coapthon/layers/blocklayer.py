@@ -180,7 +180,7 @@ class BlockLayer(object):
                         logger.error("Content-type Error")
                         return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     transaction.response.payload = self._block2_sent[key_token].payload + transaction.response.payload
-                del self._block2_sent[key_token]
+                    del self._block2_sent[key_token]
         else:
             transaction.block_transfer = False
         return transaction
