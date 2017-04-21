@@ -88,7 +88,7 @@ class BlockLayer(object):
                 # end of blockwise
                 del transaction.request.block1
                 transaction.block_transfer = False
-                # TODO remove from _block1_receive
+                del self._block1_receive[key_token]
                 return transaction
             else:
                 # Continue

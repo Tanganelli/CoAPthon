@@ -186,3 +186,6 @@ class Tree(object):
 
     def __delitem__(self, key):
         del self.tree[key]
+
+    def __contains__(self, item):
+        return item in self.tree
