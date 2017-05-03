@@ -71,7 +71,7 @@ To install master branch:
 $ git clone https://github.com/Tanganelli/CoAPthon.git
 $ cd CoAPthon
 $ python setup.py sdist
-$ sudo pip install dist/CoAPthon-4.0.0.tar.gz -r requirements.txt
+$ sudo pip install dist/CoAPthon-4.0.2.tar.gz -r requirements.txt
 ```
 
 Running:
