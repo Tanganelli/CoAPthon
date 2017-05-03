@@ -206,37 +206,30 @@ class CoAP(object):
 
             transaction.separate_timer = self._start_separate_timer(transaction)
 
-            path = str("/" + transaction.request.uri_path)
-            if path in self.root:
-                self._blockLayer.receive_request(transaction)
+            self._blockLayer.receive_request(transaction)
 
-                if transaction.block_transfer:
-                    self._stop_separate_timer(transaction.separate_timer)
-                    self._messageLayer.send_response(transaction)
-                    self.send_datagram(transaction.response)
-                    return
-
-                self._observeLayer.receive_request(transaction)
-
-                self._requestLayer.receive_request(transaction)
-
-                if transaction.resource is not None and transaction.resource.changed:
-                    self.notify(transaction.resource)
-                    transaction.resource.changed = False
-                elif transaction.resource is not None and transaction.resource.deleted:
-                    self.notify(transaction.resource)
-                    transaction.resource.deleted = False
-
-                self._observeLayer.send_response(transaction)
-
-                self._blockLayer.send_response(transaction)
-
+            if transaction.block_transfer:
                 self._stop_separate_timer(transaction.separate_timer)
-            else:
-                transaction.response = Response()
-                transaction.response.destination = transaction.request.source
-                transaction.response.token = transaction.request.token
-                transaction.response.code = defines.Codes.NOT_FOUND.number
+                self._messageLayer.send_response(transaction)
+                self.send_datagram(transaction.response)
+                return
+
+            self._observeLayer.receive_request(transaction)
+
+            self._requestLayer.receive_request(transaction)
+
+            if transaction.resource is not None and transaction.resource.changed:
+                self.notify(transaction.resource)
+                transaction.resource.changed = False
+            elif transaction.resource is not None and transaction.resource.deleted:
+                self.notify(transaction.resource)
+                transaction.resource.deleted = False
+
+            self._observeLayer.send_response(transaction)
+
+            self._blockLayer.send_response(transaction)
+
+            self._stop_separate_timer(transaction.separate_timer)
 
             self._messageLayer.send_response(transaction)
 
