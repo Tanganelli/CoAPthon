@@ -143,7 +143,11 @@ class CoAP(object):
             except socket.timeout:
                 continue
             try:
-                self.receive_datagram((data, client_address))
+                #Start a new thread not to block other requests
+                args = ((data, client_address), )
+                t = threading.Thread(target=self.receive_datagram, args=args)
+                t.daemon = True
+                t.start()
             except RuntimeError:
                 print "Exception with Executor"
         print "closing socket"
