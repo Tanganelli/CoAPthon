@@ -101,9 +101,13 @@ class ForwardLayer(object):
         request.code = transaction.request.code
         response = client.send_request(request)
         client.stop()
-        transaction.response.payload = response.payload
-        transaction.response.code = response.code
-        transaction.response.options = response.options
+        if response is not None:
+            transaction.response.payload = response.payload
+            transaction.response.code = response.code
+            transaction.response.options = response.options
+        else:
+            transaction.response.code = defines.Codes.SERVICE_UNAVAILABLE.number
+
         return transaction
 
     def _handle_request(self, transaction, new_resource):
