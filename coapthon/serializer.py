@@ -5,6 +5,7 @@ from coapthon.messages.response import Response
 from coapthon.messages.option import Option
 from coapthon import defines
 from coapthon.messages.message import Message
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -225,9 +226,9 @@ class Serializer(object):
             datagram = ctypes.create_string_buffer(s.size)
             s.pack_into(datagram, 0, *values)
         except struct.error as e:
-            print values
-            print e.args
-            print e.message
+            six.print_(values)
+            six.print_(e.args)
+            six.print_(e.message)
 
         return datagram
 
@@ -326,7 +327,7 @@ class Serializer(object):
             return 0
         if isinstance(value, tuple):
             value = value[0]
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = str(value)
         if isinstance(value, str):
             return bytearray(value, "utf-8")

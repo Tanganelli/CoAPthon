@@ -1,4 +1,4 @@
-from Queue import Queue
+from six.moves.queue import Queue
 import random
 import socket
 import threading
@@ -11,6 +11,7 @@ from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
+import six
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -92,7 +93,7 @@ class Tests(unittest.TestCase):
         client.stop()
 
     def client_callback(self, response):
-        print "Callback"
+        six.print_("Callback")
         self.queue.put(response)
 
     def _test_plugtest(self, message_list):  # pragma: no cover
@@ -105,8 +106,8 @@ class Tests(unittest.TestCase):
             if expected is not None:
                 datagram, source = sock.recvfrom(4096)
                 received_message = serializer.deserialize(datagram, source)
-                print received_message.pretty_print()
-                print expected.pretty_print()
+                six.print_(received_message.pretty_print())
+                six.print_(expected.pretty_print())
                 if expected.type is not None:
                     self.assertEqual(received_message.type, expected.type)
                 if expected.mid is not None:
@@ -158,7 +159,7 @@ class Tests(unittest.TestCase):
         sock.close()
 
     def test_get_forward(self):
-        print "TEST_GET_FORWARD"
+        six.print_("TEST_GET_FORWARD")
         path = "/basic"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -259,7 +260,7 @@ class Tests(unittest.TestCase):
     #     self._test_with_client([exchange1, exchange2, exchange3, exchange4])
     #
     def test_post(self):
-        print "TEST_POST"
+        six.print_("TEST_POST")
         path = "/storage/new_res?id=1"
         req = Request()
 
@@ -357,7 +358,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_post_block(self):
-        print "TEST_POST_BLOCK"
+        six.print_("TEST_POST_BLOCK")
         req = Request()
 
         req.code = defines.Codes.POST.number
@@ -491,7 +492,7 @@ class Tests(unittest.TestCase):
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_get_block(self):
-        print "TEST_GET_BLOCK"
+        six.print_("TEST_GET_BLOCK")
 
         req = Request()
         req.code = defines.Codes.GET.number
@@ -658,7 +659,7 @@ class Tests(unittest.TestCase):
         #self._test_plugtest([exchange1])
 
     def test_post_block_big(self):
-        print "TEST_POST_BLOCK_BIG"
+        six.print_("TEST_POST_BLOCK_BIG")
         req = Request()
 
         req.code = defines.Codes.POST.number
@@ -1251,7 +1252,7 @@ class Tests(unittest.TestCase):
     #     self._test_with_client([exchange1, exchange2, exchange3, exchange4])
     #
     def test_invalid(self):
-        print "TEST_INVALID"
+        six.print_("TEST_INVALID")
 
         # version
         req = ("\x00\x01\x8c\xda", self.server_address)
@@ -1306,7 +1307,7 @@ class Tests(unittest.TestCase):
         self._test_datagram([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_post_block_big_client(self):
-        print "TEST_POST_BLOCK_BIG_CLIENT"
+        six.print_("TEST_POST_BLOCK_BIG_CLIENT")
         req = Request()
 
         req.code = defines.Codes.POST.number
@@ -1351,7 +1352,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1])
 
     def test_observe_client(self):
-        print "TEST_OBSERVE_CLIENT"
+        six.print_("TEST_OBSERVE_CLIENT")
 
         req = Request()
         req.code = defines.Codes.GET.number
@@ -1375,7 +1376,7 @@ class Tests(unittest.TestCase):
         self._test_with_client_observe([exchange1])
 
     def test_duplicate(self):
-        print "TEST_DUPLICATE"
+        six.print_("TEST_DUPLICATE")
         req = Request()
         req.code = defines.Codes.GET.number
         req.proxy_uri = "coap://127.0.0.1:5684/basic"
@@ -1393,7 +1394,7 @@ class Tests(unittest.TestCase):
         self._test_plugtest([(req, expected), (req, expected)])
 
     def test_duplicate_not_completed(self):
-        print "TEST_DUPLICATE_NOT_COMPLETED"
+        six.print_("TEST_DUPLICATE_NOT_COMPLETED")
         req = Request()
         req.code = defines.Codes.GET.number
         req.proxy_uri = "coap://127.0.0.1:5684/long"

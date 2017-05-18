@@ -4,6 +4,7 @@ import sys
 from plugtest_resources import TestResource, SeparateResource, ObservableResource, LargeResource, LargeUpdateResource, \
     LongResource
 from coapthon.server.coap import CoAP
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -42,7 +43,7 @@ class CoAPServerPlugTest(CoAP):
 
 
 def usage():  # pragma: no cover
-    print "plugtest_coapserver.py -i <ip address> -p <port>"
+    six.print_("plugtest_coapserver.py -i <ip address> -p <port>")
 
 
 def main(argv):  # pragma: no cover
@@ -66,9 +67,9 @@ def main(argv):  # pragma: no cover
     try:
         server.listen(10)
     except KeyboardInterrupt:
-        print "Server Shutdown"
+        six.print_("Server Shutdown")
         server.close()
-        print "Exiting..."
+        six.print_("Exiting...")
 
 
 if __name__ == "__main__":

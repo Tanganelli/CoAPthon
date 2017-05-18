@@ -3,6 +3,7 @@
 import getopt
 import sys
 from coapthon.forward_proxy.coap import CoAP
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -11,11 +12,11 @@ class CoAPForwardProxy(CoAP):
     def __init__(self, host, port,  multicast=False):
         CoAP.__init__(self, (host, port), multicast=multicast)
 
-        print "CoAP Proxy start on " + host + ":" + str(port)
+        six.print_("CoAP Proxy start on " + host + ":" + str(port))
 
 
 def usage():  # pragma: no cover
-    print "coapforwardproxy.py -i <ip address> -p <port>"
+    six.print_("coapforwardproxy.py -i <ip address> -p <port>")
 
 
 def main(argv):  # pragma: no cover
@@ -39,9 +40,9 @@ def main(argv):  # pragma: no cover
     try:
         server.listen(10)
     except KeyboardInterrupt:
-        print "Server Shutdown"
+        six.print_("Server Shutdown")
         server.close()
-        print "Exiting..."
+        six.print_("Exiting...")
 
 
 if __name__ == "__main__":  # pragma: no cover

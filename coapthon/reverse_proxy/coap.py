@@ -22,6 +22,7 @@ from coapthon.resources.remoteResource import RemoteResource
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from coapthon.utils import Tree, create_logging
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -243,7 +244,7 @@ class CoAP(object):
 
                 self.receive_datagram((data, client_address))
             except RuntimeError:
-                print "Exception with Executor"
+                six.print_("Exception with Executor")
         self._socket.close()
 
     def close(self):
@@ -313,9 +314,9 @@ class CoAP(object):
                 transaction = self._cacheLayer.receive_request(transaction)
 
                 if transaction.cacheHit is False:
-                    print transaction.request
+                    six.print_(transaction.request)
                     transaction = self._forwardLayer.receive_request_reverse(transaction)
-                    print transaction.response
+                    six.print_(transaction.response)
 
                 transaction = self._observeLayer.send_response(transaction)
 

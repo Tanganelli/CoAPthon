@@ -13,6 +13,7 @@ from coapthon.messages.message import Message
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
+import six
 
 
 __author__ = 'Giacomo Tanganelli'
@@ -154,7 +155,7 @@ class CoAP(object):
         try:
             self._socket.sendto(raw_message, (host, port))
         except Exception as e:
-            if self._cb_ignore_write_exception is not None and callable(self._cb_ignore_write_exception):
+            if self._cb_ignore_write_exception is not None and six.callable(self._cb_ignore_write_exception):
                 if not self._cb_ignore_write_exception(e, self):
                     raise
 
@@ -233,7 +234,7 @@ class CoAP(object):
             except socket.timeout:  # pragma: no cover
                 continue
             except Exception as e:  # pragma: no cover
-                if self._cb_ignore_read_exception is not None and callable(self._cb_ignore_read_exception):
+                if self._cb_ignore_read_exception is not None and six.callable(self._cb_ignore_read_exception):
                     if self._cb_ignore_read_exception(e, self):
                         continue
                 return

@@ -1,6 +1,7 @@
 from coapthon.utils import parse_blockwise
 from coapthon import defines
 from coapthon.messages.option import Option
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -646,7 +647,7 @@ class Message(object):
 
         :return: the string representing the message
         """
-        inv_types = {v: k for k, v in defines.Types.iteritems()}
+        inv_types = {v: k for k, v in six.iteritems(defines.Types)}
 
         if self._code is None:
             self._code = defines.Codes.EMPTY.number
@@ -678,7 +679,7 @@ class Message(object):
         """
         msg = "Source: " + str(self._source) + "\n"
         msg += "Destination: " + str(self._destination) + "\n"
-        inv_types = {v: k for k, v in defines.Types.iteritems()}
+        inv_types = {v: k for k, v in six.iteritems(defines.Types)}
         msg += "Type: " + str(inv_types[self._type]) + "\n"
         msg += "MID: " + str(self._mid) + "\n"
         if self._code is None:

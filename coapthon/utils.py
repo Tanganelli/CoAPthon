@@ -1,5 +1,6 @@
 import random
 import string
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -170,7 +171,7 @@ class Tree(object):
 
     def with_prefix_resource(self, path):
         ret = []
-        for key, value in self.tree.iteritems():
+        for key, value in six.iteritems(self.tree):
             if path.startswith(key):
                 ret.append(value)
 

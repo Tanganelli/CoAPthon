@@ -2,6 +2,7 @@
 from coapthon.defines import Codes
 
 from coapthon.caching.cache import *
+import six
 
 __author__ = 'Emilio Vallati'
 
@@ -34,7 +35,7 @@ class CacheLayer(object):
             age = transaction.cached_element.creation_time + transaction.cached_element.max_age - time.time()
             if transaction.cached_element.freshness is True:
                 if age <= 0:
-                    print "resource not fresh"
+                    six.print_("resource not fresh")
                     """
                     if the resource is not fresh, its Etag must be added to the request so that the server might validate it instead of sending a new one
                     """
@@ -43,7 +44,7 @@ class CacheLayer(object):
                     ensuring that the request goes to the server
                     """
                     transaction.cacheHit = False
-                    print "requesting etag ", transaction.response.etag
+                    six.print_("requesting etag ", transaction.response.etag)
                     transaction.request.etag = transaction.response.etag
                 else:
                     transaction.response.max_age = age
@@ -62,7 +63,7 @@ class CacheLayer(object):
             """
             handling response based on the code
             """
-            print "handling response"
+            six.print_("handling response")
             self._handle_response(transaction)
         return transaction
 
@@ -82,7 +83,7 @@ class CacheLayer(object):
         if the request etag is different from the response, send the cached response
         """
         if code == Codes.VALID.number:
-            print "received VALID"
+            six.print_("received VALID")
             self.cache.validate(transaction.request, transaction.response)
             if transaction.request.etag != transaction.response.etag:
                 element = self.cache.search_response(transaction.request)

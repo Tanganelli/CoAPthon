@@ -16,6 +16,7 @@ from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from coapthon.utils import Tree
+import six
 
 
 __author__ = 'Giacomo Tanganelli'
@@ -137,7 +138,7 @@ class CoAP(object):
             except socket.timeout:
                 continue
             except Exception as e:
-                if self._cb_ignore_listen_exception is not None and callable(self._cb_ignore_listen_exception):
+                if self._cb_ignore_listen_exception is not None and six.callable(self._cb_ignore_listen_exception):
                     if self._cb_ignore_listen_exception(e, self):
                         continue
                 raise
@@ -182,7 +183,7 @@ class CoAP(object):
                             self._observeLayer.receive_empty(message, transaction)
 
             except RuntimeError:
-                print "Exception with Executor"
+                six.print_("Exception with Executor")
         self._socket.close()
 
     def close(self):

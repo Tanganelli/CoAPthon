@@ -6,6 +6,7 @@ from coapthon.server.coap import CoAP
 from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, \
     Child, \
     MultipleEncodingResource, AdvancedResource, AdvancedResourceSeparate
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -26,12 +27,12 @@ class CoAPServer(CoAP):
         self.add_resource('advanced/', AdvancedResource())
         self.add_resource('advancedSeparate/', AdvancedResourceSeparate())
 
-        print "CoAP Server start on " + host + ":" + str(port)
-        print self.root.dump()
+        six.print_("CoAP Server start on " + host + ":" + str(port))
+        six.print_(self.root.dump())
 
 
 def usage():  # pragma: no cover
-    print "coapserver.py -i <ip address> -p <port>"
+    six.print_("coapserver.py -i <ip address> -p <port>")
 
 
 def main(argv):  # pragma: no cover
@@ -58,9 +59,9 @@ def main(argv):  # pragma: no cover
     try:
         server.listen(10)
     except KeyboardInterrupt:
-        print "Server Shutdown"
+        six.print_("Server Shutdown")
         server.close()
-        print "Exiting..."
+        six.print_("Exiting...")
 
 
 if __name__ == "__main__":  # pragma: no cover

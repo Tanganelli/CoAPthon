@@ -1,5 +1,6 @@
 from cachetools import LRUCache
 from coapthon.caching.coapcache import CoapCache
+import six
 
 __author__ = 'Emilio Vallati'
 
@@ -19,9 +20,9 @@ class CoapLRUCache(CoapCache):
         :param element:
         :return:
         """
-        print "updating cache"
-        print "key: ", key.hashkey
-        print "element: ", element
+        six.print_("updating cache")
+        six.print_("key: ", key.hashkey)
+        six.print_("element: ", element)
         self.cache.update([(key.hashkey, element)])
 
     def get(self, key):
@@ -33,7 +34,7 @@ class CoapLRUCache(CoapCache):
         try:
             response = self.cache[key.hashkey]
         except KeyError:
-            print "problem here"
+            six.print_("problem here")
             response = None
         return response
 
@@ -60,10 +61,10 @@ class CoapLRUCache(CoapCache):
 
         :return:
         """
-        print "size = ", self.cache.currsize
+        six.print_("size = ", self.cache.currsize)
         list = self.cache.items()
         for key, element in list:
-            print "element.max age ", element.max_age
-            print "element.uri", element.uri
-            print "element.freshness ", element.freshness
+            six.print_("element.max age ", element.max_age)
+            six.print_("element.uri", element.uri)
+            six.print_("element.freshness ", element.freshness)
 

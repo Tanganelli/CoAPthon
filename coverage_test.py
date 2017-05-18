@@ -1,4 +1,4 @@
-from Queue import Queue
+from six.moves.queue import Queue
 import random
 import socket
 import threading
@@ -11,6 +11,7 @@ from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
+import six
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -87,7 +88,7 @@ class Tests(unittest.TestCase):
         client.stop()
 
     def client_callback(self, response):
-        print "Callback"
+        six.print_("Callback")
         self.queue.put(response)
 
     def _test_plugtest(self, message_list):  # pragma: no cover
@@ -151,7 +152,7 @@ class Tests(unittest.TestCase):
         sock.close()
 
     def test_not_allowed(self):
-        print "TEST_NOT_ALLOWED"
+        six.print_("TEST_NOT_ALLOWED")
         path = "/void"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -223,7 +224,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_separate(self):
-        print "TEST_SEPARATE"
+        six.print_("TEST_SEPARATE")
         path = "/separate"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -300,7 +301,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_post(self):
-        print "TEST_POST"
+        six.print_("TEST_POST")
         path = "/storage/new_res?id=1"
         req = Request()
 
@@ -398,7 +399,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_post_block(self):
-        print "TEST_POST_BLOCK"
+        six.print_("TEST_POST_BLOCK")
         path = "/storage/new_res"
         req = Request()
 
@@ -533,7 +534,7 @@ class Tests(unittest.TestCase):
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_get_block(self):
-        print "TEST_GET_BLOCK"
+        six.print_("TEST_GET_BLOCK")
         path = "/big"
 
         req = Request()
@@ -699,7 +700,7 @@ class Tests(unittest.TestCase):
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7, exchange8])
 
     def test_post_block_big(self):
-        print "TEST_POST_BLOCK_BIG"
+        six.print_("TEST_POST_BLOCK_BIG")
         path = "/big"
         req = Request()
 
@@ -864,7 +865,7 @@ class Tests(unittest.TestCase):
         self._test_plugtest([exchange1, exchange2, exchange3, exchange4, exchange5, exchange6, exchange7])
 
     def test_options(self):
-        print "TEST_OPTIONS"
+        six.print_("TEST_OPTIONS")
         path = "/storage/new_res"
 
         req = Request()
@@ -945,7 +946,7 @@ class Tests(unittest.TestCase):
         """
         Test processing of options with extended length
         """
-        print "TEST_LONG_OPTIONS"
+        six.print_("TEST_LONG_OPTIONS")
 
         path = "/storage/"
         req = Request()
@@ -1012,7 +1013,7 @@ class Tests(unittest.TestCase):
         self._test_datagram([exchange21, exchange22, exchange23])
 
     def test_content_type(self):
-        print "TEST_CONTENT_TYPE"
+        six.print_("TEST_CONTENT_TYPE")
         path = "/storage/new_res"
 
         req = Request()
@@ -1138,7 +1139,7 @@ class Tests(unittest.TestCase):
         expected.token = None
         expected.payload = "<value>0</value>"
 
-        print(expected.pretty_print())
+        six.print_((expected.pretty_print()))
 
         exchange7 = (req, expected)
         self.current_mid += 1
@@ -1203,7 +1204,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_ETAG(self):
-        print "TEST_ETAG"
+        six.print_("TEST_ETAG")
         path = "/etag"
 
         req = Request()
@@ -1284,7 +1285,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_child(self):
-        print "TEST_CHILD"
+        six.print_("TEST_CHILD")
         path = "/child"
 
         req = Request()
@@ -1361,7 +1362,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_not_found(self):
-        print "TEST_not_found"
+        six.print_("TEST_not_found")
         path = "/not_found"
 
         req = Request()
@@ -1437,7 +1438,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1, exchange2, exchange3, exchange4])
 
     def test_invalid(self):
-        print "TEST_INVALID"
+        six.print_("TEST_INVALID")
 
         # version
         req = ("\x00\x01\x8c\xda", self.server_address)
@@ -1492,7 +1493,7 @@ class Tests(unittest.TestCase):
         self._test_datagram([exchange1, exchange2, exchange3, exchange4, exchange5])
 
     def test_post_block_big_client(self):
-        print "TEST_POST_BLOCK_BIG_CLIENT"
+        six.print_("TEST_POST_BLOCK_BIG_CLIENT")
         path = "/big"
         req = Request()
 
@@ -1538,7 +1539,7 @@ class Tests(unittest.TestCase):
         self._test_with_client([exchange1])
 
     def test_observe_client(self):
-        print "TEST_OBSERVE_CLIENT"
+        six.print_("TEST_OBSERVE_CLIENT")
         path = "/basic"
 
         req = Request()
