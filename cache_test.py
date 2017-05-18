@@ -1,4 +1,4 @@
-from Queue import Queue
+from six.moves.queue import Queue
 import random
 import socket
 import threading
@@ -12,6 +12,7 @@ from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.serializer import Serializer
 import time
+import six
 
 __author__ = 'Emilio Vallati'
 __version__ = "1.0"
@@ -84,11 +85,11 @@ class Tests(unittest.TestCase):
 
 
     def client_callback(self, response):
-        print "Callback"
+        six.print_("Callback")
         self.queue.put(response)
 
     def test_get_multiple(self):
-        print "TEST_GET_MULTIPLE"
+        six.print_("TEST_GET_MULTIPLE")
         path = "/basic"
         req = Request()
         req.code = defines.Codes.GET.number
@@ -132,7 +133,7 @@ class Tests(unittest.TestCase):
         self._test_with_client_delayed([exchange1, exchange2])
 
     def test_get_post(self):
-        print "TEST_GET_POST"
+        six.print_("TEST_GET_POST")
         path = "/basic"
         req = Request()
         req.code = defines.Codes.POST.number
@@ -219,7 +220,7 @@ class Tests(unittest.TestCase):
 
 
     def test_get_put(self):
-        print "TEST_GET_PUT"
+        six.print_("TEST_GET_PUT")
         path = "/basic"
         req = Request()
         req.code = defines.Codes.POST.number
@@ -306,7 +307,7 @@ class Tests(unittest.TestCase):
 
 
     def test_get_delete(self):
-        print "TEST_GET_DELETE"
+        six.print_("TEST_GET_DELETE")
         path = "/basic"
 
         req2 = Request()
@@ -411,7 +412,7 @@ class Tests(unittest.TestCase):
 
 
     def test_get_etag(self):
-        print "TEST_GET_ETAG"
+        six.print_("TEST_GET_ETAG")
         path = "/etag"
         req = Request()
         req.code = defines.Codes.GET.number

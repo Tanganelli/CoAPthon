@@ -1,9 +1,10 @@
 import time
 
-from coaplrucache import CoapLRUCache
+from .coaplrucache import CoapLRUCache
 from coapthon import utils
 from coapthon.messages.request import *
 from coapthon.messages.message import Message
+import six
 
 
 __author__ = 'Emilio Vallati'
@@ -30,7 +31,7 @@ class Cache(object):
         :param response:
         :return:
         """
-        print "adding response to the cache"
+        six.print_("adding response to the cache")
 
         """
         checking for valid code
@@ -39,7 +40,7 @@ class Cache(object):
         try:
             utils.check_code(code)
         except utils.InvalidResponseCode:
-            print "Invalid response code"
+            six.print_("Invalid response code")
             return
 
         """
@@ -57,21 +58,21 @@ class Cache(object):
         else:
             new_key = ReverseCacheKey(request)
 
-        print "max age = ", response.max_age
+        six.print_("max age = ", response.max_age)
         new_element = CacheElement(new_key, response, request, response.max_age)
 
         self.cache.update(new_key, new_element)
-        print "cache size = ", self.cache.debug_print()
+        six.print_("cache size = ", self.cache.debug_print())
 
 
 
     def search_related(self, request):
-        print "searching similar payload"
+        six.print_("searching similar payload")
         if self.cache.is_empty() is True:
-            print "empty cache"
+            six.print_("empty cache")
             return None
 
-        print "cache not empty"
+        six.print_("cache not empty")
 
         """
         extracting everything from the cache
@@ -79,13 +80,13 @@ class Cache(object):
         result = []
         items = self.cache.cache.items()
         for key, item in items:
-            print "key = ", key
-            print "item = ", item
+            six.print_("key = ", key)
+            six.print_("item = ", item)
 
         for key, item in items:
             element = self.cache.get(item.key)
-            print "element.uri: ", element.uri
-            print "uri path: ", request.proxy_uri
+            six.print_("element.uri: ", element.uri)
+            six.print_("uri path: ", request.proxy_uri)
             if request.proxy_uri == element.uri:
                 result.append(item)
 
@@ -99,13 +100,13 @@ class Cache(object):
         :param request:
         :return CacheElement: returns None if there's a cache miss
         """
-        print "searching response"
+        six.print_("searching response")
 
         if self.cache.is_empty() is True:
-            print "empty cache"
+            six.print_("empty cache")
             return None
 
-        print "cache not empty"
+        six.print_("cache not empty")
 
         """
         create a new cache key from the request
@@ -143,11 +144,11 @@ class Cache(object):
         :param request:
         :return:
         """
-        print "element.response = ", element.cached_response
-        print "element.uri = ", element.uri
-        print "element.freshness = ", element.freshness
+        six.print_("element.response = ", element.cached_response)
+        six.print_("element.uri = ", element.uri)
+        six.print_("element.freshness = ", element.freshness)
         if element is not None:
-            print "unfreshening"
+            six.print_("unfreshening")
             element.freshness = False
         self.cache.debug_print()
 
@@ -172,12 +173,12 @@ class CacheElement(object):
         self.uri = request.proxy_uri
 
     def debug_print(self):
-        print "freshness = ", self.freshness
-        print "key"
+        six.print_("freshness = ", self.freshness)
+        six.print_("key")
         self.key.debug_print()
-        print "response = ", self.cached_response
-        print "max age = ", self.max_age
-        print "creation time = ", self.creation_time
+        six.print_("response = ", self.cached_response)
+        six.print_("max age = ", self.max_age)
+        six.print_("creation time = ", self.creation_time)
 
 """
 class for the key used to search elements in the cache (forward-proxy only)
@@ -190,7 +191,7 @@ class CacheKey(object):
 
         :param request:
         """
-        print "creating key"
+        six.print_("creating key")
         if (request.payload is not None):
             self._payload = request.payload
         else:
@@ -217,11 +218,11 @@ class CacheKey(object):
         self.debug_print()
 
     def debug_print(self):
-        print "payload = ", self._payload
-        print "method = ", self._method
-        print "options = "
+        six.print_("payload = ", self._payload)
+        six.print_("method = ", self._method)
+        six.print_("options = ")
         for option in self._options:
-            print option
+            six.print_(option)
 
 
 """
@@ -255,10 +256,10 @@ class ReverseCacheKey(object):
         self.hashkey = (self._payload, self._method, option_str)
 
     def debug_print(self):
-        print "payload = ", self._payload
-        print "method = ", self._method
-        print "options = "
+        six.print_("payload = ", self._payload)
+        six.print_("method = ", self._method)
+        six.print_("options = ")
         for option in self._options:
-            print option
+            six.print_(option)
 
 

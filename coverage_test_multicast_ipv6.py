@@ -1,4 +1,4 @@
-from Queue import Queue
+from six.moves.queue import Queue
 import random
 import threading
 import unittest
@@ -9,6 +9,7 @@ from coapthon.messages.message import Message
 from coapthon.messages.option import Option
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
+import six
 
 __author__ = 'Giacomo Tanganelli'
 __version__ = "2.0"
@@ -84,11 +85,11 @@ class Tests(unittest.TestCase):
         client.stop()
 
     def client_callback(self, response):
-        print "Callback"
+        six.print_("Callback")
         self.queue.put(response)
 
     def test_not_allowed(self):
-        print "TEST_NOT_ALLOWED"
+        six.print_("TEST_NOT_ALLOWED")
         path = "/void"
         req = Request()
         req.code = defines.Codes.GET.number

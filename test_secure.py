@@ -33,6 +33,7 @@ from exampleresources import Storage
 
 # Logging
 from logging import basicConfig, DEBUG, getLogger, root, Filter
+import six
 basicConfig(level=DEBUG, format="%(asctime)s - %(threadName)-30s - %(name)s - %(levelname)s - %(message)s")
 
 
@@ -205,7 +206,7 @@ class Tests(unittest.TestCase):
         def _removePemFile(fname):
             os.remove(fname)
 
-        for v in pem.itervalues():
+        for v in six.itervalues(pem):
             _removePemFile(v)
 
         os.rmdir(self._tmp_dir)

@@ -8,6 +8,7 @@ from coapthon.messages.request import Request
 from coapthon import defines
 from coapthon.serializer import Serializer
 from plugtest_coapserver import CoAPServerPlugTest
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -54,7 +55,7 @@ class Tests(unittest.TestCase):
         sock.close()
 
     def test_retrasnmissions(self):
-        print "Retransmissions"
+        six.print_("Retransmissions")
         path = "/separate"
         req = Request()
         req.code = defines.Codes.GET.number

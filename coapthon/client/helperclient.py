@@ -6,6 +6,7 @@ from coapthon import defines
 from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
 from coapthon.utils import generate_random_token
+import six
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -92,7 +93,7 @@ class HelperClient(object):
         request = self.mk_request(defines.Codes.GET, path)
         request.token = generate_random_token(2)
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
@@ -110,7 +111,7 @@ class HelperClient(object):
         request = self.mk_request(defines.Codes.GET, path)
         request.observe = 0
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
@@ -127,7 +128,7 @@ class HelperClient(object):
         """
         request = self.mk_request(defines.Codes.DELETE, path)
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
@@ -147,7 +148,7 @@ class HelperClient(object):
         request.token = generate_random_token(2)
         request.payload = payload
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
@@ -167,7 +168,7 @@ class HelperClient(object):
         request.token = generate_random_token(2)
         request.payload = payload
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
@@ -183,7 +184,7 @@ class HelperClient(object):
         """
         request = self.mk_request(defines.Codes.GET, defines.DISCOVERY_URL)
 
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             if hasattr(request, k):
                 setattr(request, k, v)
 
