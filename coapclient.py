@@ -31,13 +31,13 @@ def client_callback_observe(response):  # pragma: no cover
     six.print_("Callback_observe")
     check = True
     while check:
-        chosen = input("Stop observing? [y/N]: ")
+        chosen = eval(input("Stop observing? [y/N]: "))
         if chosen != "" and not (chosen == "n" or chosen == "N" or chosen == "y" or chosen == "Y"):
             six.print_("Unrecognized choose.")
             continue
         elif chosen == "y" or chosen == "Y":
             while True:
-                rst = input("Send RST message? [Y/n]: ")
+                rst = eval(input("Send RST message? [Y/n]: "))
                 if rst != "" and not (rst == "n" or rst == "N" or rst == "y" or rst == "Y"):
                     six.print_("Unrecognized choose.")
                     continue
