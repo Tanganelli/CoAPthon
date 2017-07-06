@@ -14,5 +14,6 @@ script:
 - coverage run -a coverage_testIPv6.py
 - coverage run -a coverage_test_advanced.py
 - coverage run -a coverage_test_multicast.py
+- coverage run -a cache_test.py
 after_success:
 - coveralls
