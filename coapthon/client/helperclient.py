@@ -1,5 +1,6 @@
 import random
 from multiprocessing import Queue
+from Queue import Empty
 import threading
 from coapthon.messages.message import Message
 from coapthon import defines
@@ -203,7 +204,11 @@ class HelperClient(object):
             thread.start()
         else:
             self.protocol.send_message(request)
-            response = self.queue.get(block=True, timeout=timeout)
+            try:
+                response = self.queue.get(block=True, timeout=timeout)
+            except Empty:
+                #if timeout is set
+                response = None
             return response
 
     def send_empty(self, empty):  # pragma: no cover
