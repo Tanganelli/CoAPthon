@@ -1,7 +1,11 @@
+import logging
+
 from cachetools import LRUCache
 from coapthon.caching.coapcache import CoapCache
 
 __author__ = 'Emilio Vallati'
+
+logger = logging.getLogger(__name__)
 
 
 class CoapLRUCache(CoapCache):
@@ -19,9 +23,8 @@ class CoapLRUCache(CoapCache):
         :param element:
         :return:
         """
-        print "updating cache"
-        print "key: ", key.hashkey
-        print "element: ", element
+        logger.debug("updating cache, key: %s, element: %s", \
+                key.hashkey, element)
         self.cache.update([(key.hashkey, element)])
 
     def get(self, key):
@@ -33,7 +36,7 @@ class CoapLRUCache(CoapCache):
         try:
             response = self.cache[key.hashkey]
         except KeyError:
-            print "problem here"
+            logger.debug("problem here", exc_info=1)
             response = None
         return response
 
@@ -66,10 +69,15 @@ class CoapLRUCache(CoapCache):
 
         :return:
         """
-        print "size = ", self.cache.currsize
-        list = self.cache.items()
-        for key, element in list:
-            print "element.max age ", element.max_age
-            print "element.uri", element.uri
-            print "element.freshness ", element.freshness
-
+        return ("size = %s\n%s" % (
+            self.cache.currsize,
+            '\n'.join([
+                (   "element.max age %s\n"\
+                    "element.uri %s\n"\
+                    "element.freshness %s"  ) % (
+                        element.max_age,
+                        element.uri,
+                        element.freshness )
+                for key, element
+                in list(self.cache.items())
+            ])))

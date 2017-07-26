@@ -32,7 +32,7 @@ class Cache(object):
         :param response:
         :return:
         """
-        print "adding response to the cache"
+        logger.debug("adding response to the cache")
 
         """
         checking for valid code

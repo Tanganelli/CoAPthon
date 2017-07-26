@@ -1,3 +1,4 @@
+import logging
 import struct
 import ctypes
 from coapthon.messages.request import Request
@@ -7,6 +8,8 @@ from coapthon import defines
 from coapthon.messages.message import Message
 
 __author__ = 'Giacomo Tanganelli'
+
+logger = logging.getLogger(__name__)
 
 
 class Serializer(object):
@@ -224,10 +227,10 @@ class Serializer(object):
             s = struct.Struct(fmt)
             datagram = ctypes.create_string_buffer(s.size)
             s.pack_into(datagram, 0, *values)
-        except struct.error as e:
-            print values
-            print e.args
-            print e.message
+        except struct.error:
+            # The .exception method will report on the exception encountered
+            # and provide a traceback.
+            logging.exception('Failed to pack structure')
 
         return datagram
 
