@@ -120,6 +120,17 @@ class CoAP(object):
             message = self._messageLayer.send_empty(None, None, message)
             self.send_datagram(message)
 
+    def end_observation(self, token):
+        """
+        Remove an observation token from our records.
+
+        :param token: the token for the observation
+        """
+        dummy = Message()
+        dummy.token = token
+        dummy.destination = self._server
+        self._observeLayer.remove_subscriber(dummy)
+
     @staticmethod
     def _wait_for_retransmit_thread(transaction):
         """
