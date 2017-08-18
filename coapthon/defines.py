@@ -230,7 +230,7 @@ class Codes(object):
         4: DELETE,
 
         65: CREATED,
-        66: DELETE,
+        66: DELETED,
         67: VALID,
         68: CHANGED,
         69: CONTENT,
