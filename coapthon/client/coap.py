@@ -74,6 +74,12 @@ class CoAP(object):
             event.set()
         if self._receiver_thread is not None:
             self._receiver_thread.join()
+        try:
+            # Python does not close the OS FD on socket.close()
+            # Ensure OS socket is closed with shutdown to prevent FD leak
+            self._socket.shutdown(socket.SHUT_RDWR)
+        except socket.error:
+            pass
         self._socket.close()
 
     @property
