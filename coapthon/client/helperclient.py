@@ -69,6 +69,7 @@ class HelperClient(object):
         with self.requests_lock:
             # Unblock/signal waiters
             for token in self.requests:
+                context = self.requests[token]
                 if hasattr(context, 'callback'):
                     context.callback(None)
                 else:
