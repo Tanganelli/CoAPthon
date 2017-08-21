@@ -257,6 +257,7 @@ class HelperClient(object):
 
         # Wait for response
         context.responded.wait(timeout)
+        del self.requests[request.token]
         return context.response
 
     def send_empty(self, empty):  # pragma: no cover
