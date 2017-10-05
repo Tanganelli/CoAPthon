@@ -149,8 +149,8 @@ class CoAP(object):
                 t.daemon = True
                 t.start()
             except RuntimeError:
-                print "Exception with Executor"
-        print "closing socket"
+                logging.exception("Exception with Executor")
+        logging.debug("closing socket")
         self._socket.close()
 
     def close(self):
@@ -172,7 +172,7 @@ class CoAP(object):
         """
         data, client_address = args
 
-        print "receiving datagram"
+        logging.debug("receiving datagram")
 
         try:
             host, port = client_address
@@ -229,9 +229,9 @@ class CoAP(object):
                 transaction = self._cacheLayer.receive_request(transaction)
 
                 if transaction.cacheHit is False:
-                    print transaction.request
+                    logging.debug(transaction.request)
                     transaction = self._forwardLayer.receive_request(transaction)
-                    print transaction.response
+                    logging.debug(transaction.response)
 
                 transaction = self._observeLayer.send_response(transaction)
 
