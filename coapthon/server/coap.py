@@ -283,6 +283,29 @@ class CoAP(object):
                 self.root[actual_path] = resource
         return True
 
+    def remove_resource(self, path):
+        """
+        Helper function to remove resources.
+
+        :param path: the path for the unwanted resource
+        :rtype : the removed object
+        """
+
+        path = path.strip("/")
+        paths = path.split("/")
+        actual_path = ""
+        i = 0
+        for p in paths:
+            i += 1
+            actual_path += "/" + p
+        try:
+            res = self.root[actual_path]
+        except KeyError:
+            res = None
+        if res is not None:
+            del(self.root[actual_path])
+        return res
+
     def _start_retransmission(self, transaction, message):
         """
         Start the retransmission task.
