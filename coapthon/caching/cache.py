@@ -40,7 +40,7 @@ class Cache(object):
         code = response.code
         try:
             utils.check_code(code)
-        except utils.InvalidResponseCode:
+        except utils.InvalidResponseCode:  # pragma no cover
             logger.error("Invalid response code")
             return
 
@@ -236,8 +236,11 @@ class ReverseCacheKey(object):
         self.hashkey = (self._payload, self._method, option_str)
 
     def __str__(self):
-        return "Payload: {p}, Method: {m}, Options:{o}".format(p=self._payload, m=self._method,
-                                                               o=', '.join(map(str, self._options)))
+        msg = ""
+        for opt in self._options:
+            msg += "{name}: {value}, ".format(name=opt.name, value=opt.value)
+        return "Payload: {p}, Method: {m}, Options: [{o}]".format(p=self._payload, m=self._method, o=msg)
+
 
 
 
