@@ -258,7 +258,7 @@ class Resource(object):
         :param v: the Observe counter value
         """
         assert isinstance(v, int)
-        self._observe_count = v
+        self._observe_count = (v % 65000)
 
     @property
     def actual_content_type(self):

@@ -342,7 +342,8 @@ class CoAP(object):
         with transaction:
             while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
                     and not self.stopped.isSet():
-                transaction.retransmit_stop.wait(timeout=future_time)
+                if transaction.retransmit_stop is not None:
+                    transaction.retransmit_stop.wait(timeout=future_time)
                 if not message.acknowledged and not message.rejected and not self.stopped.isSet():
                     retransmit_count += 1
                     future_time *= 2
