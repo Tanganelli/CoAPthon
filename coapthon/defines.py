@@ -134,7 +134,7 @@ class OptionRegistry(object):
         1: IF_MATCH,
         3: URI_HOST,
         4: ETAG,
-        5: IF_MATCH,
+        5: IF_NONE_MATCH,
         6: OBSERVE,
         7: URI_PORT,
         8: LOCATION_PATH,
