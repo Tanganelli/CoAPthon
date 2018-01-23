@@ -199,6 +199,7 @@ class RadioResource(Resource):
                       {"n": "byte_sent", "v": self.byte_sent},
                       {"n": "byte_received", "v": self.byte_received}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
+
         if not self._coap_server.stopped.isSet():
 
             timer = threading.Timer(self.period, self.read_sensor)
