@@ -5,8 +5,10 @@
 CoAPthon
 ========
 
-CoAPthon is a python library to the CoAP protocol compliant with the RFC.
+CoAPthon is a python 2.7 library to the CoAP protocol compliant with the RFC.
 Branch is available for the Twisted framework.
+
+For python 3 please visit https://github.com/Tanganelli/CoAPthon3
 
 Citation
 --------
