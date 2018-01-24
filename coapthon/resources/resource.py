@@ -454,7 +454,7 @@ class Resource(object):
 
     def render_PUT(self, request):
         """
-        Method to be redefined to render a PUTT request on the resource.
+        Method to be redefined to render a PUT request on the resource.
 
         :param request: the request
         :return: the resource
@@ -463,7 +463,7 @@ class Resource(object):
 
     def render_PUT_advanced(self, request, response):
         """
-        Method to be redefined to render a PUTT request on the resource.
+        Method to be redefined to render a PUT request on the resource.
 
         :param response: the partially filled response
         :param request: the request
