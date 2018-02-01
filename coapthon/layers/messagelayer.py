@@ -88,7 +88,8 @@ class MessageLayer(object):
             transaction = Transaction(request=request, timestamp=request.timestamp)
             with transaction:
                 self._transactions[key_mid] = transaction
-                self._transactions_token[key_token] = transaction
+		if request.token is not None:
+                    self._transactions_token[key_token] = transaction
         return transaction
 
     def receive_response(self, response):
@@ -215,9 +216,10 @@ class MessageLayer(object):
 
         key_mid = str_append_hash(host, port, request.mid)
         self._transactions[key_mid] = transaction
-
-        key_token = str_append_hash(host, port, request.token)
-        self._transactions_token[key_token] = transaction
+	
+	if request.token is not None:
+            key_token = str_append_hash(host, port, request.token)
+            self._transactions_token[key_token] = transaction
 
         return self._transactions[key_mid]
 
