@@ -80,6 +80,12 @@ class CoAP(object):
             event.set()
         if self._receiver_thread is not None:
             self._receiver_thread.join()
+        try:
+            # Python does not close the OS FD on socket.close()
+            # Ensure OS socket is closed with shutdown to prevent FD leak
+            self._socket.shutdown(socket.SHUT_RDWR)
+        except socket.error:
+            pass
         self._socket.close()
 
     @property
@@ -119,6 +125,17 @@ class CoAP(object):
             message = self._observeLayer.send_empty(message)
             message = self._messageLayer.send_empty(None, None, message)
             self.send_datagram(message)
+
+    def end_observation(self, token):
+        """
+        Remove an observation token from our records.
+
+        :param token: the token for the observation
+        """
+        dummy = Message()
+        dummy.token = token
+        dummy.destination = self._server
+        self._observeLayer.remove_subscriber(dummy)
 
     @staticmethod
     def _wait_for_retransmit_thread(transaction):
