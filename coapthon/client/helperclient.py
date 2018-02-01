@@ -242,6 +242,7 @@ class HelperClient(object):
         :param timeout: the timeout of the request
         :return: the response (synchronous), or the token (for asynchronous callback)
         """
+
         with self.requests_lock:
             # Same requests from the same endpoint must have different tokens
             # Ensure there is a unique token in case the other side issues a
@@ -259,6 +260,7 @@ class HelperClient(object):
         context.responded.wait(timeout)
         del self.requests[request.token]
         return context.response
+
 
     def send_empty(self, empty):  # pragma: no cover
         """

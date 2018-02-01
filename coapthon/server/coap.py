@@ -1,4 +1,5 @@
-import logging
+import logging.config
+import os
 import random
 import socket
 import struct
@@ -16,12 +17,17 @@ from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from coapthon.utils import Tree
+from coapthon.utils import create_logging
 
 
 __author__ = 'Giacomo Tanganelli'
 
 
+if not os.path.isfile("logging.conf"):
+    create_logging()
+
 logger = logging.getLogger(__name__)
+logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 
 class CoAP(object):
@@ -182,7 +188,7 @@ class CoAP(object):
                             self._observeLayer.receive_empty(message, transaction)
 
             except RuntimeError:
-                print "Exception with Executor"
+                logger.exception("Exception with Executor")
         self._socket.close()
 
     def close(self):
@@ -283,6 +289,29 @@ class CoAP(object):
                 self.root[actual_path] = resource
         return True
 
+    def remove_resource(self, path):
+        """
+        Helper function to remove resources.
+
+        :param path: the path for the unwanted resource
+        :rtype : the removed object
+        """
+
+        path = path.strip("/")
+        paths = path.split("/")
+        actual_path = ""
+        i = 0
+        for p in paths:
+            i += 1
+            actual_path += "/" + p
+        try:
+            res = self.root[actual_path]
+        except KeyError:
+            res = None
+        if res is not None:
+            del(self.root[actual_path])
+        return res
+
     def _start_retransmission(self, transaction, message):
         """
         Start the retransmission task.
@@ -313,7 +342,8 @@ class CoAP(object):
         with transaction:
             while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
                     and not self.stopped.isSet():
-                transaction.retransmit_stop.wait(timeout=future_time)
+                if transaction.retransmit_stop is not None:
+                    transaction.retransmit_stop.wait(timeout=future_time)
                 if not message.acknowledged and not message.rejected and not self.stopped.isSet():
                     retransmit_count += 1
                     future_time *= 2
