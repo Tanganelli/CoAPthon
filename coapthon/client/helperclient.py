@@ -43,14 +43,15 @@ class HelperClient(object):
 
         :param message: the received message
         """
-        if not message:
-            return
         if message.code == defines.Codes.CONTINUE.number:
             return
         with self.requests_lock:
             if message.token not in self.requests:
                 return
             context = self.requests[message.token]
+            if message.timeouted:
+                # Message is actually the original timed out request (not the response), discard content
+                message = None
             if hasattr(context, 'callback'):
                 if not hasattr(context.request, 'observe'):
                     # OBSERVE stays until cancelled, for all others we're done

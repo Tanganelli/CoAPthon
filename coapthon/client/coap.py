@@ -233,7 +233,7 @@ class CoAP(object):
                 message.timeouted = True
 
                 # Inform the user, that nothing was received
-                self._callback(None)
+                self._callback(message)
 
             try:
                 self.to_be_stopped.remove(transaction.retransmit_stop)
