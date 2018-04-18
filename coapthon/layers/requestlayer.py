@@ -53,6 +53,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
@@ -106,6 +108,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
@@ -124,6 +128,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
