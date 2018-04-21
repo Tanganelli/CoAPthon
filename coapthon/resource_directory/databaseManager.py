@@ -88,10 +88,10 @@ class DatabaseManager(object):
         :return: the location path of the registration resource or an error code
         """
         if (len(endpoint) <= 0) or (len(resources) <= 0):
-            return defines.Codes.BAD_REQUEST
+            return defines.Codes.BAD_REQUEST.number
         data_ep = self.parse_uri_query(endpoint)
         if "ep" not in data_ep:
-            return defines.Codes.BAD_REQUEST
+            return defines.Codes.BAD_REQUEST.number
         if "lt" not in data_ep:
             data_ep.update({'lt': '86400'})
         DatabaseManager.lock.acquire()
@@ -107,7 +107,7 @@ class DatabaseManager(object):
             DatabaseManager.next_loc_path += 1
         except OperationFailure:
             print("OperationFailure")
-            loc_path = defines.Codes.SERVICE_UNAVAILABLE
+            loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
             DatabaseManager.lock.release()
             return loc_path
@@ -154,13 +154,13 @@ class DatabaseManager(object):
             elif type_search == "res":
                 collection = self.db.resources
             else:
-                return defines.Codes.SERVICE_UNAVAILABLE
+                return defines.Codes.SERVICE_UNAVAILABLE.number
             result = collection.find(query)
             link = self.serialize_core_link_format(result, type_search)
             return link
         except OperationFailure:
             print("Operation Failure")
-            return defines.Codes.SERVICE_UNAVAILABLE
+            return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def update(self, resource, uri_query):
         """
@@ -170,7 +170,7 @@ class DatabaseManager(object):
         :return: the code of the response
         """
         if len(resource) <= 0:
-            return defines.Codes.BAD_REQUEST
+            return defines.Codes.BAD_REQUEST.number
         data = {}
         if len(uri_query) > 0:
             data = self.parse_uri_query(uri_query)
@@ -181,11 +181,11 @@ class DatabaseManager(object):
             result = collection.update_one(res, {"$set": data})
             if not result.matched_count:
                 print("Resource not found")
-                return defines.Codes.NOT_FOUND
-            return defines.Codes.CHANGED
+                return defines.Codes.NOT_FOUND.number
+            return defines.Codes.CHANGED.number
         except OperationFailure:
             print("Operation Failure")
-            return defines.Codes.SERVICE_UNAVAILABLE
+            return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def delete(self, resource):
         """
@@ -199,10 +199,10 @@ class DatabaseManager(object):
             result = collection.delete_one(res)
             if not result.deleted_count:
                 print("Not found")
-                return defines.Codes.NOT_FOUND
+                return defines.Codes.NOT_FOUND.number
             collection = self.db.resources
             collection.delete_many(res)
-            return defines.Codes.DELETED
+            return defines.Codes.DELETED.number
         except OperationFailure:
             print("Operation Failure")
-            return defines.Codes.SERVICE_UNAVAILABLE
+            return defines.Codes.SERVICE_UNAVAILABLE.number
