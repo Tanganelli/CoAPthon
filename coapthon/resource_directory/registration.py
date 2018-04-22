@@ -15,22 +15,22 @@ class Registration(Resource):
         res = "res=/" + request.uri_path
         db = DatabaseManager()
         result = db.search(res, "res")
-        if (type(result) is unicode) or (type(result) is str):
+        if type(result) is int:
+            response.code = result
+        else:
             response.code = defines.Codes.CONTENT.number
             response.payload = result
-        else:
-            response.code = result
         return self, response
 
     def render_POST_advanced(self, request, response):
         db = DatabaseManager()
         if request.uri_path == 'rd':
             result = db.insert(request.uri_query, request.payload)
-            if type(result) is str:
+            if type(result) is int:
+                response.code = result
+            else:
                 response.location_path = result
                 response.code = defines.Codes.CREATED.number
-            else:
-                response.code = result
         else:
             response.code = db.update("/" + request.uri_path, request.uri_query)
         return self, response
@@ -40,4 +40,4 @@ class Registration(Resource):
             raise NotImplementedError
         db = DatabaseManager()
         response.code = db.delete("/" + request.uri_path)
-        return True, response
+        return False, response

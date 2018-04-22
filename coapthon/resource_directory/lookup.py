@@ -15,9 +15,9 @@ class Lookup(Resource):
             result = db.search(request.uri_query, "ep")
         elif request.uri_path == 'rd-lookup/res':
             result = db.search(request.uri_query, "res")
-        if (type(result) is unicode) or (type(result) is str):
+        if type(result) is int:
+            response.code = result
+        else:
             response.code = defines.Codes.CONTENT.number
             response.payload = result
-        else:
-            response.code = result
         return self, response
