@@ -30,10 +30,10 @@ class DatabaseManager(object):
     @staticmethod
     def parse_core_link_format(link_format, rd_parameters):
         """
-        Parse a string in core link format and insert location path to the result.
+        Parse a string in core link format and insert the result in a dict with RD parameters.
         :param link_format: the string in core link format
-        :param loc_path: the location path to add
-        :return data: list of dict that contains the result of the parsing
+        :param rd_parameters: the parameters of the registration
+        :return data: list of dict that contains the result
         """
         data = []
         while len(link_format) > 0:
@@ -86,7 +86,7 @@ class DatabaseManager(object):
     def insert(self, endpoint, resources):
         """
         Insert an endpoint and its resources.
-        :param endpoint: string containing the endpoint and its parameters
+        :param endpoint: string containing the registration parameters
         :param resources: string in core link format containing the resources
         :return: the location path of the registration resource or an error code
         """
@@ -151,6 +151,11 @@ class DatabaseManager(object):
         return link
 
     def split_queries(self, query):
+        """
+        Split the query in two parts, one for RD parameters and one for resource parameters
+        :param query: the query to split
+        :return: the dicts containing the parameters
+        """
         query_rdp = {}
         query_res = {}
         for k in query:
@@ -162,7 +167,7 @@ class DatabaseManager(object):
 
     def search(self, uri_query, type_search):
         """
-        Search an endpoints or resources.
+        Search endpoints or resources.
         :param uri_query: parameters to search
         :param type_search: it's equal to ep if the search is for endpoints or res if it is for resources
         :return: the string of results or an error code
