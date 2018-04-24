@@ -1,4 +1,6 @@
 import re
+from datetime import datetime
+from datetime import timedelta
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
@@ -23,8 +25,10 @@ class DatabaseManager(object):
         """
         connection = MongoClient(host, port, username=user, password=pwd, authSource=database, authMechanism='SCRAM-SHA-1')
         self.db = connection[database]
+        self.rd_parameters = ["ep", "lt", "d", "con", "et", "loc_path"]
 
-    def parse_core_link_format(self, link_format, loc_path):
+    @staticmethod
+    def parse_core_link_format(link_format, rd_parameters):
         """
         Parse a string in core link format and insert location path to the result.
         :param link_format: the string in core link format
@@ -46,18 +50,22 @@ class DatabaseManager(object):
                 for att in attributes:
                     a = att.split("=")
                     if len(a) > 1:
-                        a[1] = a[1].replace('"', '')
+                        if a[1].isdigit():
+                            a[1] = int(a[1])
+                        else:
+                            a[1] = a[1].replace('"', '')
                         dict_att[a[0]] = a[1]
                     else:
-                        a[0] = a[0].replace('"', '')
                         dict_att[a[0]] = a[0]
                 link_format = link_format[result.end(0) + 1:]
-            tmp = {'uri': path, 'res': loc_path}
+            tmp = {'path': path}
             tmp.update(dict_att)
             data.append(tmp)
-        return data
+        rd_parameters.update({'res': data})
+        return rd_parameters
 
-    def parse_uri_query(self, uri_query):
+    @staticmethod
+    def parse_uri_query(uri_query):
         """
         Parse an uri query.
         :param uri_query: the string to parse
@@ -68,6 +76,8 @@ class DatabaseManager(object):
         for att in attributes:
             a = att.split("=")
             if len(a) > 1:
+                if a[1].isdigit():
+                    a[1] = int(a[1])
                 dict_att[a[0]] = a[1]
             else:
                 dict_att[a[0]] = a[0]
@@ -82,21 +92,19 @@ class DatabaseManager(object):
         """
         if (len(endpoint) <= 0) or (len(resources) <= 0):
             return defines.Codes.BAD_REQUEST.number
-        data_ep = self.parse_uri_query(endpoint)
-        if "ep" not in data_ep:
+        rd_parameters = self.parse_uri_query(endpoint)
+        if "ep" not in rd_parameters:
             return defines.Codes.BAD_REQUEST.number
-        if "lt" not in data_ep:
-            data_ep.update({'lt': '86400'})
+        if "lt" not in rd_parameters:
+            rd_parameters.update({'lt': 86400})
         DatabaseManager.lock.acquire()
         loc_path = "/rd/" + str(DatabaseManager.next_loc_path)
-        data_ep.update({'res': loc_path})
-#       add current time to data_ep
-        data_res = self.parse_core_link_format(resources, loc_path)
+        expiration = datetime.utcnow() + timedelta(seconds=rd_parameters['lt'])
+        rd_parameters.update({'loc_path': loc_path, 'expireAt': expiration})
+        data = self.parse_core_link_format(resources, rd_parameters)
         try:
-            collection = self.db.endpoints
-            collection.insert_one(data_ep)
             collection = self.db.resources
-            collection.insert_many(data_res)
+            collection.insert_one(data)
             DatabaseManager.next_loc_path += 1
         except (ConnectionFailure, OperationFailure):
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
@@ -104,7 +112,8 @@ class DatabaseManager(object):
             DatabaseManager.lock.release()
             return loc_path
 
-    def serialize_core_link_format(self, cursor, type_search):
+    @staticmethod
+    def serialize_core_link_format(cursor, type_search):
         """
         Serialize the results of a search() into a string in core link format
         :param cursor: the results of the search()
@@ -113,24 +122,43 @@ class DatabaseManager(object):
         """
         link = ""
         first_elem = True
+        previous_elem = ""
         for data in cursor:
-            data.pop('_id')
-#           remove time
             if not first_elem:
                 link += ","
             first_elem = False
             if type_search == "ep":
-                link += "<" + data.pop("res") + ">"
-            elif type_search == "res":
-                data.pop("res")
-                link += "<" + data.pop("uri") + ">"
+                loc_path = data.pop("loc_path")
+                if loc_path == previous_elem:
+                    link = link[:-1]
+                    continue
+                previous_elem = loc_path
+                data.pop('_id')
+                data.pop('res')
+                data['lt'] = int((data.pop('expireAt') - datetime.utcnow()).total_seconds())
+                link += "<" + loc_path + ">"
             else:
-                return link
-            keys = data.keys()
-            for attr in keys:
-                link += ";"
-                link += attr + '="' + data[attr] + '"'
+                if "con" in data:
+                    link += "<" + data["con"] + data["res"].pop("path") + ">"
+                else:
+                    link += "<" + data["res"].pop("path") + ">"
+                data = data['res']
+            for attr in data:
+                if type(data[attr]) is int:
+                    link += ";" + attr + '=' + str(data[attr])
+                else:
+                    link += ";" + attr + '="' + data[attr] + '"'
         return link
+
+    def split_queries(self, query):
+        query_rdp = {}
+        query_res = {}
+        for k in query:
+            if k in self.rd_parameters:
+                query_rdp[k] = query[k]
+            else:
+                query_res["res." + k] = query[k]
+        return query_rdp, query_res
 
     def search(self, uri_query, type_search):
         """
@@ -139,15 +167,14 @@ class DatabaseManager(object):
         :param type_search: it's equal to ep if the search is for endpoints or res if it is for resources
         :return: the string of results or an error code
         """
+        if (type_search != "ep") and (type_search != "res"):
+            return defines.Codes.BAD_REQUEST.number
         query = self.parse_uri_query(uri_query)
+        query_rdp, query_res = self.split_queries(query)
         try:
-            if type_search == "ep":
-                collection = self.db.endpoints
-            elif type_search == "res":
-                collection = self.db.resources
-            else:
-                return defines.Codes.SERVICE_UNAVAILABLE.number
-            result = collection.find(query)
+            query = [{"$match": query_rdp}, {"$unwind": "$res"}, {"$match": query_res}]
+            collection = self.db.resources
+            result = collection.aggregate(query)
             link = self.serialize_core_link_format(result, type_search)
             return link
         except (ConnectionFailure, OperationFailure):
@@ -165,10 +192,15 @@ class DatabaseManager(object):
         data = {}
         if len(uri_query) > 0:
             data = self.parse_uri_query(uri_query)
-#       data.update({'time': str(time())})
-        res = {'res': resource}
+        res = {'loc_path': resource}
         try:
-            collection = self.db.endpoints
+            collection = self.db.resources
+            if "lt" not in data:
+                lifetime = collection.find_one(res)["lt"]
+            else:
+                lifetime = data["lt"]
+            expiration = datetime.utcnow() + timedelta(seconds=lifetime)
+            data.update({"expireAt": expiration})
             result = collection.update_one(res, {"$set": data})
             if not result.matched_count:
                 return defines.Codes.NOT_FOUND.number
@@ -182,14 +214,12 @@ class DatabaseManager(object):
         :param resource: the registration resource to delete
         :return: the code of the response
         """
-        res = {'res': resource}
+        res = {'loc_path': resource}
         try:
-            collection = self.db.endpoints
+            collection = self.db.resources
             result = collection.delete_one(res)
             if not result.deleted_count:
                 return defines.Codes.NOT_FOUND.number
-            collection = self.db.resources
-            collection.delete_many(res)
             return defines.Codes.DELETED.number
         except (ConnectionFailure, OperationFailure):
             return defines.Codes.SERVICE_UNAVAILABLE.number
