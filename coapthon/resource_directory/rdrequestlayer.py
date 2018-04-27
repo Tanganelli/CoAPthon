@@ -4,7 +4,7 @@ from coapthon import defines
 __author__ = 'Giacomo Tanganelli'
 
 
-class RequestLayer(object):
+class RdRequestLayer(object):
     """
     Class to handle the Request/Response layer
     """
@@ -53,6 +53,10 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
+        elif (path == "/rd-lookup/res") or (path == "/rd-lookup/ep"):
+            path = "/rd-lookup"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
@@ -106,6 +110,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
@@ -124,6 +130,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        if path.startswith("/rd/"):
+            path = "/rd"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token

@@ -1,4 +1,4 @@
-from coapthon.server.coap import CoAP
+from coap import CoAP
 from registration import Registration
 from lookup import Lookup
 
