@@ -10,7 +10,6 @@ __author__ = 'Carmelo Aparo'
 
 
 class DatabaseManager(object):
-    next_loc_path = 1
     lock = Lock()
 
     def __init__(self, host="127.0.0.1", port=27017, database="resourceDirectory", user="RD", pwd="res-dir"):
@@ -100,16 +99,22 @@ class DatabaseManager(object):
         if "lt" not in rd_parameters:
             rd_parameters.update({'lt': 86400})
         DatabaseManager.lock.acquire()
-        loc_path = "/rd/" + str(DatabaseManager.next_loc_path)
+        f = open('coapthon/resource_directory/next_loc_path', 'r')
+        next_loc_path = f.read()
+        loc_path = "/rd/" + next_loc_path
+        f.close()
         rd_parameters.update({'res': loc_path, 'time': int(time())})
         data = self.parse_core_link_format(resources, rd_parameters)
         try:
             collection = self.db.resources
             collection.insert_one(data)
-            DatabaseManager.next_loc_path += 1
+            next_loc_path = int(next_loc_path) + 1
+            f = open('coapthon/resource_directory/next_loc_path', 'w')
+            f.write(str(next_loc_path))
         except (ConnectionFailure, OperationFailure):
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
+            f.close()
             DatabaseManager.lock.release()
             return loc_path
 
