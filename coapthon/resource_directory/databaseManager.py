@@ -228,3 +228,11 @@ class DatabaseManager(object):
             return defines.Codes.DELETED.number
         except (ConnectionFailure, OperationFailure):
             return defines.Codes.SERVICE_UNAVAILABLE.number
+
+    def delete_expired(self):
+        query = {"$expr": {"$lte": [{"$sum": ["$lt", "$time"]}, time()]}}
+        try:
+            collection = self.db.resources
+            collection.delete_many(query)
+        except (ConnectionFailure, OperationFailure):
+            return

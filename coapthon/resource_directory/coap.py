@@ -18,6 +18,7 @@ from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
 from coapthon.utils import Tree
 from coapthon.utils import create_logging
+from databaseManager import DatabaseManager
 
 
 __author__ = 'Giacomo Tanganelli'
@@ -66,6 +67,11 @@ class CoAP(object):
         self.server_address = server_address
         self.multicast = multicast
         self._cb_ignore_listen_exception = cb_ignore_listen_exception
+
+        self.rd_stopped = threading.Event()
+        self.rd_stopped.clear()
+        self.rd_lt_manager = threading.Thread(target=self.manage_lifetime)
+        self.rd_lt_manager.start()
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
@@ -197,6 +203,7 @@ class CoAP(object):
 
         """
         logger.info("Stop server")
+        self.rd_stopped.set()
         self.stopped.set()
         for event in self.to_be_stopped:
             event.set()
@@ -419,3 +426,9 @@ class CoAP(object):
                         self._start_retransmission(transaction, transaction.response)
 
                     self.send_datagram(transaction.response)
+
+    def manage_lifetime(self):
+        while not self.rd_stopped.isSet():
+            self.rd_stopped.wait(timeout=60)
+            db = DatabaseManager()
+            db.delete_expired()
