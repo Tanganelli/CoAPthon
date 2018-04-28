@@ -1,6 +1,5 @@
 import re
-from datetime import datetime
-from datetime import timedelta
+from time import time
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
@@ -25,7 +24,7 @@ class DatabaseManager(object):
         """
         connection = MongoClient(host, port, username=user, password=pwd, authSource=database, authMechanism='SCRAM-SHA-1')
         self.db = connection[database]
-        self.rd_parameters = ["ep", "lt", "d", "con", "et", "loc_path"]
+        self.rd_parameters = ["ep", "lt", "d", "con", "et", "res"]
 
     @staticmethod
     def parse_core_link_format(link_format, rd_parameters):
@@ -61,7 +60,7 @@ class DatabaseManager(object):
             tmp = {'path': path}
             tmp.update(dict_att)
             data.append(tmp)
-        rd_parameters.update({'res': data})
+        rd_parameters.update({'links': data})
         return rd_parameters
 
     @staticmethod
@@ -78,6 +77,9 @@ class DatabaseManager(object):
             if len(a) > 1:
                 if a[1].isdigit():
                     a[1] = int(a[1])
+                else:
+                    if "*" in a[1]:
+                        a[1] = {'$regex': a[1].replace('*', '')}
                 dict_att[a[0]] = a[1]
             else:
                 dict_att[a[0]] = a[0]
@@ -99,8 +101,7 @@ class DatabaseManager(object):
             rd_parameters.update({'lt': 86400})
         DatabaseManager.lock.acquire()
         loc_path = "/rd/" + str(DatabaseManager.next_loc_path)
-        expiration = datetime.utcnow() + timedelta(seconds=rd_parameters['lt'])
-        rd_parameters.update({'loc_path': loc_path, 'expireAt': expiration})
+        rd_parameters.update({'res': loc_path, 'time': int(time())})
         data = self.parse_core_link_format(resources, rd_parameters)
         try:
             collection = self.db.resources
@@ -128,26 +129,29 @@ class DatabaseManager(object):
                 link += ","
             first_elem = False
             if type_search == "ep":
-                loc_path = data.pop("loc_path")
+                loc_path = data.pop("res")
                 if loc_path == previous_elem:
                     link = link[:-1]
                     continue
                 previous_elem = loc_path
                 data.pop('_id')
-                data.pop('res')
-                data['lt'] = int((data.pop('expireAt') - datetime.utcnow()).total_seconds())
+                data.pop('links')
+                data['lt'] = data['lt'] - (time() - data['time'])
                 link += "<" + loc_path + ">"
             else:
                 if "con" in data:
-                    link += "<" + data["con"] + data["res"].pop("path") + ">"
+                    link += "<" + data["con"] + data["links"].pop("path") + ">"
                 else:
-                    link += "<" + data["res"].pop("path") + ">"
-                data = data['res']
+                    link += "<" + data["links"].pop("path") + ">"
+                data = data['links']
             for attr in data:
                 if type(data[attr]) is int:
                     link += ";" + attr + '=' + str(data[attr])
                 else:
-                    link += ";" + attr + '="' + data[attr] + '"'
+                    if attr != data[attr]:
+                        link += ";" + attr + '="' + data[attr] + '"'
+                    else:
+                        link += ";" + attr
         return link
 
     def split_queries(self, query):
@@ -162,7 +166,7 @@ class DatabaseManager(object):
             if k in self.rd_parameters:
                 query_rdp[k] = query[k]
             else:
-                query_res["res." + k] = query[k]
+                query_res["links." + k] = query[k]
         return query_rdp, query_res
 
     def search(self, uri_query, type_search):
@@ -177,7 +181,7 @@ class DatabaseManager(object):
         query = self.parse_uri_query(uri_query)
         query_rdp, query_res = self.split_queries(query)
         try:
-            query = [{"$match": query_rdp}, {"$unwind": "$res"}, {"$match": query_res}]
+            query = [{"$match": query_rdp}, {"$unwind": "$links"}, {"$match": query_res}]
             collection = self.db.resources
             result = collection.aggregate(query)
             link = self.serialize_core_link_format(result, type_search)
@@ -197,15 +201,10 @@ class DatabaseManager(object):
         data = {}
         if len(uri_query) > 0:
             data = self.parse_uri_query(uri_query)
-        res = {'loc_path': resource}
+        res = {'res': resource}
         try:
             collection = self.db.resources
-            if "lt" not in data:
-                lifetime = collection.find_one(res)["lt"]
-            else:
-                lifetime = data["lt"]
-            expiration = datetime.utcnow() + timedelta(seconds=lifetime)
-            data.update({"expireAt": expiration})
+            data.update({"time": int(time())})
             result = collection.update_one(res, {"$set": data})
             if not result.matched_count:
                 return defines.Codes.NOT_FOUND.number
@@ -219,7 +218,7 @@ class DatabaseManager(object):
         :param resource: the registration resource to delete
         :return: the code of the response
         """
-        res = {'loc_path': resource}
+        res = {'res': resource}
         try:
             collection = self.db.resources
             result = collection.delete_one(res)

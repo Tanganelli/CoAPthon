@@ -12,7 +12,7 @@ class Registration(Resource):
     def render_GET_advanced(self, request, response):
         if request.uri_path == 'rd':
             raise NotImplementedError
-        res = "loc_path=/" + request.uri_path
+        res = "res=/" + request.uri_path
         db = DatabaseManager()
         result = db.search(res, "res")
         if type(result) is int:
