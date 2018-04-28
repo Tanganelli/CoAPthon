@@ -429,6 +429,6 @@ class CoAP(object):
 
     def manage_lifetime(self):
         while not self.rd_stopped.isSet():
-            self.rd_stopped.wait(timeout=60)
+            self.rd_stopped.wait(timeout=1800)
             db = DatabaseManager()
             db.delete_expired()
