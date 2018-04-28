@@ -136,7 +136,7 @@ class DatabaseManager(object):
                 previous_elem = loc_path
                 data.pop('_id')
                 data.pop('links')
-                data['lt'] = data['lt'] - (time() - data['time'])
+                data['lt'] = data['lt'] - (int(time()) - data['time'])
                 link += "<" + loc_path + ">"
             else:
                 if "con" in data:
@@ -181,7 +181,8 @@ class DatabaseManager(object):
         query = self.parse_uri_query(uri_query)
         query_rdp, query_res = self.split_queries(query)
         try:
-            query = [{"$match": query_rdp}, {"$unwind": "$links"}, {"$match": query_res}]
+            query = [{"$match": {"$and": [query_rdp, {"$expr": {"$gt": [{"$sum": ["$lt", "$time"]}, int(time())]}}]}},
+                     {"$unwind": "$links"}, {"$match": query_res}]
             collection = self.db.resources
             result = collection.aggregate(query)
             link = self.serialize_core_link_format(result, type_search)
