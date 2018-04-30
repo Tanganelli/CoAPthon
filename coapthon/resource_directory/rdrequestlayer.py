@@ -55,8 +55,6 @@ class RdRequestLayer(object):
         path = str("/" + transaction.request.uri_path)
         if path.startswith("/rd/"):
             path = "/rd"
-        elif (path == "/rd-lookup/res") or (path == "/rd-lookup/ep"):
-            path = "/rd-lookup"
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token

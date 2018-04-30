@@ -7,7 +7,9 @@ __author__ = 'Carmelo Aparo'
 
 class Registration(Resource):
     def __init__(self, name="rd"):
-        super(Registration, self).__init__(name)
+        super(Registration, self).__init__(name, coap_server=None, visible=True, observable=False)
+        self.resource_type = "core.rd"
+        self.content_type = defines.Content_types["application/link-format"]
 
     def render_GET_advanced(self, request, response):
         if request.uri_path == 'rd':
