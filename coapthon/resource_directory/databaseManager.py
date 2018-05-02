@@ -10,6 +10,9 @@ __author__ = 'Carmelo Aparo'
 
 
 class DatabaseManager(object):
+    """
+    Implementation of a MongoDB database manager.
+    """
     lock = Lock()
 
     def __init__(self, host="127.0.0.1", port=27017, database="resourceDirectory", user="RD", pwd="res-dir"):
@@ -235,6 +238,9 @@ class DatabaseManager(object):
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def delete_expired(self):
+        """
+        Deletes all the expired resources.
+        """
         query = {"$expr": {"$lte": [{"$sum": ["$lt", "$time"]}, time()]}}
         try:
             collection = self.db.resources

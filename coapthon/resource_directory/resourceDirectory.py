@@ -8,7 +8,15 @@ __author__ = 'Carmelo Aparo'
 
 
 class ResourceDirectory(CoAP):
+    """
+    Implementation of the resource directory server.
+    """
     def __init__(self, host, port):
+        """
+        Initializes a resource directory and creates registration, lookup resources.
+        :param host: the host where the resource directory is.
+        :param port: the port where the resource directory listens.
+        """
         CoAP.__init__(self, (host, port))
         self.add_resource('rd/', Registration())
         self.add_resource('rd-lookup/', Lookup())
