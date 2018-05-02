@@ -12,6 +12,9 @@ class LookupRes(Resource):
         self.content_type = defines.Content_types["application/link-format"]
 
     def render_GET_advanced(self, request, response):
+        if (request.accept != defines.Content_types["application/link-format"]) and (request.accept is not None):
+            response.code = defines.Codes.NOT_ACCEPTABLE.number
+            return self, response
         db = DatabaseManager()
         result = db.search(request.uri_query, "res")
         if type(result) is int:
@@ -19,4 +22,5 @@ class LookupRes(Resource):
         else:
             response.code = defines.Codes.CONTENT.number
             response.payload = result
+            response.actual_content_type = defines.Content_types["application/link-format"]
         return self, response
