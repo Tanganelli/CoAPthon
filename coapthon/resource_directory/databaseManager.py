@@ -144,7 +144,7 @@ class DatabaseManager(object):
                 previous_elem = loc_path
                 data.pop('_id')
                 data.pop('links')
-                data['lt'] = data['lt'] - (int(time()) - data['time'])
+                data['lt'] = data['lt'] - (int(time()) - data.pop('time'))
                 link += "<" + loc_path + ">"
             else:
                 if "con" in data:
