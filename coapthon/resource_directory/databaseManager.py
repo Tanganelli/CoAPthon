@@ -101,7 +101,7 @@ class DatabaseManager(object):
             return defines.Codes.BAD_REQUEST.number
         if "lt" not in rd_parameters:
             rd_parameters.update({'lt': 86400})
-        elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] <= 0):
+        elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
         DatabaseManager.lock.acquire()
         f = open('coapthon/resource_directory/next_loc_path', 'r')
