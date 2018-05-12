@@ -134,7 +134,7 @@ class DatabaseManager(object):
             logger.error("Connection to the database cannot be made or is lost.")
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         except OperationFailure:
-            logger.debug("Operation failure. Maybe the endpoint name and the domain already exist.")
+            logger.debug("Insert operation failure. Maybe the endpoint name and the domain already exist.")
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
             return loc_path
@@ -217,7 +217,7 @@ class DatabaseManager(object):
             logger.error("Connection to the database cannot be made or is lost.")
             return defines.Codes.SERVICE_UNAVAILABLE.number
         except OperationFailure:
-            logger.error("Search operation failure with type of search " + type_search + "and uri query " + uri_query)
+            logger.error("Search operation failure with type of search " + type_search + " and uri query " + uri_query)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def update(self, resource, uri_query):
@@ -243,7 +243,7 @@ class DatabaseManager(object):
             logger.error("Connection to the database cannot be made or is lost.")
             return defines.Codes.SERVICE_UNAVAILABLE.number
         except OperationFailure:
-            logger.error("Update operation failure on resource " + resource + "and with uri query " + uri_query)
+            logger.error("Update operation failure on resource " + resource + " and with uri query " + uri_query)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def delete(self, resource):
