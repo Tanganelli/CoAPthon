@@ -432,6 +432,6 @@ class CoAP(object):
         Every 1800 seconds calls the function to delete the expired resources.
         """
         while not self.rd_stopped.isSet():
-            self.rd_stopped.wait(timeout=1800)
             db = DatabaseManager()
             db.delete_expired()
+            self.rd_stopped.wait(timeout=1800)

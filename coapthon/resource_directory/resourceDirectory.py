@@ -3,6 +3,8 @@ from registration import Registration
 from lookup import Lookup
 from lookupRes import LookupRes
 from lookupEp import LookupEp
+from subprocess import Popen
+from coapthon.defines import MONGO_CONFIG_FILE
 
 __author__ = 'Carmelo Aparo'
 
@@ -22,3 +24,7 @@ class ResourceDirectory(CoAP):
         self.add_resource('rd-lookup/', Lookup())
         self.add_resource('rd-lookup/res', LookupRes())
         self.add_resource('rd-lookup/ep', LookupEp())
+        self.mongodb = Popen(['mongod', '--config', MONGO_CONFIG_FILE, '--auth'])
+
+    def __del__(self):
+        self.mongodb.terminate()
