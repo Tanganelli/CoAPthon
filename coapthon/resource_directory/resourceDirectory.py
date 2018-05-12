@@ -27,4 +27,7 @@ class ResourceDirectory(CoAP):
         self.mongodb = Popen(['mongod', '--config', MONGO_CONFIG_FILE, '--auth'])
 
     def __del__(self):
+        """
+        Terminates mongod process.
+        """
         self.mongodb.terminate()
