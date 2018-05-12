@@ -26,6 +26,7 @@ class DatabaseManager(object):
         """
         connection = MongoClient(host, port, username=user, password=pwd, authSource=database, authMechanism='SCRAM-SHA-1')
         self.db = connection[database]
+        self.collection = self.db.resources
         self.rd_parameters = ["ep", "lt", "d", "con", "et", "res"]
 
     @staticmethod
@@ -111,8 +112,7 @@ class DatabaseManager(object):
         rd_parameters.update({'res': loc_path, 'time': int(time())})
         data = self.parse_core_link_format(resources, rd_parameters)
         try:
-            collection = self.db.resources
-            collection.insert_one(data)
+            self.collection.insert_one(data)
             next_loc_path = int(next_loc_path) + 1
             f = open('coapthon/resource_directory/next_loc_path', 'w')
             f.write(str(next_loc_path))
@@ -193,8 +193,7 @@ class DatabaseManager(object):
         try:
             query = [{"$match": {"$and": [query_rdp, {"$expr": {"$gt": [{"$sum": ["$lt", "$time"]}, int(time())]}}]}},
                      {"$unwind": "$links"}, {"$match": query_res}]
-            collection = self.db.resources
-            result = collection.aggregate(query)
+            result = self.collection.aggregate(query)
             link = self.serialize_core_link_format(result, type_search)
             return link
         except (ConnectionFailure, OperationFailure):
@@ -214,9 +213,8 @@ class DatabaseManager(object):
             data = self.parse_uri_query(uri_query)
         res = {'res': resource}
         try:
-            collection = self.db.resources
             data.update({"time": int(time())})
-            result = collection.update_one(res, {"$set": data})
+            result = self.collection.update_one(res, {"$set": data})
             if not result.matched_count:
                 return defines.Codes.NOT_FOUND.number
             return defines.Codes.CHANGED.number
@@ -231,8 +229,7 @@ class DatabaseManager(object):
         """
         res = {'res': resource}
         try:
-            collection = self.db.resources
-            result = collection.delete_one(res)
+            result = self.collection.delete_one(res)
             if not result.deleted_count:
                 return defines.Codes.NOT_FOUND.number
             return defines.Codes.DELETED.number
@@ -245,7 +242,6 @@ class DatabaseManager(object):
         """
         query = {"$expr": {"$lte": [{"$sum": ["$lt", "$time"]}, time()]}}
         try:
-            collection = self.db.resources
-            collection.delete_many(query)
+            self.collection.delete_many(query)
         except (ConnectionFailure, OperationFailure):
             return
