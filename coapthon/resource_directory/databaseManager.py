@@ -1,9 +1,12 @@
 import re
+import logging
 from time import time
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
 from coapthon import defines
+
+logger = logging.getLogger(__name__)
 
 __author__ = 'Carmelo Aparo'
 
@@ -100,6 +103,7 @@ class DatabaseManager(object):
             res = result.next()["res_id"]
             next_loc_path = int(res) + 1
         except StopIteration:
+            logger.debug("Returned empty cursor. First document inserted.")
             next_loc_path = 1
         finally:
             return next_loc_path
@@ -126,7 +130,11 @@ class DatabaseManager(object):
             rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
             data = self.parse_core_link_format(resources, rd_parameters)
             self.collection.insert_one(data)
-        except (ConnectionFailure, OperationFailure):
+        except ConnectionFailure:
+            logger.error("Connection to the database cannot be made or is lost.")
+            loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
+        except OperationFailure:
+            logger.debug("Operation failure. Maybe the endpoint name and the domain already exist.")
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
             return loc_path
@@ -205,7 +213,11 @@ class DatabaseManager(object):
             result = self.collection.aggregate(query)
             link = self.serialize_core_link_format(result, type_search)
             return link
-        except (ConnectionFailure, OperationFailure):
+        except ConnectionFailure:
+            logger.error("Connection to the database cannot be made or is lost.")
+            return defines.Codes.SERVICE_UNAVAILABLE.number
+        except OperationFailure:
+            logger.error("Search operation failure with type of search " + type_search + "and uri query " + uri_query)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def update(self, resource, uri_query):
@@ -227,7 +239,11 @@ class DatabaseManager(object):
             if not result.matched_count:
                 return defines.Codes.NOT_FOUND.number
             return defines.Codes.CHANGED.number
-        except (ConnectionFailure, OperationFailure):
+        except ConnectionFailure:
+            logger.error("Connection to the database cannot be made or is lost.")
+            return defines.Codes.SERVICE_UNAVAILABLE.number
+        except OperationFailure:
+            logger.error("Update operation failure on resource " + resource + "and with uri query " + uri_query)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def delete(self, resource):
@@ -242,7 +258,11 @@ class DatabaseManager(object):
             if not result.deleted_count:
                 return defines.Codes.NOT_FOUND.number
             return defines.Codes.DELETED.number
-        except (ConnectionFailure, OperationFailure):
+        except ConnectionFailure:
+            logger.error("Connection to the database cannot be made or is lost.")
+            return defines.Codes.SERVICE_UNAVAILABLE.number
+        except OperationFailure:
+            logger.error("Delete operation failure on resource " + resource)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def delete_expired(self):
@@ -252,5 +272,9 @@ class DatabaseManager(object):
         query = {"$expr": {"$lte": [{"$sum": ["$lt", "$time"]}, time()]}}
         try:
             self.collection.delete_many(query)
-        except (ConnectionFailure, OperationFailure):
+        except ConnectionFailure:
+            logger.error("Connection to the database cannot be made or is lost.")
+            return
+        except OperationFailure:
+            logger.error("Delete expired resources operation failure.")
             return
