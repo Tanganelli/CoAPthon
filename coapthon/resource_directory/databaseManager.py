@@ -88,6 +88,17 @@ class DatabaseManager(object):
                 dict_att[a[0]] = a[0]
         return dict_att
 
+    def gen_next_loc_path(self):
+        query = [{"$sort": {"res_id": -1}}, {"$limit": 1}]
+        result = self.collection.aggregate(query)
+        try:
+            res = result.next()["res_id"]
+            next_loc_path = int(res) + 1
+        except StopIteration:
+            next_loc_path = 1
+        finally:
+            return next_loc_path
+
     def insert(self, endpoint, resources):
         """
         Insert an endpoint and its resources.
@@ -104,23 +115,15 @@ class DatabaseManager(object):
             rd_parameters.update({'lt': 86400})
         elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
-        DatabaseManager.lock.acquire()
-        f = open('coapthon/resource_directory/next_loc_path', 'r')
-        next_loc_path = f.read()
-        loc_path = "/rd/" + next_loc_path
-        f.close()
-        rd_parameters.update({'res': loc_path, 'time': int(time())})
+        next_loc_path = self.gen_next_loc_path()
+        loc_path = "/rd/" + str(next_loc_path)
+        rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
         data = self.parse_core_link_format(resources, rd_parameters)
         try:
             self.collection.insert_one(data)
-            next_loc_path = int(next_loc_path) + 1
-            f = open('coapthon/resource_directory/next_loc_path', 'w')
-            f.write(str(next_loc_path))
         except (ConnectionFailure, OperationFailure):
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
-            f.close()
-            DatabaseManager.lock.release()
             return loc_path
 
     @staticmethod
@@ -145,6 +148,7 @@ class DatabaseManager(object):
                     continue
                 previous_elem = loc_path
                 data.pop('_id')
+                data.pop('res_id')
                 data.pop('links')
                 data['lt'] = data['lt'] - (int(time()) - data.pop('time'))
                 link += "<" + loc_path + ">"
