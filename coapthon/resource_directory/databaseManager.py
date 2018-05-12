@@ -76,6 +76,8 @@ class DatabaseManager(object):
         for att in attributes:
             a = att.split("=")
             if len(a) > 1:
+                if a[0] == "res":
+                    a[1] = a[1].strip("/")
                 if a[1].isdigit():
                     a[1] = int(a[1])
                 else:
@@ -119,7 +121,7 @@ class DatabaseManager(object):
             return defines.Codes.BAD_REQUEST.number
         try:
             next_loc_path = self.gen_next_loc_path()
-            loc_path = "/rd/" + str(next_loc_path)
+            loc_path = "rd/" + str(next_loc_path)
             rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
             data = self.parse_core_link_format(resources, rd_parameters)
             self.collection.insert_one(data)
@@ -144,7 +146,7 @@ class DatabaseManager(object):
                 link += ","
             first_elem = False
             if type_search == "ep":
-                loc_path = data.pop("res")
+                loc_path = "/" + data.pop("res")
                 if loc_path == previous_elem:
                     link = link[:-1]
                     continue

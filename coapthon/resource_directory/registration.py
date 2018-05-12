@@ -30,7 +30,7 @@ class Registration(Resource):
         if (request.accept != defines.Content_types["application/link-format"]) and (request.accept is not None):
             response.code = defines.Codes.NOT_ACCEPTABLE.number
             return self, response
-        res = "res=/" + request.uri_path
+        res = "res=" + request.uri_path
         db = DatabaseManager()
         result = db.search(res, "res")
         if type(result) is int:
@@ -63,7 +63,7 @@ class Registration(Resource):
                 response.location_path = result
                 response.code = defines.Codes.CREATED.number
         else:
-            response.code = db.update("/" + request.uri_path, request.uri_query)
+            response.code = db.update(request.uri_path, request.uri_query)
         return self, response
 
     def render_DELETE_advanced(self, request, response):
@@ -76,5 +76,5 @@ class Registration(Resource):
         if request.uri_path == 'rd':
             raise NotImplementedError
         db = DatabaseManager()
-        response.code = db.delete("/" + request.uri_path)
+        response.code = db.delete(request.uri_path)
         return False, response
