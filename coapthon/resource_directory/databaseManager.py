@@ -13,7 +13,6 @@ class DatabaseManager(object):
     """
     Implementation of a MongoDB database manager.
     """
-    lock = Lock()
 
     def __init__(self, host="127.0.0.1", port=27017, database="resourceDirectory", user="RD", pwd="res-dir"):
         """
@@ -89,6 +88,10 @@ class DatabaseManager(object):
         return dict_att
 
     def gen_next_loc_path(self):
+        """
+        Generate the next location path for resource registration.
+        :return: the next location path
+        """
         query = [{"$sort": {"res_id": -1}}, {"$limit": 1}]
         result = self.collection.aggregate(query)
         try:
@@ -115,11 +118,11 @@ class DatabaseManager(object):
             rd_parameters.update({'lt': 86400})
         elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
-        next_loc_path = self.gen_next_loc_path()
-        loc_path = "/rd/" + str(next_loc_path)
-        rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
-        data = self.parse_core_link_format(resources, rd_parameters)
         try:
+            next_loc_path = self.gen_next_loc_path()
+            loc_path = "/rd/" + str(next_loc_path)
+            rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
+            data = self.parse_core_link_format(resources, rd_parameters)
             self.collection.insert_one(data)
         except (ConnectionFailure, OperationFailure):
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
