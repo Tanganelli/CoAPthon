@@ -3,7 +3,6 @@ from time import time
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
-from threading import Lock
 from coapthon import defines
 
 __author__ = 'Carmelo Aparo'
