@@ -16,7 +16,7 @@ class Registration(Resource):
         """
         super(Registration, self).__init__(name, coap_server=None, visible=True, observable=False)
         self.resource_type = "core.rd"
-        self.content_type = defines.Content_types["application/link-format"]
+        self.content_type = "application/link-format"
 
     def render_GET_advanced(self, request, response):
         """

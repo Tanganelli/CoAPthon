@@ -16,7 +16,7 @@ class LookupRes(Resource):
         """
         super(LookupRes, self).__init__(name, coap_server=None, visible=True, observable=False)
         self.resource_type = "core.rd-lookup-res"
-        self.content_type = defines.Content_types["application/link-format"]
+        self.content_type = "application/link-format"
 
     def render_GET_advanced(self, request, response):
         """
