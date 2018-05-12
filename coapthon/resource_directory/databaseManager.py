@@ -13,7 +13,8 @@ class DatabaseManager(object):
     Implementation of a MongoDB database manager.
     """
 
-    def __init__(self, host="127.0.0.1", port=27017, database="resourceDirectory", user="RD", pwd="res-dir"):
+    def __init__(self, host=defines.MONGO_HOST, port=defines.MONGO_PORT, database=defines.MONGO_DATABASE,
+                 user=defines.MONGO_USER, pwd=defines.MONGO_PWD):
         """
         Establish a connection to the database.
         :param host: address of the database
