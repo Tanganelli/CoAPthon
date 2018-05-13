@@ -26,7 +26,8 @@ class DatabaseManager(object):
         :param user: user for authentication to the database
         :param pwd: password for authentication to the database
         """
-        connection = MongoClient(host, port, username=user, password=pwd, authSource=database, authMechanism='SCRAM-SHA-1')
+        connection = MongoClient(host, port, username=user, password=pwd, authSource=database,
+                                 authMechanism='SCRAM-SHA-1')
         self.db = connection[database]
         self.collection = self.db.resources
         self.rd_parameters = ["ep", "lt", "d", "con", "et", "res"]
