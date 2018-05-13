@@ -122,7 +122,7 @@ Then you need to configure Resource Directory database. [Start mongod process](h
 > db.resources.createIndex( { "ep": 1, "d": 1 }, { unique: true } )
 ```
 
-You can change user, password and database name in the commands above. If you change some parameter, then you must change You will find all mongoDB parameters in coapthon/defines.py file.
+You can change user, password and database name in the commands above. If you change some parameters, then you must change them also in mongoDB parameters in coapthon/defines.py file where you will find also the path for your mongoDB configuration file.
 
 User Guide
 ========
