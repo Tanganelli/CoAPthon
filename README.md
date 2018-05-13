@@ -114,7 +114,7 @@ Install instructions for CoRE Resource Directory
 
 To use Resource Directory functionalities, you need to install mongoDB database [following the official documentation](https://docs.mongodb.com/manual/installation/).
 
-Then you need to configure Resource Directory database. [Start mongod process](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and [open a mongo shell](https://docs.mongodb.com/manual/mongo/). In mongo shell use these commands (you can change user and password):
+Then you need to configure Resource Directory database. [Start mongod process](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and [open a mongo shell](https://docs.mongodb.com/manual/mongo/). In mongo shell use these commands:
 
 ```sh
 > use resourceDirectory
@@ -122,7 +122,7 @@ Then you need to configure Resource Directory database. [Start mongod process](h
 > db.resources.createIndex( { "ep": 1, "d": 1 }, { unique: true } )
 ```
 
-You will find all mongoDB parameters in coapthon/defines.py file.
+You can change user, password and database name in the commands above. If you change some parameter, then you must change You will find all mongoDB parameters in coapthon/defines.py file.
 
 User Guide
 ========
