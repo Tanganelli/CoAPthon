@@ -1,5 +1,7 @@
 from coapthon.client.helperclient import HelperClient
 
+__author__ = 'Carmelo Aparo'
+
 
 def main():
     host = "127.0.0.1"
