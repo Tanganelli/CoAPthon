@@ -1,5 +1,6 @@
 from coapthon.client.helperclient import HelperClient
 
+
 def main():
     host = "127.0.0.1"
     port = 5683
@@ -19,44 +20,31 @@ def main():
     # print response.pretty_print()
 
     # update test
-    #path = "/rd/3?et=ciao"
-    #response = client.post(path, '')
-    #print response.pretty_print()
+    # path = "/rd/3"
+    # response = client.post(path, '')
+    # print response.pretty_print()
 
     # res lookup test
-    #path = 'rd-lookup/res?ep=node1&res=/rd/1'
-    #response = client.get(path)
-    #print response.pretty_print()
+    # path = 'rd-lookup/res?ep=node1'
+    # response = client.get(path)
+    # print response.pretty_print()
 
     # read endpoint links
-    path = 'rd/1'
-    response = client.get(path)
-    print response.pretty_print()
+    # path = 'rd/1'
+    # response = client.get(path)
+    # print response.pretty_print()
 
     # ep lookup test
-    #path = 'rd-lookup/ep?res=*'
-    #response = client.get(path)
-    #print response.pretty_print()
+    # path = 'rd-lookup/ep?res=*'
+    # response = client.get(path)
+    # print response.pretty_print()
 
     # delete test
-    #path = '/rd/5'
-    #response = client.delete(path)
-    #print response.pretty_print()
-
-    # GET request
-    #response = client.get(path)
-    #print response.pretty_print()
-
-    # POST request
-    #response = client.post(path, '')
-    #print response.pretty_print()
-
-    # DELETE request
-    #response = client.delete(path)
-    #print response.pretty_print()
+    # path = '/rd/5'
+    # response = client.delete(path)
+    # print response.pretty_print()
 
     client.stop()
-
 
 
 if __name__ == '__main__':
