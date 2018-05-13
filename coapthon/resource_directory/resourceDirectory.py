@@ -26,8 +26,9 @@ class ResourceDirectory(CoAP):
         self.add_resource('rd-lookup/ep', LookupEp())
         self.mongodb = Popen(['mongod', '--config', MONGO_CONFIG_FILE, '--auth'])
 
-    def __del__(self):
+    def close(self):
         """
-        Terminates mongod process.
+        Stop the server and terminates mongod process.
         """
+        CoAP.close(self)
         self.mongodb.terminate()
