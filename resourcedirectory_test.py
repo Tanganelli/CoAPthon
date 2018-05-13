@@ -519,6 +519,38 @@ class ResourceDirectoryTest(unittest.TestCase):
         self.current_mid += 1
         self._test_check([(req, expected)])
 
+    def test_wildcard(self):
+        print("Use wildcard * to find resources")
+        client = HelperClient(self.server_address)
+        path = "rd?ep=node1&con=coap://local-proxy-old.example.com:5683"
+        ct = {'content_type': defines.Content_types["application/link-format"]}
+        payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
+                  '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
+        client.post(path, payload, None, None, **ct)
+        client.stop()
+
+        path = "rd-lookup/res?rt=temperature*"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.content_type = 0
+        req.payload = None
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.content_type = defines.Content_types["application/link-format"]
+        expected.payload = '<coap://local-proxy-old.example.com:5683/sensors/temp>;ct=41;rt="temperature-c";' \
+                           'if="sensor";anchor="coap://spurious.example.com:5683"'
+
+        self.current_mid += 1
+        self._test_check([(req, expected)])
+
 
 if __name__ == '__main__':
     unittest.main()
