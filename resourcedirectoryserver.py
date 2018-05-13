@@ -2,7 +2,7 @@ from coapthon.resource_directory.resourceDirectory import ResourceDirectory
 
 
 def main():
-    server = ResourceDirectory("0.0.0.0", 5683)
+    server = ResourceDirectory("127.0.0.1", 5683)
     try:
         server.listen(10)
     except KeyboardInterrupt:
