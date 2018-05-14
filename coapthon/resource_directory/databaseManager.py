@@ -206,6 +206,8 @@ class DatabaseManager(object):
         """
         if (type_search != "ep") and (type_search != "res"):
             return defines.Codes.BAD_REQUEST.number
+        if len(uri_query) <= 0:
+            uri_query = "ep=*"
         query = self.parse_uri_query(uri_query)
         query_rdp, query_res = self.split_queries(query)
         try:
