@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
 from coapthon import defines
+from threading import RLock
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class DatabaseManager(object):
     """
     Implementation of a MongoDB database manager.
     """
+    lock = RLock()
 
     def __init__(self, host=defines.MONGO_HOST, port=defines.MONGO_PORT, database=defines.MONGO_DATABASE,
                  user=defines.MONGO_USER, pwd=defines.MONGO_PWD):
@@ -125,6 +127,7 @@ class DatabaseManager(object):
             rd_parameters.update({'lt': 86400})
         elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
+        DatabaseManager.lock.acquire()
         try:
             next_loc_path = self.gen_next_loc_path()
             loc_path = "rd/" + str(next_loc_path)
@@ -138,6 +141,7 @@ class DatabaseManager(object):
             logger.debug("Insert operation failure. Maybe the endpoint name and the domain already exist.")
             loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
         finally:
+            DatabaseManager.lock.release()
             return loc_path
 
     @staticmethod
