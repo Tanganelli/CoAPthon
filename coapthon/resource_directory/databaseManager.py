@@ -102,6 +102,7 @@ class DatabaseManager(object):
         """
         query = [{"$sort": {"res_id": -1}}, {"$limit": 1}]
         result = self.collection.aggregate(query)
+        next_loc_path = 1
         try:
             res = result.next()["res_id"]
             next_loc_path = int(res) + 1
@@ -127,22 +128,22 @@ class DatabaseManager(object):
             rd_parameters.update({'lt': 86400})
         elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
-        DatabaseManager.lock.acquire()
-        try:
-            next_loc_path = self.gen_next_loc_path()
-            loc_path = "rd/" + str(next_loc_path)
-            rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
-            data = self.parse_core_link_format(resources, rd_parameters)
-            self.collection.insert_one(data)
-        except ConnectionFailure:
-            logger.error("Connection to the database cannot be made or is lost.")
-            loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
-        except OperationFailure:
-            logger.debug("Insert operation failure. Maybe the endpoint name and the domain already exist.")
-            loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
-        finally:
-            DatabaseManager.lock.release()
-            return loc_path
+        with DatabaseManager.lock:
+            loc_path = "rd/1"
+            try:
+                next_loc_path = self.gen_next_loc_path()
+                loc_path = "rd/" + str(next_loc_path)
+                rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
+                data = self.parse_core_link_format(resources, rd_parameters)
+                self.collection.insert_one(data)
+            except ConnectionFailure:
+                logger.error("Connection to the database cannot be made or is lost.")
+                loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
+            except OperationFailure:
+                logger.debug("Insert operation failure. Maybe the endpoint name and the domain already exist.")
+                loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
+            finally:
+                return loc_path
 
     @staticmethod
     def serialize_core_link_format(cursor, type_search):
