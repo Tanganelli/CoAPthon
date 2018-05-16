@@ -20,7 +20,7 @@ class ResourceDirectoryTest(unittest.TestCase):
     def setUp(self):
         self.server_address = ("127.0.0.1", 5683)
         self.current_mid = random.randint(1, 1000)
-        self.server = ResourceDirectory("127.0.0.1", 5683)
+        self.server = ResourceDirectory("127.0.0.1", 5683, start_mongo=False)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
         self.delete_database()

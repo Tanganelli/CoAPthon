@@ -13,7 +13,7 @@ class ResourceDirectory(CoAP):
     """
     Implementation of the resource directory server.
     """
-    def __init__(self, host, port):
+    def __init__(self, host, port, start_mongo=True):
         """
         Initializes a resource directory and creates registration, lookup resources.
         :param host: the host where the resource directory is.
@@ -24,11 +24,14 @@ class ResourceDirectory(CoAP):
         self.add_resource('rd-lookup/', Lookup())
         self.add_resource('rd-lookup/res', LookupRes())
         self.add_resource('rd-lookup/ep', LookupEp())
-        self.mongodb = Popen(['mongod', '--config', MONGO_CONFIG_FILE, '--auth'])
+        self.start_mongo = start_mongo
+        if self.start_mongo:
+            self.mongodb = Popen(['mongod', '--config', MONGO_CONFIG_FILE, '--auth'])
 
     def close(self):
         """
         Stop the server and terminates mongod process.
         """
         CoAP.close(self)
-        self.mongodb.terminate()
+        if self.start_mongo:
+            self.mongodb.terminate()
