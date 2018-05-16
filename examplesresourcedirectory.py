@@ -1,4 +1,5 @@
 from coapthon.client.helperclient import HelperClient
+from coapthon import defines
 
 __author__ = 'Carmelo Aparo'
 
@@ -9,42 +10,43 @@ def main():
     client = HelperClient(server=(host, port))
 
     # Test discover
-    # path = "/.well-known/core"
-    # response = client.get(path)
-    # print response.pretty_print()
+    path = "/.well-known/core"
+    response = client.get(path)
+    print response.pretty_print()
 
-    # registration test
-    # path = "rd?ep=node1"
-    # ct = {'content_type': 40}
-    # payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
-    #          '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
-    # response = client.post(path, payload, None, None, **ct)
-    # print response.pretty_print()
+    # Create a registration resource
+    path = "rd?ep=node1&con=coap://local-proxy-old.example.com:5683&et=oic.d.sensor"
+    ct = {'content_type': defines.Content_types["application/link-format"]}
+    payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
+              '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
+    response = client.post(path, payload, None, None, **ct)
+    location_path = response.location_path
+    print response.pretty_print()
 
-    # update test
-    # path = "/rd/3"
-    # response = client.post(path, '')
-    # print response.pretty_print()
+    # Resource lookup
+    path = 'rd-lookup/res?if=sensor'
+    response = client.get(path)
+    print response.pretty_print()
 
-    # res lookup test
-    # path = 'rd-lookup/res?ep=node1'
-    # response = client.get(path)
-    # print response.pretty_print()
+    # Update a registration resource
+    path = location_path + "?con=coaps://new.example.com:5684"
+    response = client.post(path, '')
+    print response.pretty_print()
 
-    # read endpoint links
-    # path = 'rd/1'
-    # response = client.get(path)
-    # print response.pretty_print()
+    # Read endpoint links
+    path = location_path
+    response = client.get(path)
+    print response.pretty_print()
 
-    # ep lookup test
-    # path = 'rd-lookup/ep?res=*'
-    # response = client.get(path)
-    # print response.pretty_print()
+    # Endpoint lookup
+    path = 'rd-lookup/ep?et=oic.d.sensor'
+    response = client.get(path)
+    print response.pretty_print()
 
-    # delete test
-    # path = '/rd/5'
-    # response = client.delete(path)
-    # print response.pretty_print()
+    # Delete a registration resource
+    path = location_path
+    response = client.delete(path)
+    print response.pretty_print()
 
     client.stop()
 
