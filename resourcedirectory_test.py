@@ -96,7 +96,12 @@ class ResourceDirectoryTest(unittest.TestCase):
                 if expected.payload is not None:
                     expected_list = self.parse_core_link_format(expected.payload)
                     received_list = self.parse_core_link_format(received_message.payload)
-                    all_list = zip(received_list, expected_list)
+                    all_list = []
+                    for expected_elem in expected_list:
+                        for received_elem in received_list:
+                            if expected_elem['path'] == received_elem['path']:
+                                all_list_elem = (expected_elem, received_elem)
+                                all_list.append(all_list_elem)
                     for data in all_list:
                         for k in data[1]:
                             self.assertIn(k, data[0])
@@ -519,7 +524,7 @@ class ResourceDirectoryTest(unittest.TestCase):
         self.current_mid += 1
         self._test_check([(req, expected)])
 
-    def test_wildcard(self):
+    def test_wildcard_res(self):
         print("Use wildcard * to find resources")
         client = HelperClient(self.server_address)
         path = "rd?ep=node1&con=coap://local-proxy-old.example.com:5683"
@@ -527,9 +532,12 @@ class ResourceDirectoryTest(unittest.TestCase):
         payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
                   '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
         client.post(path, payload, None, None, **ct)
+        path = "rd?ep=node2&con=coap://[2001:db8:3::123]:61616"
+        payload = '</temp>;rt="temperature";anchor="coap://[2001:db8:3::123]:61616"'
+        client.post(path, payload, None, None, **ct)
         client.stop()
 
-        path = "rd-lookup/res?rt=temperature*"
+        path = "rd-lookup/res?rt=temp*"
         req = Request()
         req.code = defines.Codes.GET.number
         req.uri_path = path
@@ -546,7 +554,47 @@ class ResourceDirectoryTest(unittest.TestCase):
         expected.token = None
         expected.content_type = defines.Content_types["application/link-format"]
         expected.payload = '<coap://local-proxy-old.example.com:5683/sensors/temp>;ct=41;rt="temperature-c";' \
-                           'if="sensor";anchor="coap://spurious.example.com:5683"'
+                           'if="sensor";anchor="coap://spurious.example.com:5683",' \
+                           '<coap://[2001:db8:3::123]:61616/temp>;rt="temperature";' \
+                           'anchor="coap://[2001:db8:3::123]:61616"'
+
+        self.current_mid += 1
+        self._test_check([(req, expected)])
+
+    def test_wildcard_ep(self):
+        print("Use wildcard * to find endpoints")
+        client = HelperClient(self.server_address)
+        path = "rd?ep=node1&con=coap://local-proxy-old.example.com:5683"
+        ct = {'content_type': defines.Content_types["application/link-format"]}
+        payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
+                  '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
+        response = client.post(path, payload, None, None, **ct)
+        loc_path1 = response.location_path
+        path = "rd?ep=node2&con=coap://[2001:db8:3::123]:61616"
+        payload = '</temp>;rt="temperature";anchor="coap://[2001:db8:3::123]:61616"'
+        response = client.post(path, payload, None, None, **ct)
+        loc_path2 = response.location_path
+        client.stop()
+
+        path = "rd-lookup/ep?rt=temp*"
+        req = Request()
+        req.code = defines.Codes.GET.number
+        req.uri_path = path
+        req.type = defines.Types["CON"]
+        req._mid = self.current_mid
+        req.destination = self.server_address
+        req.content_type = 0
+        req.payload = None
+
+        expected = Response()
+        expected.type = defines.Types["ACK"]
+        expected._mid = self.current_mid
+        expected.code = defines.Codes.CONTENT.number
+        expected.token = None
+        expected.content_type = defines.Content_types["application/link-format"]
+        expected.payload = '</' + loc_path1 + '>;con="coap://local-proxy-old.example.com:5683";ep="node1";lt=500,' \
+                                              '</' + loc_path2 + '>;con="coap://[2001:db8:3::123]:61616";' \
+                                                                 'ep="node2";lt=500'
 
         self.current_mid += 1
         self._test_check([(req, expected)])
