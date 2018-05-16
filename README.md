@@ -109,6 +109,21 @@ Then you need to modify the setup.py and comment the line <strong>conditionalExt
 # python setup.py build_py build_scripts install --skip-build
 ```
 
+Install instructions for CoRE Resource Directory
+======
+
+To use Resource Directory functionalities, you need to install mongoDB database [following the official documentation](https://docs.mongodb.com/manual/installation/).
+
+Then you need to configure Resource Directory database. [Start mongod process](https://docs.mongodb.com/manual/tutorial/manage-mongodb-processes/) and [open a mongo shell](https://docs.mongodb.com/manual/mongo/). In mongo shell use these commands:
+
+```sh
+> use resourceDirectory
+> db.createUser( {user: "RD",pwd: "res-dir",roles: [ { role: "readWrite", db: "resourceDirectory" } ] } )
+> db.resources.createIndex( { "ep": 1, "d": 1 }, { unique: true } )
+```
+
+You can change user, password and database name in the commands above. If you change some parameters, then you must change them also in mongoDB parameters in coapthon/defines.py file where you will find also the path for your mongoDB configuration file. The default configuration file is /usr/local/etc/mongod.conf.
+
 User Guide
 ========
 
@@ -304,6 +319,81 @@ client = HelperClient(server=(host, port))
 response = client.get(path)
 print response.pretty_print()
 client.stop()
+```
+
+CoRE Resource Directory
+------------
+
+### Resource Directory server
+
+You can start a CoRE Resource Directory server using ResourceDirectory class as follows:
+
+```Python
+from coapthon.resource_directory.resourceDirectory import ResourceDirectory
+
+
+def main():
+    server = ResourceDirectory("127.0.0.1", 5683)
+    try:
+        server.listen(10)
+    except KeyboardInterrupt:
+        print "Server Shutdown"
+        server.close()
+        print "Exiting..."
+
+
+if __name__ == '__main__':
+    main()
+```
+
+### Resource Directory client examples
+
+```Python
+def main():
+    host = "127.0.0.1"
+    port = 5683
+    client = HelperClient(server=(host, port))
+
+    # Test discover
+    path = "/.well-known/core"
+    response = client.get(path)
+    print response.pretty_print()
+
+    # Create a registration resource
+    path = "rd?ep=node1&con=coap://local-proxy-old.example.com:5683&et=oic.d.sensor"
+    ct = {'content_type': defines.Content_types["application/link-format"]}
+    payload = '</sensors/temp>;ct=41;rt="temperature-c";if="sensor";anchor="coap://spurious.example.com:5683",' \
+              '</sensors/light>;ct=41;rt="light-lux";if="sensor"'
+    response = client.post(path, payload, None, None, **ct)
+    location_path = response.location_path
+    print response.pretty_print()
+
+    # Resource lookup
+    path = 'rd-lookup/res?if=sensor'
+    response = client.get(path)
+    print response.pretty_print()
+
+    # Update a registration resource
+    path = location_path + "?con=coaps://new.example.com:5684"
+    response = client.post(path, '')
+    print response.pretty_print()
+
+    # Read endpoint links
+    path = location_path
+    response = client.get(path)
+    print response.pretty_print()
+
+    # Endpoint lookup
+    path = 'rd-lookup/ep?et=oic.d.sensor'
+    response = client.get(path)
+    print response.pretty_print()
+
+    # Delete a registration resource
+    path = location_path
+    response = client.delete(path)
+    print response.pretty_print()
+
+    client.stop()
 ```
 
 Build the documentation

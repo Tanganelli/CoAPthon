@@ -36,6 +36,20 @@ MAX_NON_NOTIFICATIONS = 10
 
 BLOCKWISE_SIZE = 1024
 
+""" MongoDB parameters """
+
+MONGO_HOST = "127.0.0.1"
+
+MONGO_PORT = 27017
+
+MONGO_DATABASE = "resourceDirectory"
+
+MONGO_USER = "RD"
+
+MONGO_PWD = "res-dir"
+
+MONGO_CONFIG_FILE = "/usr/local/etc/mongod.conf"
+
 """  Message Format """
 
 # number of bits used for the encoding of the CoAP version field.
