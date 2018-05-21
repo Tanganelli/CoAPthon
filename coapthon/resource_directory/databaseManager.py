@@ -46,6 +46,8 @@ class DatabaseManager(object):
         while len(link_format) > 0:
             pattern = "<([^>]*)>;"
             result = re.match(pattern, link_format)
+            if result is None:
+                return None
             path = result.group(1)
             link_format = link_format[result.end(1) + 2:]
             pattern = "([^<,])*"
@@ -102,7 +104,7 @@ class DatabaseManager(object):
         """
         query = [{"$sort": {"res_id": -1}}, {"$limit": 1}]
         result = self.collection.aggregate(query)
-        next_loc_path = 1
+        next_loc_path = 0
         try:
             res = result.next()["res_id"]
             next_loc_path = int(res) + 1
@@ -129,13 +131,16 @@ class DatabaseManager(object):
         elif (type(rd_parameters["lt"]) is not int) or (rd_parameters["lt"] < 60) or (rd_parameters["lt"] > 4294967295):
             return defines.Codes.BAD_REQUEST.number
         with DatabaseManager.lock:
-            loc_path = "rd/1"
+            loc_path = "rd/0"
             try:
                 next_loc_path = self.gen_next_loc_path()
                 loc_path = "rd/" + str(next_loc_path)
                 rd_parameters.update({'res': loc_path, 'time': int(time()), 'res_id': next_loc_path})
                 data = self.parse_core_link_format(resources, rd_parameters)
-                self.collection.insert_one(data)
+                if data is None:
+                    loc_path = defines.Codes.BAD_REQUEST.number
+                else:
+                    self.collection.insert_one(data)
             except ConnectionFailure:
                 logger.error("Connection to the database cannot be made or is lost.")
                 loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
