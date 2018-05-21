@@ -45,7 +45,7 @@ class ResourceDirectoryTest(unittest.TestCase):
     def parse_core_link_format(link_format):
         data = []
         while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
+            pattern = "<([^>]*)>"
             result = re.match(pattern, link_format)
             path = result.group(1)
             link_format = link_format[result.end(1) + 2:]
