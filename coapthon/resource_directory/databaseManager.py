@@ -44,7 +44,7 @@ class DatabaseManager(object):
         """
         data = []
         while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
+            pattern = "<([^>]*)>"
             result = re.match(pattern, link_format)
             if result is None:
                 return None
