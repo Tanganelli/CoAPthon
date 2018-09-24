@@ -45,7 +45,7 @@ class ResourceDirectoryTest(unittest.TestCase):
     def parse_core_link_format(link_format):
         data = []
         while len(link_format) > 0:
-            pattern = "<([^>]*)>;"
+            pattern = "<([^>]*)>"
             result = re.match(pattern, link_format)
             path = result.group(1)
             link_format = link_format[result.end(1) + 2:]
@@ -96,12 +96,14 @@ class ResourceDirectoryTest(unittest.TestCase):
                 if expected.payload is not None:
                     expected_list = self.parse_core_link_format(expected.payload)
                     received_list = self.parse_core_link_format(received_message.payload)
+                    self.assertEqual(len(expected_list), len(received_list))
                     all_list = []
                     for expected_elem in expected_list:
                         for received_elem in received_list:
                             if expected_elem['path'] == received_elem['path']:
                                 all_list_elem = (expected_elem, received_elem)
                                 all_list.append(all_list_elem)
+                    self.assertEqual(len(expected_list), len(all_list))
                     for data in all_list:
                         for k in data[1]:
                             self.assertIn(k, data[0])
