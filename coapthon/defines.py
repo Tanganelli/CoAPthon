@@ -285,6 +285,7 @@ LOCALHOST = "127.0.0.1"
 HC_PROXY_DEFAULT_PORT = 8080  # TODO there is a standard for this?
 COAP_DEFAULT_PORT = 5683
 DEFAULT_HC_PATH = "/"
+DEFAULT_CH_PATH = "/coap2http"
 BAD_REQUEST = 400  # "Bad Request" error code
 NOT_IMPLEMENTED = 501  # "Not Implemented" error code
 

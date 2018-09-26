@@ -27,6 +27,7 @@ What is implemented
 - CoAP to CoAP Forward proxy
 - CoAP to CoAP Reverse Proxy
 - HTTP to CoAP Forward Proxy
+- CoAP to HTTP/HTTPS Forward Proxy
 - Caching feature
 - Observe feature
 - CoRE Link Format parsing
@@ -36,7 +37,6 @@ What is implemented
 TODO
 ====
 
-- CoAP to HTTP Proxy
 - DTLS support
 
 Install instructions
