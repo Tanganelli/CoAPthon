@@ -122,17 +122,20 @@ class HelperClient(object):
         """
         self.cancel_observe_token(self, response.token, explicit)
 
-    def get(self, path, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def get(self, path, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a GET on a certain path.
 
         :param path: the path
+        :param proxy_uri: Proxy-Uri option of a request
         :param callback: the callback function to invoke upon response
         :param timeout: the timeout of the request
         :return: the response
         """
         request = self.mk_request(defines.Codes.GET, path)
         request.token = generate_random_token(2)
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -159,17 +162,20 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def delete(self, path, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def delete(self, path, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a DELETE on a certain path.
 
         :param path: the path
+        :param proxy_uri: Proxy-Uri option of a request
         :param callback: the callback function to invoke upon response
         :param timeout: the timeout of the request
         :return: the response
         """
         request = self.mk_request(defines.Codes.DELETE, path)
         request.token = generate_random_token(2)
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -177,12 +183,13 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def post(self, path, payload, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def post(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a POST on a certain path.
 
         :param path: the path
         :param payload: the request payload
+        :param proxy_uri: Proxy-Uri option of a request
         :param callback: the callback function to invoke upon response
         :param timeout: the timeout of the request
         :return: the response
@@ -190,6 +197,8 @@ class HelperClient(object):
         request = self.mk_request(defines.Codes.POST, path)
         request.token = generate_random_token(2)
         request.payload = payload
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -197,12 +206,13 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def put(self, path, payload, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def put(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a PUT on a certain path.
 
         :param path: the path
         :param payload: the request payload
+        :param proxy_uri: Proxy-Uri option of a request
         :param callback: the callback function to invoke upon response
         :param timeout: the timeout of the request
         :return: the response
@@ -210,6 +220,8 @@ class HelperClient(object):
         request = self.mk_request(defines.Codes.PUT, path)
         request.token = generate_random_token(2)
         request.payload = payload
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
