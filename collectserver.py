@@ -5,13 +5,14 @@ import json
 import random
 import sys
 import threading
-
 import time
+from Queue import Queue
 
+import serial
 from coapthon import defines
+from coapthon.client.helperclient import HelperClient
 from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
-
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -50,10 +51,10 @@ class PowerResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.cpu_power = random.uniform(0, 0.3)
-        self.lpm_power = random.uniform(0, 0.15)
-        self.listen_power = random.uniform(0, 0.4)
-        self.transmit_power = random.uniform(0, 0.2)
+        self.cpu_power = random.uniform(0, 0.3)             # read_schema(self._coap_server, "cpu_power")
+        self.lpm_power = random.uniform(0, 0.15)            # read_schema(self._coap_server, "lpm_power")
+        self.listen_power = random.uniform(0, 0.4)          # read_schema(self._coap_server, "listen_power")
+        self.transmit_power = random.uniform(0, 0.2)        # read_schema(self._coap_server, "transmit_power")
         self.average_power = 0
         self.aggregate_power = self.cpu_power + self.lpm_power + self.listen_power + self.transmit_power
 
@@ -84,7 +85,15 @@ class TemperatureResource(Resource):
         self.content_type = "application/json"
         self.temperature = 0
         self.period = 5
+        self.refresh_period = 30
         self.read_sensor(True)
+        self.location_path = coap_server.register_rd_resource(self.resource_type, "temp")
+
+        refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
+                                                                                                self.refresh_period,
+                                                                                                self.location_path])
+        refresher.setDaemon(True)
+        refresher.start()
 
         self.value = [{"n": "temperature", "v": self.temperature, "u": "Cel", "t": time.time()}]
 
@@ -95,7 +104,7 @@ class TemperatureResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.temperature = random.uniform(-10, 30)
+        self.temperature = read_schema(self._coap_server, "temp")
 
         self.value = [{"n": "temperature", "v": self.temperature, "u": "Cel", "t": time.time()}]
 
@@ -109,6 +118,8 @@ class TemperatureResource(Resource):
             if not first and self._coap_server is not None:
                 self._coap_server.notify(self)
                 self.observe_count += 1
+
+        print self.payload
 
 
 class BatteryResource(Resource):
@@ -133,8 +144,8 @@ class BatteryResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.voltage = random.uniform(0, 5)
-        self.indicator = random.randint(1, 10)
+        self.voltage = random.uniform(0, 5)         # read_schema(self._coap_server, "voltage")
+        self.indicator = random.randint(1, 10)      # read_schema(self._coap_server, "indicator")
 
         self.value = [{"n": "voltage", "v": self.voltage, "u": "V", "bt": time.time()},
                       {"n": "indicator", "v": self.indicator, "u": "%"}]
@@ -185,12 +196,12 @@ class RadioResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.rssi = random.uniform(-90, -10)
-        self.latency = random.uniform(0, 50)
-        self.best_neighbor_id = "0"
-        self.best_neighbor_etx = random.randint(1, 10)
-        self.byte_sent = random.randint(1, 500)
-        self.byte_received = random.randint(1, 500)
+        self.rssi = random.uniform(-90, -10)            # read_schema(self._coap_server, "rssi")
+        self.latency = random.uniform(0, 50)            # read_schema(self._coap_server, "latency")
+        self.best_neighbor_id = "0"                     # read_schema(self._coap_server, "best_neighbor_id")
+        self.best_neighbor_etx = random.randint(1, 10)  # read_schema(self._coap_server, "best_neighbor_etx")
+        self.byte_sent = random.randint(1, 500)         # read_schema(self._coap_server, "byte_sent")
+        self.byte_received = random.randint(1, 500)     # read_schema(self._coap_server, "byte_received")
 
         self.value = [{"n": "rssi", "v": self.rssi, "u": "dBm", "bt": time.time()},
                       {"n": "latency", "v": self.latency, "u": "ms"},
@@ -210,6 +221,7 @@ class RadioResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
+
 class HumidityResource(Resource):
     def __init__(self, name="HumidityResource", coap_server=None):
         super(HumidityResource, self).__init__(name, coap_server, visible=True,
@@ -218,7 +230,15 @@ class HumidityResource(Resource):
         self.content_type = "application/json"
         self.humidity = 0
         self.period = 5
+        self.refresh_period = 30
         self.read_sensor(True)
+        self.location_path = coap_server.register_rd_resource(self.resource_type, "hum")
+
+        refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
+                                                                                                self.refresh_period,
+                                                                                                self.location_path])
+        refresher.setDaemon(True)
+        refresher.start()
 
         self.value = [{"n": "humidity", "v": self.humidity, "u": "%RH", "t": time.time()}]
 
@@ -229,7 +249,7 @@ class HumidityResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.humidity = random.randint(0, 100)
+        self.humidity = read_schema(self._coap_server, "hum")
 
         self.value = [{"n": "humidity", "v": self.humidity, "u": "%RH", "t": time.time()}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
@@ -242,6 +262,8 @@ class HumidityResource(Resource):
             if not first and self._coap_server is not None:
                 self._coap_server.notify(self)
                 self.observe_count += 1
+
+        print self.payload
 
 
 class LightResource(Resource):
@@ -252,11 +274,19 @@ class LightResource(Resource):
         self.content_type = "application/json"
         self.light1 = 0
         self.light2 = 0
+        self.period = 5
+        self.refresh_period = 30
+        self.read_sensor(True)
+        self.location_path = coap_server.register_rd_resource(self.resource_type, "light")
+
+        refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
+                                                                                                self.refresh_period,
+                                                                                                self.location_path])
+        refresher.setDaemon(True)
+        refresher.start()
 
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx"}]
-        self.period = 5
-        self.read_sensor(True)
 
     def render_GET(self, request):
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
@@ -266,8 +296,8 @@ class LightResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.light1 = random.randint(0, 1000)
-        self.light2 = random.randint(0, 2000)
+        self.light1 = read_schema(self._coap_server, "light1")
+        self.light2 = read_schema(self._coap_server, "light2")
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx"}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
@@ -281,20 +311,87 @@ class LightResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
+        print self.payload
+
 
 class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, (host, port), multicast)
+
+        self.resource_schema = Queue(1)     # using Queue for synchronized access
+        self.client = HelperClient(server=(host, 5683))      # RD parameter
+
+        serial_listener = threading.Thread(target=self.serial_listen)
+        serial_listener.setDaemon(True)
+        serial_listener.start()
+
+        self.rd_discovery()
+
         print "CoAP Server start on " + host + ":" + str(port)
+
+    def serial_listen(self):
+        port = serial.Serial('/dev/ttyUSB0')
+        port.baudrate = 115200
+        self.resource_schema.put(json.load(open("venv/serialschema.json", "r")), True)  # put the dict in a queue
+
+        while True:
+            while True:
+                try:
+                    received_resource_dict = json.loads(port.readline())
+                    break
+                except ValueError:
+                    continue
+
+            resource_dict = self.resource_schema.get(True)  # lock
+            for key in resource_dict:
+                if key in received_resource_dict:
+                    resource_dict[key] = received_resource_dict[key]
+                else:
+                    resource_dict[key] = -1  # error code
+            self.resource_schema.put(resource_dict, True)  # unlock
+
+    def rd_discovery(self):
+        # Test discover
+        path = "/.well-known/core"
+        response = self.client.get(path)
+        print response.pretty_print()
+
+    def register_rd_resource(self, resource_type, key):
+        path = "rd?ep=node1"  # todo: node name from .json
+        ct = {'content_type': defines.Content_types["application/link-format"]}
+        payload = '</sensors/' + key + '>;ct=41;' + resource_type + ';if="sensor";'
+        response = self.client.post(path, payload, None, None, **ct)
+        print response.pretty_print()
+        return response.location_path
+
+    def refresh_rd_resource(self, coap_server, period, location_path):
+        path = location_path
+        response = self.client.post(path, '')
+        print response.pretty_print()
+
+        refresher = threading.Timer(period, coap_server.refresh_rd_resource, args=[coap_server, period, location_path])
+        refresher.setDaemon(True)
+        refresher.start()
+
 
 
 def usage():  # pragma: no cover
     print "coapserver.py -i <ip address> -p <port>"
 
 
+# global?
+def read_schema(coap_server, key):
+    resource_dict = coap_server.resource_schema.get(True)  # lock
+    result = resource_dict[key]
+    coap_server.resource_schema.put(resource_dict, True)  # unlock
+    if type(result) is dict:  # at first, the json-imported object is a Dict of Dict
+        return -1
+    return result
+
+
 def main(argv):  # pragma: no cover
-    ip = "0.0.0.0"
-    port = 5683
+    ip = "127.0.0.1"  #0.0.0.0
+    port = 5688  # 5683
     multicast = False
     try:
         opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
@@ -313,18 +410,21 @@ def main(argv):  # pragma: no cover
             multicast = True
 
     server = CoAPServer(ip, port, multicast)
+
     power = PowerResource(coap_server=server)
     temperature = TemperatureResource(coap_server=server)
     battery = BatteryResource(coap_server=server)
     radio = RadioResource(coap_server=server)
     hum = HumidityResource(coap_server=server)
     light = LightResource(coap_server=server)
+
     server.add_resource('power/', power)
     server.add_resource('temperature/', temperature)
     server.add_resource('battery/', battery)
     server.add_resource('radio/', radio)
     server.add_resource('humidity/', hum)
     server.add_resource('light/', light)
+
     try:
         server.listen(10)
     except KeyboardInterrupt:
