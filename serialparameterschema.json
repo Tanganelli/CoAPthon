@@ -1,0 +1,41 @@
+{
+    "light1": {
+          "name": {
+            "type": "string",
+            "nameValue" : "light1"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+    },
+    "light2": {
+          "name": {
+            "type": "string",
+            "nameValue" : "light2"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+    },
+    "hum": {
+         "name": {
+           "type": "string"
+         },
+         "parameter": {
+           "type": "integer",
+           "value": 0
+         }
+    },
+    "temp": {
+         "name": {
+           "type": "string"
+         },
+         "parameter": {
+           "type": "integer",
+           "value": 0
+         }
+    }
+}
+

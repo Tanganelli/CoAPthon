@@ -6,9 +6,8 @@ import random
 import sys
 import threading
 import time
-from Queue import Queue
-
 import serial
+
 from coapthon import defines
 from coapthon.client.helperclient import HelperClient
 from coapthon.resources.resource import Resource
@@ -78,10 +77,11 @@ class PowerResource(Resource):
 
 
 class TemperatureResource(Resource):
-    def __init__(self, name="TemperatureResource", coap_server=None):
+    def __init__(self, name="TemperatureResource", coap_server=None, parameter_name=None):
         super(TemperatureResource, self).__init__(name, coap_server, visible=True,
                                                   observable=True, allow_children=False)
         self.resource_type = "Temperature Resource"
+        self.parameter_name = parameter_name
         self.content_type = "application/json"
         self.temperature = 0
         self.period = 5
@@ -104,7 +104,7 @@ class TemperatureResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.temperature = read_schema(self._coap_server, "temp")
+        self.temperature = read_parameter_schema(self._coap_server, self.parameter_name)
 
         self.value = [{"n": "temperature", "v": self.temperature, "u": "Cel", "t": time.time()}]
 
@@ -223,10 +223,11 @@ class RadioResource(Resource):
 
 
 class HumidityResource(Resource):
-    def __init__(self, name="HumidityResource", coap_server=None):
+    def __init__(self, name="HumidityResource", coap_server=None, parameter_name=None):
         super(HumidityResource, self).__init__(name, coap_server, visible=True,
                                                observable=True, allow_children=False)
         self.resource_type = "Humidity Resource"
+        self.parameter_name = parameter_name
         self.content_type = "application/json"
         self.humidity = 0
         self.period = 5
@@ -249,7 +250,7 @@ class HumidityResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.humidity = read_schema(self._coap_server, "hum")
+        self.humidity = read_parameter_schema(self._coap_server, self.parameter_name)
 
         self.value = [{"n": "humidity", "v": self.humidity, "u": "%RH", "t": time.time()}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
@@ -267,10 +268,11 @@ class HumidityResource(Resource):
 
 
 class LightResource(Resource):
-    def __init__(self, name="LightResource", coap_server=None):
+    def __init__(self, name="LightResource", coap_server=None, parameter_name=None):
         super(LightResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=False)
         self.resource_type = "Light Resource"
+        self.parameter_name = parameter_name
         self.content_type = "application/json"
         self.light1 = 0
         self.light2 = 0
@@ -296,8 +298,8 @@ class LightResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.light1 = read_schema(self._coap_server, "light1")
-        self.light2 = read_schema(self._coap_server, "light2")
+        self.light1 = read_parameter_schema(self._coap_server, self.parameter_name + "1")
+        self.light2 = read_parameter_schema(self._coap_server, self.parameter_name + "2")
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx"}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
@@ -318,8 +320,10 @@ class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, (host, port), multicast)
 
-        self.resource_schema = Queue(1)     # using Queue for synchronized access
-        self.client = HelperClient(server=(host, 5683))      # RD parameter
+        self.client = HelperClient(server=(host, 5684))      # RD parameter
+        self.resource_schema = json.load(open(defines.RESOURCE_SCHEMA_PATH, "r"))
+        self.parameter_schema = json.load(open(defines.SERIAL_PARAMETER_SCHEMA_PATH, "r"))
+        self.parameter_schema_lock = threading.Lock()
 
         serial_listener = threading.Thread(target=self.serial_listen)
         serial_listener.setDaemon(True)
@@ -330,25 +334,30 @@ class CoAPServer(CoAP):
         print "CoAP Server start on " + host + ":" + str(port)
 
     def serial_listen(self):
-        port = serial.Serial('/dev/ttyUSB0')
-        port.baudrate = 115200
-        self.resource_schema.put(json.load(open("venv/serialschema.json", "r")), True)  # put the dict in a queue
+        port = serial.Serial(defines.SERIAL_PORT)
+        port.baudrate = defines.SERIAL_BAUDRATE
 
         while True:
-            while True:
-                try:
-                    received_resource_dict = json.loads(port.readline())
-                    break
-                except ValueError:
-                    continue
+            try:
+                received_parameter_dict = json.loads(port.readline())
+            except ValueError:
+                continue
 
-            resource_dict = self.resource_schema.get(True)  # lock
-            for key in resource_dict:
-                if key in received_resource_dict:
-                    resource_dict[key] = received_resource_dict[key]
+            self.parameter_schema_lock.acquire()
+
+            for key in self.parameter_schema:
+                if key in received_parameter_dict:
+                    value = received_parameter_dict[key]
+                    typeof = self.parameter_schema[key]["parameter"]["type"]
+
+                    if (typeof == "integer" and type(value) is int) or (typeof == "string" and type(value) is str):
+                        self.parameter_schema[key]["parameter"]["value"] = value
                 else:
-                    resource_dict[key] = -1  # error code
-            self.resource_schema.put(resource_dict, True)  # unlock
+                    self.parameter_schema[key]["parameter"]["value"] = -1  # error code
+
+            self.parameter_schema_lock.release()
+
+            print "schema parametri " + str(self.parameter_schema)
 
     def rd_discovery(self):
         # Test discover
@@ -379,19 +388,21 @@ def usage():  # pragma: no cover
     print "coapserver.py -i <ip address> -p <port>"
 
 
-# global?
-def read_schema(coap_server, key):
-    resource_dict = coap_server.resource_schema.get(True)  # lock
-    result = resource_dict[key]
-    coap_server.resource_schema.put(resource_dict, True)  # unlock
-    if type(result) is dict:  # at first, the json-imported object is a Dict of Dict
+def read_parameter_schema(coap_server, key):
+    coap_server.parameter_schema_lock.acquire()
+
+    result = coap_server.parameter_schema[key]["parameter"]["value"]
+
+    coap_server.parameter_schema_lock.release()
+
+    if result is "":
         return -1
     return result
 
 
 def main(argv):  # pragma: no cover
     ip = "127.0.0.1"  #0.0.0.0
-    port = 5688  # 5683
+    port = 5683  # 5683
     multicast = False
     try:
         opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
@@ -411,19 +422,12 @@ def main(argv):  # pragma: no cover
 
     server = CoAPServer(ip, port, multicast)
 
-    power = PowerResource(coap_server=server)
-    temperature = TemperatureResource(coap_server=server)
-    battery = BatteryResource(coap_server=server)
-    radio = RadioResource(coap_server=server)
-    hum = HumidityResource(coap_server=server)
-    light = LightResource(coap_server=server)
+    for key in server.resource_schema:
+        classname = server.resource_schema[key]["className"]["classNameValue"]
+        name = server.resource_schema[key]["name"]["nameValue"]
 
-    server.add_resource('power/', power)
-    server.add_resource('temperature/', temperature)
-    server.add_resource('battery/', battery)
-    server.add_resource('radio/', radio)
-    server.add_resource('humidity/', hum)
-    server.add_resource('light/', light)
+        resource = eval(classname + "(coap_server=server, parameter_name='" + name + "')")
+        server.add_resource(name + '/', resource)
 
     try:
         server.listen(10)
