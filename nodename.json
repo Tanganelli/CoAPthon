@@ -1,0 +1,8 @@
+{
+  "node": {
+    "name": {
+      "type": "string",
+      "value": "node1"
+    }
+  }
+}

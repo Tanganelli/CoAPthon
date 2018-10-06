@@ -50,10 +50,10 @@ class PowerResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.cpu_power = random.uniform(0, 0.3)             # read_schema(self._coap_server, "cpu_power")
-        self.lpm_power = random.uniform(0, 0.15)            # read_schema(self._coap_server, "lpm_power")
-        self.listen_power = random.uniform(0, 0.4)          # read_schema(self._coap_server, "listen_power")
-        self.transmit_power = random.uniform(0, 0.2)        # read_schema(self._coap_server, "transmit_power")
+        self.cpu_power = random.uniform(0, 0.3)
+        self.lpm_power = random.uniform(0, 0.15)
+        self.listen_power = random.uniform(0, 0.4)
+        self.transmit_power = random.uniform(0, 0.2)
         self.average_power = 0
         self.aggregate_power = self.cpu_power + self.lpm_power + self.listen_power + self.transmit_power
 
@@ -87,7 +87,7 @@ class TemperatureResource(Resource):
         self.period = 5
         self.refresh_period = 30
         self.read_sensor(True)
-        self.location_path = coap_server.register_rd_resource(self.resource_type, "temp")
+        self.location_path = coap_server.register_rd_resource(self.resource_type, parameter_name)
 
         refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
                                                                                                 self.refresh_period,
@@ -119,8 +119,6 @@ class TemperatureResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
-        print self.payload
-
 
 class BatteryResource(Resource):
     def __init__(self, name="BatteryResource", coap_server=None):
@@ -144,8 +142,8 @@ class BatteryResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.voltage = random.uniform(0, 5)         # read_schema(self._coap_server, "voltage")
-        self.indicator = random.randint(1, 10)      # read_schema(self._coap_server, "indicator")
+        self.voltage = random.uniform(0, 5)
+        self.indicator = random.randint(1, 10)
 
         self.value = [{"n": "voltage", "v": self.voltage, "u": "V", "bt": time.time()},
                       {"n": "indicator", "v": self.indicator, "u": "%"}]
@@ -196,12 +194,12 @@ class RadioResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.rssi = random.uniform(-90, -10)            # read_schema(self._coap_server, "rssi")
-        self.latency = random.uniform(0, 50)            # read_schema(self._coap_server, "latency")
-        self.best_neighbor_id = "0"                     # read_schema(self._coap_server, "best_neighbor_id")
-        self.best_neighbor_etx = random.randint(1, 10)  # read_schema(self._coap_server, "best_neighbor_etx")
-        self.byte_sent = random.randint(1, 500)         # read_schema(self._coap_server, "byte_sent")
-        self.byte_received = random.randint(1, 500)     # read_schema(self._coap_server, "byte_received")
+        self.rssi = random.uniform(-90, -10)
+        self.latency = random.uniform(0, 50)
+        self.best_neighbor_id = "0"
+        self.best_neighbor_etx = random.randint(1, 10)
+        self.byte_sent = random.randint(1, 500)
+        self.byte_received = random.randint(1, 500)
 
         self.value = [{"n": "rssi", "v": self.rssi, "u": "dBm", "bt": time.time()},
                       {"n": "latency", "v": self.latency, "u": "ms"},
@@ -233,7 +231,7 @@ class HumidityResource(Resource):
         self.period = 5
         self.refresh_period = 30
         self.read_sensor(True)
-        self.location_path = coap_server.register_rd_resource(self.resource_type, "hum")
+        self.location_path = coap_server.register_rd_resource(self.resource_type, parameter_name)
 
         refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
                                                                                                 self.refresh_period,
@@ -264,8 +262,6 @@ class HumidityResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
-        print self.payload
-
 
 class LightResource(Resource):
     def __init__(self, name="LightResource", coap_server=None, parameter_name=None):
@@ -279,7 +275,7 @@ class LightResource(Resource):
         self.period = 5
         self.refresh_period = 30
         self.read_sensor(True)
-        self.location_path = coap_server.register_rd_resource(self.resource_type, "light")
+        self.location_path = coap_server.register_rd_resource(self.resource_type, parameter_name)
 
         refresher = threading.Timer(self.refresh_period, coap_server.refresh_rd_resource, args=[coap_server,
                                                                                                 self.refresh_period,
@@ -313,14 +309,13 @@ class LightResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
-        print self.payload
-
 
 class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, (host, port), multicast)
 
         self.client = HelperClient(server=(host, 5684))      # RD parameter
+        self.nodename = json.load(open(defines.COLLECT_SERVER_NODENAME_PATH, "r"))["node"]["name"]["value"]
         self.resource_schema = json.load(open(defines.RESOURCE_SCHEMA_PATH, "r"))
         self.parameter_schema = json.load(open(defines.SERIAL_PARAMETER_SCHEMA_PATH, "r"))
         self.parameter_schema_lock = threading.Lock()
@@ -357,7 +352,7 @@ class CoAPServer(CoAP):
 
             self.parameter_schema_lock.release()
 
-            print "schema parametri " + str(self.parameter_schema)
+    #       print "schema parametri " + str(self.parameter_schema)
 
     def rd_discovery(self):
         # Test discover
@@ -366,7 +361,7 @@ class CoAPServer(CoAP):
         print response.pretty_print()
 
     def register_rd_resource(self, resource_type, key):
-        path = "rd?ep=node1"  # todo: node name from .json
+        path = "rd?ep=" + self.nodename + ""
         ct = {'content_type': defines.Content_types["application/link-format"]}
         payload = '</sensors/' + key + '>;ct=41;' + resource_type + ';if="sensor";'
         response = self.client.post(path, payload, None, None, **ct)
@@ -401,8 +396,8 @@ def read_parameter_schema(coap_server, key):
 
 
 def main(argv):  # pragma: no cover
-    ip = "127.0.0.1"  #0.0.0.0
-    port = 5683  # 5683
+    ip = "127.0.0.1"
+    port = 5683
     multicast = False
     try:
         opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
