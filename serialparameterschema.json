@@ -1,41 +1,49 @@
 {
-    "light1": {
+    "light" : {
+        "light1": {
           "name": {
             "type": "string",
-            "nameValue" : "light1"
+            "value": "light1"
           },
           "parameter": {
             "type": "integer",
             "value": 0
           }
-    },
-    "light2": {
+        },
+        "light2": {
           "name": {
             "type": "string",
-            "nameValue" : "light2"
+            "value": "light2"
           },
           "parameter": {
             "type": "integer",
             "value": 0
           }
+        }
     },
-    "hum": {
-         "name": {
-           "type": "string"
-         },
-         "parameter": {
-           "type": "integer",
-           "value": 0
-         }
+    "humidity" : {
+        "hum": {
+          "name": {
+            "type": "string",
+            "value": "hum"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        }
     },
-    "temp": {
-         "name": {
-           "type": "string"
-         },
-         "parameter": {
-           "type": "integer",
-           "value": 0
-         }
+    "temperature" : {
+        "temp": {
+          "name": {
+            "type": "string",
+            "value": "temp"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        }
     }
 }
 
