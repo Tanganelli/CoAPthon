@@ -1,0 +1,49 @@
+{
+    "light" : {
+        "light1": {
+          "name": {
+            "type": "string",
+            "value": "light1"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        },
+        "light2": {
+          "name": {
+            "type": "string",
+            "value": "light2"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        }
+    },
+    "humidity" : {
+        "hum": {
+          "name": {
+            "type": "string",
+            "value": "hum"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        }
+    },
+    "temperature" : {
+        "temp": {
+          "name": {
+            "type": "string",
+            "value": "temp"
+          },
+          "parameter": {
+            "type": "integer",
+            "value": 0
+          }
+        }
+    }
+}
+

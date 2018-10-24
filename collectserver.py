@@ -5,13 +5,13 @@ import json
 import random
 import sys
 import threading
-
 import time
+import serial
 
 from coapthon import defines
+from coapthon.client.helperclient import HelperClient
 from coapthon.resources.resource import Resource
 from coapthon.server.coap import CoAP
-
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -77,15 +77,18 @@ class PowerResource(Resource):
 
 
 class TemperatureResource(Resource):
-    def __init__(self, name="TemperatureResource", coap_server=None):
+    def __init__(self, name="TemperatureResource", coap_server=None, resource_key=None, subresources_keys=None):
         super(TemperatureResource, self).__init__(name, coap_server, visible=True,
                                                   observable=True, allow_children=False)
         self.resource_type = "Temperature Resource"
+        self.resource_key = resource_key
+        self.subresources_keys = subresources_keys
         self.content_type = "application/json"
         self.temperature = 0
         self.period = 5
+        self.RD_registered = False
+        self.location_path = ""
         self.read_sensor(True)
-
         self.value = [{"n": "temperature", "v": self.temperature, "u": "Cel", "t": time.time()}]
 
     def render_GET(self, request):
@@ -95,11 +98,17 @@ class TemperatureResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.temperature = random.uniform(-10, 30)
-
+        self.temperature = read_parameter_schema(self._coap_server, self.resource_key, self.subresources_keys[0])
         self.value = [{"n": "temperature", "v": self.temperature, "u": "Cel", "t": time.time()}]
-
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
+
+        if self.temperature != -1:
+            if self.RD_registered is False:
+                self.location_path = self._coap_server.register_rd_resource(self.resource_type, self.resource_key)
+                self.RD_registered = True
+            else:
+                self._coap_server.refresh_rd_resource(self.location_path)
+
         if not self._coap_server.stopped.isSet():
 
             timer = threading.Timer(self.period, self.read_sensor)
@@ -152,10 +161,11 @@ class BatteryResource(Resource):
 
 
 class RadioResource(Resource):
-    def __init__(self, name="RadioResource", coap_server=None):
+    def __init__(self, name="RadioResource", coap_server=None, parameter_name=None):
         super(RadioResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=False)
         self.resource_type = "Radio Resource"
+        self.parameter_name = parameter_name
         self.content_type = "application/json"
         self.rssi = 0
         self.latency = 0
@@ -210,16 +220,20 @@ class RadioResource(Resource):
                 self._coap_server.notify(self)
                 self.observe_count += 1
 
+
 class HumidityResource(Resource):
-    def __init__(self, name="HumidityResource", coap_server=None):
+    def __init__(self, name="HumidityResource", coap_server=None, resource_key=None, subresources_keys=list):
         super(HumidityResource, self).__init__(name, coap_server, visible=True,
                                                observable=True, allow_children=False)
         self.resource_type = "Humidity Resource"
+        self.resource_key = resource_key
+        self.subresources_keys = subresources_keys
         self.content_type = "application/json"
         self.humidity = 0
         self.period = 5
+        self.RD_registered = False
+        self.location_path = ""
         self.read_sensor(True)
-
         self.value = [{"n": "humidity", "v": self.humidity, "u": "%RH", "t": time.time()}]
 
     def render_GET(self, request):
@@ -229,10 +243,17 @@ class HumidityResource(Resource):
         return self
 
     def read_sensor(self, first=False):
-        self.humidity = random.randint(0, 100)
-
+        self.humidity = read_parameter_schema(self._coap_server, self.resource_key, self.subresources_keys[0])
         self.value = [{"n": "humidity", "v": self.humidity, "u": "%RH", "t": time.time()}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
+
+        if self.humidity != -1:
+            if self.RD_registered is False:
+                self.location_path = self._coap_server.register_rd_resource(self.resource_type, self.resource_key)
+                self.RD_registered = True
+            else:
+                self._coap_server.refresh_rd_resource(self.location_path)
+
         if not self._coap_server.stopped.isSet():
 
             timer = threading.Timer(self.period, self.read_sensor)
@@ -245,32 +266,43 @@ class HumidityResource(Resource):
 
 
 class LightResource(Resource):
-    def __init__(self, name="LightResource", coap_server=None):
+    def __init__(self, name="LightResource", coap_server=None, resource_key=None, subresources_keys=None):
         super(LightResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=False)
         self.resource_type = "Light Resource"
+        self.resource_key = resource_key
+        self.subresources_keys = subresources_keys
         self.content_type = "application/json"
         self.light1 = 0
         self.light2 = 0
-
-        self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
-                      {"n": "light2", "v": self.light2, "u": "lx"}]
         self.period = 5
+        self.RD_registered = False
+        self.location_path = ""
         self.read_sensor(True)
+        self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
+                      {"n": "light2", "v": self.light2, "u": "lx", "bt": time.time()}]
 
     def render_GET(self, request):
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
-                      {"n": "light2", "v": self.light2, "u": "lx"}]
+                      {"n": "light2", "v": self.light2, "u": "lx", "bt": time.time()}]
 
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
         return self
 
     def read_sensor(self, first=False):
-        self.light1 = random.randint(0, 1000)
-        self.light2 = random.randint(0, 2000)
+        self.light1 = read_parameter_schema(self._coap_server, self.resource_key, self.subresources_keys[0])
+        self.light2 = read_parameter_schema(self._coap_server, self.resource_key, self.subresources_keys[1])
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx"}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
+
+        if self.light1 != -1 or self.light2 != -1:
+            if self.RD_registered is False:
+                self.location_path = self._coap_server.register_rd_resource(self.resource_type, self.resource_key)
+                self.RD_registered = True
+            else:
+                self._coap_server.refresh_rd_resource(self.location_path)
+
         if not self._coap_server.stopped.isSet():
 
             timer = threading.Timer(self.period, self.read_sensor)
@@ -285,16 +317,86 @@ class LightResource(Resource):
 class CoAPServer(CoAP):
     def __init__(self, host, port, multicast=False):
         CoAP.__init__(self, (host, port), multicast)
+
+        self.client = HelperClient(server=(defines.RD_HOST, defines.RD_PORT))
+        self.node_resource_schema = json.load(open(defines.NODE_RESOURCE_SCHEMA_PATH, "r"))
+        self.node_name = self.node_resource_schema["node"]["name"]["value"]
+
+        self.parameter_schema = json.load(open(defines.SERIAL_PARAMETER_SCHEMA_PATH, "r"))
+        self.parameter_schema_lock = threading.Lock()
+
+        serial_listener = threading.Thread(target=self.serial_listen)
+        serial_listener.setDaemon(True)
+        serial_listener.start()
+
+        self.rd_discovery()
+
         print "CoAP Server start on " + host + ":" + str(port)
+
+    def serial_listen(self):
+        port = serial.Serial(defines.SERIAL_PORT)
+        port.baudrate = defines.SERIAL_BAUDRATE
+
+        while True:
+            try:
+                received_parameter_dict = json.loads(port.readline())
+            except ValueError:
+                continue
+
+            self.parameter_schema_lock.acquire()
+
+            for key in self.parameter_schema:
+                subresources = self.parameter_schema[key]
+                for subkey in subresources:
+                    if subkey in received_parameter_dict:
+                        value = received_parameter_dict[subkey]
+                        typeof = subresources[subkey]["parameter"]["type"]
+
+                        if (typeof == "integer" and type(value) is int) or (typeof == "string" and type(value) is str):
+                            subresources[subkey]["parameter"]["value"] = value
+                    else:
+                        subresources[subkey]["parameter"]["value"] = -1  # error code
+
+            self.parameter_schema_lock.release()
+            print "schema parametri " + str(self.parameter_schema)
+
+    def rd_discovery(self):
+        # Test discover
+        path = "/.well-known/core"
+        response = self.client.get(path)
+        print response.pretty_print()
+
+    def register_rd_resource(self, resource_type, key):
+        path = "rd?ep=" + self.node_name + "&con=coap://" + str(self.server_address[0]) + ":" + str(self.server_address[1])
+        ct = {'content_type': defines.Content_types["application/link-format"]}
+        payload = '</sensors/' + key + '>;ct=41;' + resource_type + ';if="sensor";'
+        response = self.client.post(path, payload, None, None, **ct)
+        print response.pretty_print()
+        return response.location_path
+
+    def refresh_rd_resource(self, location_path):
+        path = location_path
+        response = self.client.post(path, '')
+        print response.pretty_print()
 
 
 def usage():  # pragma: no cover
     print "coapserver.py -i <ip address> -p <port>"
 
 
+def read_parameter_schema(coap_server, key, subresource):
+    coap_server.parameter_schema_lock.acquire()
+
+    result = coap_server.parameter_schema[key][subresource]["parameter"]["value"]
+
+    coap_server.parameter_schema_lock.release()
+
+    return result
+
+
 def main(argv):  # pragma: no cover
-    ip = "0.0.0.0"
-    port = 5683
+    ip = "127.0.0.1"
+    port = 5681
     multicast = False
     try:
         opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
@@ -313,18 +415,19 @@ def main(argv):  # pragma: no cover
             multicast = True
 
     server = CoAPServer(ip, port, multicast)
-    power = PowerResource(coap_server=server)
-    temperature = TemperatureResource(coap_server=server)
-    battery = BatteryResource(coap_server=server)
-    radio = RadioResource(coap_server=server)
-    hum = HumidityResource(coap_server=server)
-    light = LightResource(coap_server=server)
-    server.add_resource('power/', power)
-    server.add_resource('temperature/', temperature)
-    server.add_resource('battery/', battery)
-    server.add_resource('radio/', radio)
-    server.add_resource('humidity/', hum)
-    server.add_resource('light/', light)
+
+    resources = server.node_resource_schema["node"]["resources"]
+    for key in resources:
+        class_name = resources[key]["className"]["value"]
+        resource_key = resources[key]["resourceKey"]["value"]
+        subresources_keys = resources[key]["subresources"]["items"]
+
+        resource = eval(class_name + "(coap_server=server, resource_key='" + resource_key +
+                        "', subresources_keys=subres_key)", {"__builtins__": globals()},
+                        {"subres_key": subresources_keys, "server": server})
+
+        server.add_resource(resource_key + '/', resource)
+
     try:
         server.listen(10)
     except KeyboardInterrupt:

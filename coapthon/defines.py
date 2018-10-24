@@ -36,6 +36,24 @@ MAX_NON_NOTIFICATIONS = 10
 
 BLOCKWISE_SIZE = 1024
 
+""" Resource Directory parameters"""
+
+RD_HOST = "127.0.0.1"
+
+RD_PORT = 5680
+
+""" Serial communication parameters"""
+
+SERIAL_PORT = "/dev/ttyUSB0"
+
+SERIAL_BAUDRATE = 115200
+
+""" JSON configuration paths"""
+
+SERIAL_PARAMETER_SCHEMA_PATH = "serialparameterschema.json"
+
+NODE_RESOURCE_SCHEMA_PATH = "noderesourceschema.json"
+
 """ MongoDB parameters """
 
 MONGO_HOST = "127.0.0.1"
