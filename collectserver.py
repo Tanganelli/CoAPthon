@@ -80,7 +80,7 @@ class TemperatureResource(Resource):
     def __init__(self, name="TemperatureResource", coap_server=None, resource_key=None, subresources_keys=None):
         super(TemperatureResource, self).__init__(name, coap_server, visible=True,
                                                   observable=True, allow_children=False)
-        self.resource_type = "Temperature Resource"
+        self.resource_type = "temperature"
         self.resource_key = resource_key
         self.subresources_keys = subresources_keys
         self.content_type = "application/json"
@@ -124,7 +124,7 @@ class BatteryResource(Resource):
     def __init__(self, name="BatteryResource", coap_server=None):
         super(BatteryResource, self).__init__(name, coap_server, visible=True,
                                               observable=True, allow_children=False)
-        self.resource_type = "Battery Resource"
+        self.resource_type = "battery"
         self.content_type = "application/json"
         self.voltage = 0
         self.indicator = 0
@@ -164,7 +164,7 @@ class RadioResource(Resource):
     def __init__(self, name="RadioResource", coap_server=None, parameter_name=None):
         super(RadioResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=False)
-        self.resource_type = "Radio Resource"
+        self.resource_type = "radio"
         self.parameter_name = parameter_name
         self.content_type = "application/json"
         self.rssi = 0
@@ -225,7 +225,7 @@ class HumidityResource(Resource):
     def __init__(self, name="HumidityResource", coap_server=None, resource_key=None, subresources_keys=list):
         super(HumidityResource, self).__init__(name, coap_server, visible=True,
                                                observable=True, allow_children=False)
-        self.resource_type = "Humidity Resource"
+        self.resource_type = "humidity"
         self.resource_key = resource_key
         self.subresources_keys = subresources_keys
         self.content_type = "application/json"
@@ -269,7 +269,7 @@ class LightResource(Resource):
     def __init__(self, name="LightResource", coap_server=None, resource_key=None, subresources_keys=None):
         super(LightResource, self).__init__(name, coap_server, visible=True,
                                             observable=True, allow_children=False)
-        self.resource_type = "Light Resource"
+        self.resource_type = "light"
         self.resource_key = resource_key
         self.subresources_keys = subresources_keys
         self.content_type = "application/json"
@@ -277,10 +277,22 @@ class LightResource(Resource):
         self.light2 = 0
         self.period = 5
         self.RD_registered = False
+        self._registration_to_rd_thread = threading.Thread(target=self._registration_to_rd)
+        self._registration_to_rd_thread.daemon = True
+        self. _registration_to_rd_thread.start()
         self.location_path = ""
         self.read_sensor(True)
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx", "bt": time.time()}]
+
+    def _registration_to_rd(self):
+        while True:
+            if self.RD_registered is False:
+                self.location_path = self._coap_server.register_rd_resource(self.resource_type, self.resource_key)
+                self.RD_registered = True
+            else:
+                self._coap_server.refresh_rd_resource(self.location_path)
+            time.sleep(60)
 
     def render_GET(self, request):
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
@@ -295,13 +307,6 @@ class LightResource(Resource):
         self.value = [{"n": "light1", "v": self.light1, "u": "lx", "bt": time.time()},
                       {"n": "light2", "v": self.light2, "u": "lx"}]
         self.payload = (defines.Content_types["application/json"], json.dumps(self.value))
-
-        if self.light1 != -1 or self.light2 != -1:
-            if self.RD_registered is False:
-                self.location_path = self._coap_server.register_rd_resource(self.resource_type, self.resource_key)
-                self.RD_registered = True
-            else:
-                self._coap_server.refresh_rd_resource(self.location_path)
 
         if not self._coap_server.stopped.isSet():
 
@@ -369,7 +374,7 @@ class CoAPServer(CoAP):
     def register_rd_resource(self, resource_type, key):
         path = "rd?ep=" + self.node_name + "&con=coap://" + str(self.server_address[0]) + ":" + str(self.server_address[1])
         ct = {'content_type': defines.Content_types["application/link-format"]}
-        payload = '</sensors/' + key + '>;ct=41;' + resource_type + ';if="sensor";'
+        payload = '</' + key + '>;ct=41;' + resource_type + ';if="sensor";'
         response = self.client.post(path, payload, None, None, **ct)
         print response.pretty_print()
         return response.location_path

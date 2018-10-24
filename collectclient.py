@@ -154,6 +154,7 @@ def main():  # pragma: no cover
         usage()
         sys.exit(2)
 
+
     config = open(config, "r")
     config = json.load(config)
     while True:

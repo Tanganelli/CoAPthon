@@ -60,13 +60,13 @@ MONGO_HOST = "127.0.0.1"
 
 MONGO_PORT = 27017
 
-MONGO_DATABASE = "resourceDirectory"
+MONGO_DATABASE = "rd"
 
 MONGO_USER = "RD"
 
 MONGO_PWD = "res-dir"
 
-MONGO_CONFIG_FILE = "/usr/local/etc/mongod.conf"
+MONGO_CONFIG_FILE = "etc/mongod.conf"
 
 """  Message Format """
 

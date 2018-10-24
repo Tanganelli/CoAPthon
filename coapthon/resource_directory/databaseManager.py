@@ -28,8 +28,8 @@ class DatabaseManager(object):
         :param user: user for authentication to the database
         :param pwd: password for authentication to the database
         """
-        connection = MongoClient(host, port, username=user, password=pwd, authSource=database,
-                                 authMechanism='SCRAM-SHA-1')
+
+        connection = MongoClient("mongodb://{host}:{port}/".format(host=host, port=port))
         self.db = connection[database]
         self.collection = self.db.resources
         self.rd_parameters = ["ep", "lt", "d", "con", "et", "res"]
@@ -145,7 +145,7 @@ class DatabaseManager(object):
                 logger.error("Connection to the database cannot be made or is lost.")
                 loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
             except OperationFailure:
-                logger.debug("Insert operation failure. Maybe the endpoint name and the domain already exist.")
+                logger.warning("Insert operation failure. Maybe the endpoint name and the domain already exist.")
                 loc_path = defines.Codes.SERVICE_UNAVAILABLE.number
             finally:
                 return loc_path
@@ -229,8 +229,8 @@ class DatabaseManager(object):
         except ConnectionFailure:
             logger.error("Connection to the database cannot be made or is lost.")
             return defines.Codes.SERVICE_UNAVAILABLE.number
-        except OperationFailure:
-            logger.error("Search operation failure with type of search " + type_search + " and uri query " + uri_query)
+        except OperationFailure as e:
+            logger.error("Search operation failure with type of search " + type_search + " and uri query " + uri_query + " " +e.message)
             return defines.Codes.SERVICE_UNAVAILABLE.number
 
     def update(self, resource, uri_query):
@@ -285,9 +285,9 @@ class DatabaseManager(object):
         query = {"$expr": {"$lte": [{"$sum": ["$lt", "$time"]}, time()]}}
         try:
             self.collection.delete_many(query)
-        except ConnectionFailure:
-            logger.error("Connection to the database cannot be made or is lost.")
+        except ConnectionFailure as e:
+            logger.error("Connection to the database cannot be made or is lost. {}".format(e.message))
             return
-        except OperationFailure:
-            logger.error("Delete expired resources operation failure.")
+        except OperationFailure as e:
+            logger.error("Delete expired resources operation failure. {}".format(e.message))
             return
