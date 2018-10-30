@@ -1,7 +1,5 @@
 import time
 
-import TinyDB as TinyDB
-
 from coapthon import defines
 
 from coapthon.resources.resource import Resource
