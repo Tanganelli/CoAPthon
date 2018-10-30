@@ -141,10 +141,10 @@ class BlockLayer(object):
             item.num += 1
             item.byte += item.size
             if len(item.payload) <= item.byte:
-                m = 0
+                item.m = 0
             else:
-                m = 1
-            request.block1 = (item.num, m, item.size)
+                itme.m = 1
+            request.block1 = (item.num, item.m, item.size)
         elif transaction.response.block2 is not None:
 
             num, m, size = transaction.response.block2
