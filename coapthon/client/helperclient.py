@@ -1,6 +1,5 @@
 import random
 import threading
-from coapthon.messages.message import Message
 from coapthon import defines
 from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
@@ -28,7 +27,7 @@ class HelperClient(object):
         :param server: the remote CoAP server
         :param sock: if a socket has been created externally, it can be used directly
         :param cb_ignore_read_exception: Callback function to handle exception raised during the socket read operation
-        :param cb_ignore_write_exception: Callback function to handle exception raised during the socket write operation 
+        :param cb_ignore_write_exception: Callback function to handle exception raised during the socket write operation
         """
         self.server = server
         self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock,
@@ -111,7 +110,7 @@ class HelperClient(object):
         request.observe = 1
 
         self.send_request(request, callback=None, timeout=timeout)
-        
+
     def cancel_observing(self, response, explicit):  # pragma: no cover
         """
         Delete observing on the remote server.
@@ -122,7 +121,7 @@ class HelperClient(object):
         """
         self.cancel_observe_token(self, response.token, explicit)
 
-    def get(self, path, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def get(self, path, proxy_uri=None, etag=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a GET on a certain path.
 
@@ -136,6 +135,8 @@ class HelperClient(object):
         request.token = generate_random_token(2)
         if proxy_uri:
             request.proxy_uri = proxy_uri
+        if etag:
+            request.etag = etag
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -162,7 +163,7 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def delete(self, path, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def delete(self, path, proxy_uri=None, etag=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a DELETE on a certain path.
 
@@ -176,6 +177,8 @@ class HelperClient(object):
         request.token = generate_random_token(2)
         if proxy_uri:
             request.proxy_uri = proxy_uri
+        if etag:
+            request.etag = etag
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -183,7 +186,7 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def post(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def post(self, path, payload, proxy_uri=None, etag=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a POST on a certain path.
 
@@ -199,6 +202,8 @@ class HelperClient(object):
         request.payload = payload
         if proxy_uri:
             request.proxy_uri = proxy_uri
+        if etag:
+            request.etag = etag
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -206,7 +211,7 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
-    def put(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+    def put(self, path, payload, proxy_uri=None, etag=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a PUT on a certain path.
 
@@ -222,6 +227,8 @@ class HelperClient(object):
         request.payload = payload
         if proxy_uri:
             request.proxy_uri = proxy_uri
+        if etag:
+            request.etag = etag
 
         for k, v in kwargs.iteritems():
             if hasattr(request, k):
@@ -273,7 +280,6 @@ class HelperClient(object):
         context.responded.wait(timeout)
         del self.requests[request.token]
         return context.response
-
 
     def send_empty(self, empty):  # pragma: no cover
         """
