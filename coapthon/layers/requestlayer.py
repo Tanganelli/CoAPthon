@@ -88,8 +88,11 @@ class RequestLayer(object):
             resource = self._server.root[path]
         except KeyError:
             resource = None
-        if resource is None:
+        if resource is None and not path.startswith("/ps"):
             transaction.response.code = defines.Codes.NOT_FOUND.number
+        elif resource is None and path.startswith("/ps"):
+            transaction = self._server.resourceLayer.create_resource(path, transaction)
+            transaction.response.code = defines.Codes.CREATED.number
         else:
             transaction.resource = resource
             # Update request
