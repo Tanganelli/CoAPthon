@@ -81,6 +81,8 @@ class RequestLayer(object):
         :return: the edited transaction with the response to the request
         """
         path = str("/" + transaction.request.uri_path)
+        print(path)
+        print(path.split)
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
@@ -92,7 +94,19 @@ class RequestLayer(object):
             transaction.response.code = defines.Codes.NOT_FOUND.number
         elif resource is None and path.startswith("/ps"):
             #transaction = self._server.resourceLayer.create_resource(path, transaction)
-            print("GOT PUT ON CREATE MY FRIEND")
+            path_el = path.split("/");
+            create_item = path_el[-1]
+            del path_el[-1];
+            new_path = '/'.join(path_el);
+            parent_resource = self._server.root[new_path]
+            print("[BROKER] Creating topic "+path+" on PUT request")
+            payload = "<"+create_item+">;ct=0;";
+            resource = parent_resource.createResFromPayload(payload,new_path)
+            parent_resource.children.append(resource)
+            parent_resource.cs.add_resource(resource.name,resource)
+            print("[BROKER] Created")
+            transaction.response.code = defines.Codes.CREATED.number
+            transaction.resource = resource
             transaction = self._server.resourceLayer.update_resource(transaction)
         else:
             transaction.resource = resource
