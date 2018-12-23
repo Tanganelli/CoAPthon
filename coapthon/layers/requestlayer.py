@@ -91,8 +91,9 @@ class RequestLayer(object):
         if resource is None and not path.startswith("/ps"):
             transaction.response.code = defines.Codes.NOT_FOUND.number
         elif resource is None and path.startswith("/ps"):
-            transaction = self._server.resourceLayer.create_resource(path, transaction)
-            transaction.response.code = defines.Codes.CREATED.number
+            #transaction = self._server.resourceLayer.create_resource(path, transaction)
+            print("GOT PUT ON CREATE MY FRIEND")
+            transaction = self._server.resourceLayer.update_resource(transaction)
         else:
             transaction.resource = resource
             # Update request
