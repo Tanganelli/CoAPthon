@@ -145,6 +145,7 @@ class Serializer(object):
         tmp |= message.type
         tmp <<= 4
         tmp |= tkl
+        print(message.mid)
         values = [tmp, message.code, message.mid]
 
         if message.token is not None and tkl > 0:
@@ -226,6 +227,7 @@ class Serializer(object):
         try:
             s = struct.Struct(fmt)
             datagram = ctypes.create_string_buffer(s.size)
+            print(values)
             s.pack_into(datagram, 0, *values)
         except struct.error:
             # The .exception method will report on the exception encountered
