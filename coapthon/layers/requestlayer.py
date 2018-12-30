@@ -147,7 +147,16 @@ class RequestLayer(object):
             resource = self._server.root[path]
         except KeyError:
             resource = None
-
+        print("Notifying resource:",resource,"\n")
+        observers = self._server._observeLayer.notify(resource)
+        print("Observers",observers)
+        for transaction_ in observers:
+            with transaction_:
+                transaction_.response.code = defines.Codes.NOT_FOUND.number
+                transaction_.response.observe = transaction_.resource.observe_count+1
+                transaction_.response.type = defines.Types["NON"]
+                if transaction_.response is not None:
+                    self._server.send_datagram(transaction_.response)
         if resource is None:
             transaction.response.code = defines.Codes.NOT_FOUND.number
         else:
