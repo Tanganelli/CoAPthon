@@ -256,7 +256,6 @@ class CoAP(object):
             logger.debug("send_datagram - " + str(message))
             serializer = Serializer()
             if(message.mid is None):
-                print("Message mid was none, I must do something my friend")
                 message.mid = self._messageLayer.fetch_mid()
             message = serializer.serialize(message)
             if self.multicast:
