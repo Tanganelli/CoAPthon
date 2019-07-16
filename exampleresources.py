@@ -281,20 +281,3 @@ class AdvancedResourceSeparate(Resource):
         response.payload = "Response deleted"
         return True, response
 
-
-class DynamicResource(Resource):
-    def __init__(self, name="dynamic"):
-        super(DynamicResource, self).__init__(name)
-        self.linking_table = {}
-        self.payload = "10"
-
-    def render_GET(self, request):
-        return self
-
-    def render_POST(self, request):
-        self.payload = request.payload
-        return self
-
-    def render_PUT(self, request):
-        self.payload = request.payload
-        return self

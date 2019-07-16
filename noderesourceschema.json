@@ -1,0 +1,53 @@
+{
+  "node": {
+    "name": {
+      "type": "string",
+      "value": "node1"
+    },
+    "resources" : {
+      "light": {
+        "resourceKey": {
+          "type": "string",
+          "value": "light"
+        },
+        "className": {
+          "type": "string",
+          "value": "LightResource"
+        },
+        "subresources":{
+          "type": "array",
+          "items": ["light1", "light2"]
+        }
+      },
+      "humidity": {
+        "resourceKey": {
+          "type": "string",
+          "value": "humidity"
+        },
+        "className": {
+          "type": "string",
+          "value": "HumidityResource"
+        },
+        "subresources":{
+          "type": "array",
+          "items": ["hum"]
+        }
+      },
+      "temperature": {
+        "resourceKey": {
+          "type": "string",
+          "value": "temperature"
+        },
+        "className": {
+          "type": "string",
+          "value": "TemperatureResource"
+        },
+        "subresources":{
+          "type": "array",
+          "items": ["temp"]
+        }
+      }
+    }
+  }
+}
+

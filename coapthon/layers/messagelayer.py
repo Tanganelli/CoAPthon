@@ -170,13 +170,19 @@ class MessageLayer(object):
         if message.type == defines.Types["ACK"]:
             if not transaction.request.acknowledged:
                 transaction.request.acknowledged = True
-            elif not transaction.response.acknowledged:
+            elif (transaction.response is not None) and (not transaction.response.acknowledged):
                 transaction.response.acknowledged = True
         elif message.type == defines.Types["RST"]:
             if not transaction.request.acknowledged:
                 transaction.request.rejected = True
             elif not transaction.response.acknowledged:
                 transaction.response.rejected = True
+        elif message.type == defines.Types["CON"]:
+            #implicit ACK (might have been lost)
+            logger.debug("Implicit ACK on received CON for waiting transaction")
+            transaction.request.acknowledged = True
+        else:
+            logger.warning("Unhandled message type...")
 
         if transaction.retransmit_stop is not None:
             transaction.retransmit_stop.set()

@@ -1,25 +1,28 @@
 import logging.config
+import os
 import random
 import socket
 import struct
 import threading
 
-import os
-
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
-from coapthon.layers.cachelayer import CacheLayer
-from coapthon.layers.forwardLayer import ForwardLayer
 from coapthon.layers.messagelayer import MessageLayer
 from coapthon.layers.observelayer import ObserveLayer
+from rdrequestlayer import RdRequestLayer
 from coapthon.layers.resourcelayer import ResourceLayer
 from coapthon.messages.message import Message
 from coapthon.messages.request import Request
+from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
-from coapthon.utils import Tree, create_logging
+from coapthon.utils import Tree
+from coapthon.utils import create_logging
+from databaseManager import DatabaseManager
+
 
 __author__ = 'Giacomo Tanganelli'
+
 
 if not os.path.isfile("logging.conf"):
     create_logging()
@@ -30,39 +33,32 @@ logging.config.fileConfig("logging.conf", disable_existing_loggers=False)
 
 class CoAP(object):
     """
-    Implementation of the Forward Proxy
+    Implementation of the CoAP server
     """
-    def __init__(self, server_address, multicast=False, starting_mid=None, cache=False, sock=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None, cb_ignore_listen_exception=None):
         """
-        Initialize the Forward Proxy.
+        Initialize the server.
 
         :param server_address: Server address for incoming connections
         :param multicast: if the ip is a multicast address
         :param starting_mid: used for testing purposes
-        :param cache: if a cache must be used
         :param sock: if a socket has been created externally, it can be used directly
+        :param cb_ignore_listen_exception: Callback function to handle exception raised during the socket listen operation
         """
         self.stopped = threading.Event()
         self.stopped.clear()
         self.to_be_stopped = []
         self.purge = threading.Thread(target=self.purge)
         self.purge.start()
-        self.cache_enable = cache
 
         self._messageLayer = MessageLayer(starting_mid)
         self._blockLayer = BlockLayer()
         self._observeLayer = ObserveLayer()
-
-        if self.cache_enable:
-            self._cacheLayer = CacheLayer(defines.FORWARD_PROXY)
-        else:
-            self._cacheLayer = None
-
-        self._forwardLayer = ForwardLayer(self)
+        self._requestLayer = RdRequestLayer(self)
         self.resourceLayer = ResourceLayer(self)
 
         # Resource directory
-        root = Resource('root', self, visible=False, observable=False, allow_children=True)
+        root = Resource('root', self, visible=False, observable=False, allow_children=False)
         root.path = '/'
         self.root = Tree()
         self.root["/"] = root
@@ -70,6 +66,12 @@ class CoAP(object):
 
         self.server_address = server_address
         self.multicast = multicast
+        self._cb_ignore_listen_exception = cb_ignore_listen_exception
+
+        self.rd_stopped = threading.Event()
+        self.rd_stopped.clear()
+        self.rd_lt_manager = threading.Thread(target=self.manage_lifetime)
+        self.rd_lt_manager.start()
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
@@ -112,8 +114,9 @@ class CoAP(object):
                 self._unicast_socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
                 self._unicast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._unicast_socket.bind(self.server_address)
+
         else:
-            if addrinfo[0] == socket.AF_INET: # IPv4
+            if addrinfo[0] == socket.AF_INET:  # IPv4
                 self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             else:
@@ -125,6 +128,7 @@ class CoAP(object):
     def purge(self):
         """
         Clean old transactions
+
         """
         while not self.stopped.isSet():
             self.stopped.wait(timeout=defines.EXCHANGE_LIFETIME)
@@ -140,17 +144,57 @@ class CoAP(object):
         while not self.stopped.isSet():
             try:
                 data, client_address = self._socket.recvfrom(4096)
+                if len(client_address) > 2:
+                    client_address = (client_address[0], client_address[1])
             except socket.timeout:
                 continue
+            except Exception as e:
+                if self._cb_ignore_listen_exception is not None and callable(self._cb_ignore_listen_exception):
+                    if self._cb_ignore_listen_exception(e, self):
+                        continue
+                raise
             try:
-                #Start a new thread not to block other requests
-                args = ((data, client_address), )
-                t = threading.Thread(target=self.receive_datagram, args=args)
-                t.daemon = True
-                t.start()
+                serializer = Serializer()
+                message = serializer.deserialize(data, client_address)
+                if isinstance(message, int):
+                    logger.error("receive_datagram - BAD REQUEST")
+
+                    rst = Message()
+                    rst.destination = client_address
+                    rst.type = defines.Types["RST"]
+                    rst.code = message
+                    rst.mid = self._messageLayer.fetch_mid()
+                    self.send_datagram(rst)
+                    continue
+
+                logger.debug("receive_datagram - " + str(message))
+                if isinstance(message, Request):
+                    transaction = self._messageLayer.receive_request(message)
+                    if transaction.request.duplicated and transaction.completed:
+                        logger.debug("message duplicated, transaction completed")
+                        if transaction.response is not None:
+                            self.send_datagram(transaction.response)
+                        continue
+                    elif transaction.request.duplicated and not transaction.completed:
+                        logger.debug("message duplicated, transaction NOT completed")
+                        self._send_ack(transaction)
+                        continue
+                    args = (transaction, )
+                    t = threading.Thread(target=self.receive_request, args=args)
+                    t.start()
+                # self.receive_datagram(data, client_address)
+                elif isinstance(message, Response):
+                    logger.error("Received response from %s", message.source)
+
+                else:  # is Message
+                    transaction = self._messageLayer.receive_empty(message)
+                    if transaction is not None:
+                        with transaction:
+                            self._blockLayer.receive_empty(message, transaction)
+                            self._observeLayer.receive_empty(message, transaction)
+
             except RuntimeError:
-                logging.exception("Exception with Executor")
-        logging.debug("closing socket")
+                logger.exception("Exception with Executor")
         self._socket.close()
 
     def close(self):
@@ -159,109 +203,53 @@ class CoAP(object):
 
         """
         logger.info("Stop server")
+        self.rd_stopped.set()
         self.stopped.set()
         for event in self.to_be_stopped:
             event.set()
-        self._socket.close()
 
-    def receive_datagram(self, args):
+    def receive_request(self, transaction):
         """
-        Handle messages coming from the udp socket.
+        Handle requests coming from the udp socket.
 
-        :param args: (data, client_address)
+        :param transaction: the transaction created to manage the request
         """
-        data, client_address = args
 
-        logging.debug("receiving datagram")
-
-        try:
-            host, port = client_address
-        except ValueError:
-            host, port, tmp1, tmp2 = client_address
-
-        client_address = (host, port)
-        
-        serializer = Serializer()
-        message = serializer.deserialize(data, client_address)
-        if isinstance(message, int):
-            logger.error("receive_datagram - BAD REQUEST")
-
-            rst = Message()
-            rst.destination = client_address
-            rst.type = defines.Types["RST"]
-            rst.code = message
-            self.send_datagram(rst)
-            return
-        logger.debug("receive_datagram - " + str(message))
-        if isinstance(message, Request):
-
-            transaction = self._messageLayer.receive_request(message)
-
-            if transaction.request.duplicated and transaction.completed:
-                logger.debug("message duplicated,transaction completed")
-                transaction = self._observeLayer.send_response(transaction)
-                transaction = self._blockLayer.send_response(transaction)
-                transaction = self._messageLayer.send_response(transaction)
-                self.send_datagram(transaction.response)
-                return
-            elif transaction.request.duplicated and not transaction.completed:
-                logger.debug("message duplicated,transaction NOT completed")
-                self._send_ack(transaction)
-                return
+        with transaction:
 
             transaction.separate_timer = self._start_separate_timer(transaction)
 
-            transaction = self._blockLayer.receive_request(transaction)
+            self._blockLayer.receive_request(transaction)
 
             if transaction.block_transfer:
                 self._stop_separate_timer(transaction.separate_timer)
-                transaction = self._messageLayer.send_response(transaction)
+                self._messageLayer.send_response(transaction)
                 self.send_datagram(transaction.response)
                 return
 
-            transaction = self._observeLayer.receive_request(transaction)
+            self._observeLayer.receive_request(transaction)
 
-            """
-            call to the cache layer to check if there's a cached response for the request
-            if not, call the forward layer
-            """
-            if self._cacheLayer is not None:
-                transaction = self._cacheLayer.receive_request(transaction)
+            self._requestLayer.receive_request(transaction)
 
-                if transaction.cacheHit is False:
-                    logging.debug(transaction.request)
-                    transaction = self._forwardLayer.receive_request(transaction)
-                    logging.debug(transaction.response)
+            if transaction.resource is not None and transaction.resource.changed:
+                self.notify(transaction.resource)
+                transaction.resource.changed = False
+            elif transaction.resource is not None and transaction.resource.deleted:
+                self.notify(transaction.resource)
+                transaction.resource.deleted = False
 
-                transaction = self._observeLayer.send_response(transaction)
+            self._observeLayer.send_response(transaction)
 
-                transaction = self._blockLayer.send_response(transaction)
-
-                transaction = self._cacheLayer.send_response(transaction)
-            else:
-                transaction = self._forwardLayer.receive_request(transaction)
-
-                transaction = self._observeLayer.send_response(transaction)
-
-                transaction = self._blockLayer.send_response(transaction)
+            self._blockLayer.send_response(transaction)
 
             self._stop_separate_timer(transaction.separate_timer)
 
-            transaction = self._messageLayer.send_response(transaction)
+            self._messageLayer.send_response(transaction)
 
             if transaction.response is not None:
                 if transaction.response.type == defines.Types["CON"]:
                     self._start_retransmission(transaction, transaction.response)
                 self.send_datagram(transaction.response)
-
-        elif isinstance(message, Message):
-            transaction = self._messageLayer.receive_empty(message)
-            if transaction is not None:
-                transaction = self._blockLayer.receive_empty(message, transaction)
-                self._observeLayer.receive_empty(message, transaction)
-
-        else:  # is Response
-            logger.error("Received response from %s", message.source)
 
     def send_datagram(self, message):
         """
@@ -275,8 +263,61 @@ class CoAP(object):
             logger.debug("send_datagram - " + str(message))
             serializer = Serializer()
             message = serializer.serialize(message)
+            if self.multicast:
+                self._unicast_socket.sendto(message, (host, port))
+            else:
+                self._socket.sendto(message, (host, port))
 
-            self._socket.sendto(message, (host, port))
+    def add_resource(self, path, resource):
+        """
+        Helper function to add resources to the resource directory during server initialization.
+
+        :param path: the path for the new created resource
+        :type resource: Resource
+        :param resource: the resource to be added
+        """
+
+        assert isinstance(resource, Resource)
+        path = path.strip("/")
+        paths = path.split("/")
+        actual_path = ""
+        i = 0
+        for p in paths:
+            i += 1
+            actual_path += "/" + p
+            try:
+                res = self.root[actual_path]
+            except KeyError:
+                res = None
+            if res is None:
+                if len(paths) != i:
+                    return False
+                resource.path = actual_path
+                self.root[actual_path] = resource
+        return True
+
+    def remove_resource(self, path):
+        """
+        Helper function to remove resources.
+
+        :param path: the path for the unwanted resource
+        :rtype : the removed object
+        """
+
+        path = path.strip("/")
+        paths = path.split("/")
+        actual_path = ""
+        i = 0
+        for p in paths:
+            i += 1
+            actual_path += "/" + p
+        try:
+            res = self.root[actual_path]
+        except KeyError:
+            res = None
+        if res is not None:
+            del(self.root[actual_path])
+        return res
 
     def _start_retransmission(self, transaction, message):
         """
@@ -308,7 +349,8 @@ class CoAP(object):
         with transaction:
             while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
                     and not self.stopped.isSet():
-                transaction.retransmit_stop.wait(timeout=future_time)
+                if transaction.retransmit_stop is not None:
+                    transaction.retransmit_stop.wait(timeout=future_time)
                 if not message.acknowledged and not message.rejected and not self.stopped.isSet():
                     retransmit_count += 1
                     future_time *= 2
@@ -359,7 +401,37 @@ class CoAP(object):
 
         ack = Message()
         ack.type = defines.Types['ACK']
-
-        if not transaction.request.acknowledged:
+        # TODO handle mutex on transaction
+        if not transaction.request.acknowledged and transaction.request.type == defines.Types["CON"]:
             ack = self._messageLayer.send_empty(transaction, transaction.request, ack)
             self.send_datagram(ack)
+
+    def notify(self, resource):
+        """
+        Notifies the observers of a certain resource.
+
+        :param resource: the resource
+        """
+        observers = self._observeLayer.notify(resource)
+        logger.debug("Notify")
+        for transaction in observers:
+            with transaction:
+                transaction.response = None
+                transaction = self._requestLayer.receive_request(transaction)
+                transaction = self._observeLayer.send_response(transaction)
+                transaction = self._blockLayer.send_response(transaction)
+                transaction = self._messageLayer.send_response(transaction)
+                if transaction.response is not None:
+                    if transaction.response.type == defines.Types["CON"]:
+                        self._start_retransmission(transaction, transaction.response)
+
+                    self.send_datagram(transaction.response)
+
+    def manage_lifetime(self):
+        """
+        Every 1800 seconds calls the function to delete the expired resources.
+        """
+        while not self.rd_stopped.isSet():
+            db = DatabaseManager()
+            db.delete_expired()
+            self.rd_stopped.wait(timeout=1800)

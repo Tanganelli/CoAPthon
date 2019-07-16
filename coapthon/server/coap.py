@@ -1,10 +1,9 @@
 import logging.config
+import os
 import random
 import socket
 import struct
 import threading
-
-import os
 
 from coapthon import defines
 from coapthon.layers.blocklayer import BlockLayer
@@ -17,7 +16,9 @@ from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 from coapthon.resources.resource import Resource
 from coapthon.serializer import Serializer
-from coapthon.utils import Tree, create_logging
+from coapthon.utils import Tree
+from coapthon.utils import create_logging
+
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -33,7 +34,7 @@ class CoAP(object):
     """
     Implementation of the CoAP server
     """
-    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None):
+    def __init__(self, server_address, multicast=False, starting_mid=None, sock=None, cb_ignore_listen_exception=None):
         """
         Initialize the server.
 
@@ -41,6 +42,7 @@ class CoAP(object):
         :param multicast: if the ip is a multicast address
         :param starting_mid: used for testing purposes
         :param sock: if a socket has been created externally, it can be used directly
+        :param cb_ignore_listen_exception: Callback function to handle exception raised during the socket listen operation
         """
         self.stopped = threading.Event()
         self.stopped.clear()
@@ -63,6 +65,7 @@ class CoAP(object):
 
         self.server_address = server_address
         self.multicast = multicast
+        self._cb_ignore_listen_exception = cb_ignore_listen_exception
 
         addrinfo = socket.getaddrinfo(self.server_address[0], None)[0]
 
@@ -139,6 +142,11 @@ class CoAP(object):
                     client_address = (client_address[0], client_address[1])
             except socket.timeout:
                 continue
+            except Exception as e:
+                if self._cb_ignore_listen_exception is not None and callable(self._cb_ignore_listen_exception):
+                    if self._cb_ignore_listen_exception(e, self):
+                        continue
+                raise
             try:
                 serializer = Serializer()
                 message = serializer.deserialize(data, client_address)
@@ -180,7 +188,7 @@ class CoAP(object):
                             self._observeLayer.receive_empty(message, transaction)
 
             except RuntimeError:
-                print "Exception with Executor"
+                logger.exception("Exception with Executor")
         self._socket.close()
 
     def close(self):
@@ -192,7 +200,6 @@ class CoAP(object):
         self.stopped.set()
         for event in self.to_be_stopped:
             event.set()
-        self._socket.close()
 
     def receive_request(self, transaction):
         """
@@ -282,6 +289,29 @@ class CoAP(object):
                 self.root[actual_path] = resource
         return True
 
+    def remove_resource(self, path):
+        """
+        Helper function to remove resources.
+
+        :param path: the path for the unwanted resource
+        :rtype : the removed object
+        """
+
+        path = path.strip("/")
+        paths = path.split("/")
+        actual_path = ""
+        i = 0
+        for p in paths:
+            i += 1
+            actual_path += "/" + p
+        try:
+            res = self.root[actual_path]
+        except KeyError:
+            res = None
+        if res is not None:
+            del(self.root[actual_path])
+        return res
+
     def _start_retransmission(self, transaction, message):
         """
         Start the retransmission task.
@@ -312,7 +342,8 @@ class CoAP(object):
         with transaction:
             while retransmit_count < defines.MAX_RETRANSMIT and (not message.acknowledged and not message.rejected) \
                     and not self.stopped.isSet():
-                transaction.retransmit_stop.wait(timeout=future_time)
+                if transaction.retransmit_stop is not None:
+                    transaction.retransmit_stop.wait(timeout=future_time)
                 if not message.acknowledged and not message.rejected and not self.stopped.isSet():
                     retransmit_count += 1
                     future_time *= 2

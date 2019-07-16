@@ -26,7 +26,7 @@ class Tests(unittest.TestCase):
         self.server = CoAPServer("127.0.0.1", 5684)
         self.server_thread = threading.Thread(target=self.server.listen, args=(10,))
         self.server_thread.start()
-        self.proxy = CoAPForwardProxy("127.0.0.1", 5683)
+        self.proxy = CoAPForwardProxy("127.0.0.1", 5683, cache=True)
         self.proxy_thread = threading.Thread(target=self.proxy.listen, args=(10,))
         self.proxy_thread.start()
         self.queue = Queue()
@@ -39,23 +39,16 @@ class Tests(unittest.TestCase):
         self.proxy_thread.join(timeout=25)
         self.proxy = None
 
-
     def _test_with_client_delayed(self, message_list):  # pragma: no cover
         client = HelperClient(self.server_address)
-        start_etag = None
         for message, expected in message_list:
             if message is not None:
                 received_message = client.send_request(message)
                 time.sleep(5)
-            if received_message.etag is not None:
-                if start_etag is None:
-                    start_etag = received_message.etag
+
             if expected is not None:
                 if expected.etag is not None:
-                    if expected.etag == 1:
-                        self.assertEqual(received_message, start_etag)
-                    else:
-                        self.assertNotEqual(received_message, start_etag)
+                    self.assertEqual(received_message.etag, expected.etag)
                 if expected.type is not None:
                     self.assertEqual(received_message.type, expected.type)
                 if expected.mid is not None:
@@ -69,7 +62,7 @@ class Tests(unittest.TestCase):
                     self.assertEqual(received_message.payload, expected.payload)
                 if expected.max_age is not None:
                     if expected.max_age != 60:
-                       self.assertNotEqual(received_message.max_age, 60)
+                        self.assertNotEqual(received_message.max_age, 60)
                     else:
                         self.assertEqual(received_message.max_age, expected.max_age)
                 if expected.options:
@@ -81,7 +74,6 @@ class Tests(unittest.TestCase):
                             option_value_rec = getattr(received_message, o.name.lower().replace("-", "_"))
                             self.assertEqual(option_value, option_value_rec)
         client.stop()
-
 
     def client_callback(self, response):
         print "Callback"
@@ -109,7 +101,7 @@ class Tests(unittest.TestCase):
 
         self.current_mid += 1
 
-        #PREPARING SECOND EXPECTED RESPONSE (MAX AGE MUST BE CHECKED)
+        # PREPARING SECOND EXPECTED RESPONSE (MAX AGE MUST BE CHECKED)
         req2 = Request()
         req2.code = defines.Codes.GET.number
         req2.uri_path = path
@@ -117,7 +109,6 @@ class Tests(unittest.TestCase):
         req2._mid = self.current_mid
         req2.destination = self.server_address
         req2.proxy_uri = "coap://127.0.0.1:5684/basic"
-
 
         expected = Response()
         expected.type = defines.Types["ACK"]
@@ -195,7 +186,7 @@ class Tests(unittest.TestCase):
 
         self.current_mid += 1
 
-        #PREPARING FOURTH EXPECTED RESPONSE
+        # PREPARING FOURTH EXPECTED RESPONSE
         req4 = Request()
         req4.code = defines.Codes.GET.number
         req4.uri_path = path
@@ -216,7 +207,6 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client_delayed([exchange1, exchange2, exchange3, exchange4])
-
 
     def test_get_put(self):
         print "TEST_GET_PUT"
@@ -303,7 +293,6 @@ class Tests(unittest.TestCase):
         self.current_mid += 1
 
         self._test_with_client_delayed([exchange1, exchange2, exchange3, exchange4])
-
 
     def test_get_delete(self):
         print "TEST_GET_DELETE"
@@ -409,7 +398,6 @@ class Tests(unittest.TestCase):
 
         self._test_with_client_delayed([exchange0, exchange1, exchange2, exchange3, exchange4])
 
-
     def test_get_etag(self):
         print "TEST_GET_ETAG"
         path = "/etag"
@@ -427,6 +415,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = None
+        expected.etag = str(0)
 
         exchange1 = (req, expected)
 
@@ -446,7 +435,7 @@ class Tests(unittest.TestCase):
         expected._mid = self.current_mid
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
-        expected.etag = 1
+        expected.etag = str(0)
         expected.max_age = 1
 
         exchange2 = (req2, expected)
@@ -469,7 +458,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CHANGED.number
         expected.token = None
         expected.payload = None
-        expected.etag = 2
+        expected.etag = str(1)
         expected.location_path = "etag"
 
         exchange3 = (req3, expected)
@@ -491,7 +480,7 @@ class Tests(unittest.TestCase):
         expected.code = defines.Codes.CONTENT.number
         expected.token = None
         expected.payload = "Hello"
-        expected.etag = 2
+        expected.etag = str(1)
 
         exchange4 = (req4, expected)
 

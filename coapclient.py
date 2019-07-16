@@ -19,7 +19,6 @@ def usage():  # pragma: no cover
     print "\t-P, --payload=\t\tPayload of the request"
     print "\t-f, --payload-file=\tFile with payload of the request"
     print "\t-u, --proxy-uri-header=\tProxy-Uri CoAP Header of the request"
-    print "\t-q,  --uri_query=\tURI Query of the request"
 
 
 def client_callback(response):
@@ -29,8 +28,7 @@ def client_callback(response):
 def client_callback_observe(response):  # pragma: no cover
     global client
     print "Callback_observe"
-    print (response)
-    check = False
+    check = True
     while check:
         chosen = raw_input("Stop observing? [y/N]: ")
         if chosen != "" and not (chosen == "n" or chosen == "N" or chosen == "y" or chosen == "Y"):
@@ -58,9 +56,8 @@ def main():  # pragma: no cover
     path = None
     payload = None
     proxy_uri = None
-    uri_query = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h:o:p:q:P:f:u", ["help", "operation=", "path=", "uri_query=", "payload=",
+        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:f:", ["help", "operation=", "path=", "payload=",
                                                                "payload_file=", "proxy-uri-header="])
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -79,8 +76,6 @@ def main():  # pragma: no cover
                 payload = f.read()
         elif o in ("-u", "--proxy-uri-header"):
             proxy_uri = a
-        elif o in ("-q", "--uri_query"):
-            uri_query = a
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
@@ -125,13 +120,10 @@ def main():  # pragma: no cover
         client.stop()
     elif op == "OBSERVE":
         if path is None:
-            print "Path cannot be empty for an OBSERVE request"
+            print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        if uri_query is None:
-            client.observe(path, client_callback_observe)
-        else:
-            client.observe(path, client_callback_observe, uri_query)
+        client.observe(path, client_callback_observe)
         
     elif op == "DELETE":
         if path is None:

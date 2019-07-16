@@ -1,4 +1,6 @@
 import collections
+import array
+import struct
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -33,6 +35,38 @@ MAX_PAYLOAD = 1024
 MAX_NON_NOTIFICATIONS = 10
 
 BLOCKWISE_SIZE = 1024
+
+""" Resource Directory parameters"""
+
+RD_HOST = "127.0.0.1"
+
+RD_PORT = 5680
+
+""" Serial communication parameters"""
+
+SERIAL_PORT = "/dev/ttyUSB0"
+
+SERIAL_BAUDRATE = 115200
+
+""" JSON configuration paths"""
+
+SERIAL_PARAMETER_SCHEMA_PATH = "serialparameterschema.json"
+
+NODE_RESOURCE_SCHEMA_PATH = "noderesourceschema.json"
+
+""" MongoDB parameters """
+
+MONGO_HOST = "127.0.0.1"
+
+MONGO_PORT = 27017
+
+MONGO_DATABASE = "rd"
+
+MONGO_USER = "RD"
+
+MONGO_PWD = "res-dir"
+
+MONGO_CONFIG_FILE = "etc/mongod.conf"
 
 """  Message Format """
 
@@ -106,32 +140,33 @@ class OptionRegistry(object):
     def __init__(self):
         pass
 
-    RESERVED = OptionItem(0, "Reserved", UNKNOWN, True, None)
-    IF_MATCH = OptionItem(1, "If-Match", OPAQUE, True, None)
-    URI_HOST = OptionItem(3, "Uri-Host", STRING, True, None)
-    ETAG = OptionItem(4, "ETag", OPAQUE, True, None)
-    IF_NONE_MATCH = OptionItem(5, "If-None-Match", INTEGER, False, None)
-    OBSERVE = OptionItem(6, "Observe", INTEGER, False, 0)
-    URI_PORT = OptionItem(7, "Uri-Port", INTEGER, False, 5683)
-    LOCATION_PATH = OptionItem(8, "Location-Path", STRING, True, None)
-    URI_PATH = OptionItem(11, "Uri-Path", STRING, True, None)
-    CONTENT_TYPE = OptionItem(12, "Content-Type", INTEGER, False, 0)
-    MAX_AGE = OptionItem(14, "Max-Age", INTEGER, False, 60)
-    URI_QUERY = OptionItem(15, "Uri-Query", STRING, True, None)
-    ACCEPT = OptionItem(17, "Accept", INTEGER, False, 0)
-    LOCATION_QUERY = OptionItem(20, "Location-Query", STRING, True, None)
-    BLOCK2 = OptionItem(23, "Block2", INTEGER, False, None)
-    BLOCK1 = OptionItem(27, "Block1", INTEGER, False, None)
-    PROXY_URI = OptionItem(35, "Proxy-Uri", STRING, False, None)
-    PROXY_SCHEME = OptionItem(39, "Proxy-Schema", STRING, False, None)
-    SIZE1 = OptionItem(60, "Size1", INTEGER, False, None)
+    RESERVED =      OptionItem(0, "Reserved",       UNKNOWN, True, None)
+    IF_MATCH =      OptionItem(1, "If-Match",       OPAQUE,  True, None)
+    URI_HOST =      OptionItem(3, "Uri-Host",       STRING,  True, None)
+    ETAG =          OptionItem(4, "ETag",           OPAQUE,  True, None)
+    IF_NONE_MATCH = OptionItem(5, "If-None-Match",  INTEGER, False, None)
+    OBSERVE =       OptionItem(6, "Observe",        INTEGER, False, 0)
+    URI_PORT =      OptionItem(7, "Uri-Port",       INTEGER, False, 5683)
+    LOCATION_PATH = OptionItem(8, "Location-Path",  STRING,  True, None)
+    URI_PATH =      OptionItem(11, "Uri-Path",      STRING,  True, None)
+    CONTENT_TYPE =  OptionItem(12, "Content-Type",  INTEGER, False, 0)
+    MAX_AGE =       OptionItem(14, "Max-Age",       INTEGER, False, 60)
+    URI_QUERY =     OptionItem(15, "Uri-Query",     STRING,  True, None)
+    ACCEPT =        OptionItem(17, "Accept",        INTEGER, False, 0)
+    LOCATION_QUERY = OptionItem(20,"Location-Query",STRING,  True, None)
+    BLOCK2 =        OptionItem(23, "Block2",        INTEGER, False, None)
+    BLOCK1 =        OptionItem(27, "Block1",        INTEGER, False, None)
+    PROXY_URI =     OptionItem(35, "Proxy-Uri",     STRING,  False, None)
+    PROXY_SCHEME =  OptionItem(39, "Proxy-Schema",  STRING,  False, None)
+    SIZE1 =         OptionItem(60, "Size1",         INTEGER, False, None)
+    RM_MESSAGE_SWITCHING = OptionItem(65524, "Routing", OPAQUE, False, None)
 
     LIST = {
         0: RESERVED,
         1: IF_MATCH,
         3: URI_HOST,
         4: ETAG,
-        5: IF_MATCH,
+        5: IF_NONE_MATCH,
         6: OBSERVE,
         7: URI_PORT,
         8: LOCATION_PATH,
@@ -145,10 +180,32 @@ class OptionRegistry(object):
         27: BLOCK1,
         35: PROXY_URI,
         39: PROXY_SCHEME,
-        60: SIZE1
+        60: SIZE1,
+        65524: RM_MESSAGE_SWITCHING
 
     }
 
+    @staticmethod
+    def get_option_flags(option_num):
+        """
+        Get Critical, UnSafe, NoCacheKey flags from the option number
+        as per RFC 7252, section 5.4.6
+
+        :param option_num: option number
+        :return: option flags
+        :rtype: 3-tuple (critical, unsafe, no-cache)
+        """
+        opt_bytes = array.array('B', '\0\0')
+        if option_num < 256:
+            s = struct.Struct("!B")
+            s.pack_into(opt_bytes, 0, option_num)
+        else:
+            s = struct.Struct("H")
+            s.pack_into(opt_bytes, 0, option_num)
+        critical = (opt_bytes[0] & 0x01) > 0
+        unsafe = (opt_bytes[0] & 0x02) > 0
+        nocache = ((opt_bytes[0] & 0x1e) == 0x1c)
+        return (critical, unsafe, nocache)
 
 Types = {
     'CON': 0,
@@ -205,7 +262,7 @@ class Codes(object):
         4: DELETE,
 
         65: CREATED,
-        66: DELETE,
+        66: DELETED,
         67: VALID,
         68: CHANGED,
         69: CONTENT,
@@ -237,7 +294,8 @@ Content_types = {
     "application/xml": 41,
     "application/octet-stream": 42,
     "application/exi": 47,
-    "application/json": 50
+    "application/json": 50,
+    "application/cbor": 60
 }
 
 COAP_PREFACE = "coap://"
@@ -245,6 +303,7 @@ LOCALHOST = "127.0.0.1"
 HC_PROXY_DEFAULT_PORT = 8080  # TODO there is a standard for this?
 COAP_DEFAULT_PORT = 5683
 DEFAULT_HC_PATH = "/"
+DEFAULT_CH_PATH = "/coap2http"
 BAD_REQUEST = 400  # "Bad Request" error code
 NOT_IMPLEMENTED = 501  # "Not Implemented" error code
 

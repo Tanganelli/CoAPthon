@@ -8,8 +8,8 @@ __author__ = 'Giacomo Tanganelli'
 
 
 class CoAPForwardProxy(CoAP):
-    def __init__(self, host, port,  multicast=False):
-        CoAP.__init__(self, (host, port), multicast=multicast)
+    def __init__(self, host, port,  multicast=False, cache=False):
+        CoAP.__init__(self, (host, port), multicast=multicast, cache=cache)
 
         print "CoAP Proxy start on " + host + ":" + str(port)
 

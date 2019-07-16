@@ -88,7 +88,7 @@ class BlockLayer(object):
                 # end of blockwise
                 del transaction.request.block1
                 transaction.block_transfer = False
-                # TODO remove from _block1_receive
+                del self._block1_receive[key_token]
                 return transaction
             else:
                 # Continue
@@ -141,10 +141,10 @@ class BlockLayer(object):
             item.num += 1
             item.byte += item.size
             if len(item.payload) <= item.byte:
-                m = 0
+                item.m = 0
             else:
-                m = 1
-            request.block1 = (item.num, m, item.size)
+                itme.m = 1
+            request.block1 = (item.num, item.m, item.size)
         elif transaction.response.block2 is not None:
 
             num, m, size = transaction.response.block2
@@ -180,7 +180,7 @@ class BlockLayer(object):
                         logger.error("Content-type Error")
                         return self.error(transaction, defines.Codes.UNSUPPORTED_CONTENT_FORMAT.number)
                     transaction.response.payload = self._block2_sent[key_token].payload + transaction.response.payload
-                del self._block2_sent[key_token]
+                    del self._block2_sent[key_token]
         else:
             transaction.block_transfer = False
         return transaction
@@ -225,8 +225,7 @@ class BlockLayer(object):
 
                 self._block2_receive[key_token] = BlockItem(byte, num, m, size)
 
-            ret = transaction.response.payload[byte:byte + size]
-            if len(ret) == size:
+            if len(transaction.response.payload) > (byte + size):
                 m = 1
             else:
                 m = 0

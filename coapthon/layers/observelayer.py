@@ -43,6 +43,9 @@ class ObserveLayer(object):
             key_token = hash(str(host) + str(port) + str(request.token))
 
             self._relations[key_token] = ObserveItem(time.time(), None, True, None)
+        if request.observe == 1:
+            # Cancelling observe explicitly
+            self.remove_subscriber(request)
 
         return request
 
@@ -194,6 +197,8 @@ class ObserveLayer(object):
         try:
             self._relations[key_token].transaction.completed = True
             del self._relations[key_token]
+        except AttributeError:
+            logger.warning("No Transaction")
         except KeyError:
             logger.warning("No Subscriber")
 
