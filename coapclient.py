@@ -12,12 +12,14 @@ client = None
 
 
 def usage():  # pragma: no cover
-    print "Command:\tcoapclient.py -o -p [-P]"
+    print "Command:\tcoapclient.py -o -p [-P] [-u]"
     print "Options:"
     print "\t-o, --operation=\tGET|PUT|POST|DELETE|DISCOVER|OBSERVE"
-    print "\t-p, --path=\t\t\tPath of the request"
+    print "\t-p, --path=\t\tPath of the request"
     print "\t-P, --payload=\t\tPayload of the request"
-    print "\t-f, --payload-file=\t\tFile with payload of the request"
+    print "\t-f, --payload-file=\tFile with payload of the request"
+    print "\t-u, --proxy-uri-header=\tProxy-Uri CoAP Header of the request"
+    print "\t-q,  --uri_query=\tURI Query of the request"
 
 
 def client_callback(response):
@@ -27,7 +29,8 @@ def client_callback(response):
 def client_callback_observe(response):  # pragma: no cover
     global client
     print "Callback_observe"
-    check = True
+    print (response)
+    check = False
     while check:
         chosen = raw_input("Stop observing? [y/N]: ")
         if chosen != "" and not (chosen == "n" or chosen == "N" or chosen == "y" or chosen == "Y"):
@@ -54,9 +57,11 @@ def main():  # pragma: no cover
     op = None
     path = None
     payload = None
+    proxy_uri = None
+    uri_query = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:f:", ["help", "operation=", "path=", "payload=",
-                                                               "payload_file="])
+        opts, args = getopt.getopt(sys.argv[1:], "h:o:p:q:P:f:u", ["help", "operation=", "path=", "uri_query=", "payload=",
+                                                               "payload_file=", "proxy-uri-header="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized"
@@ -72,6 +77,10 @@ def main():  # pragma: no cover
         elif o in ("-f", "--payload-file"):
             with open(a, 'r') as f:
                 payload = f.read()
+        elif o in ("-u", "--proxy-uri-header"):
+            proxy_uri = a
+        elif o in ("-q", "--uri_query"):
+            uri_query = a
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
@@ -94,6 +103,11 @@ def main():  # pragma: no cover
         usage()
         sys.exit(2)
 
+    if proxy_uri and not proxy_uri.startswith("http://") and not proxy_uri.startswith("https://"):
+        print "Proxy-Uri header must be conform to http[s]://host[:port]/path"
+        usage()
+        sys.exit(2)
+
     host, port, path = parse_uri(path)
     try:
         tmp = socket.gethostbyname(host)
@@ -106,22 +120,25 @@ def main():  # pragma: no cover
             print "Path cannot be empty for a GET request"
             usage()
             sys.exit(2)
-        response = client.get(path)
+        response = client.get(path, proxy_uri=proxy_uri)
         print response.pretty_print()
         client.stop()
     elif op == "OBSERVE":
         if path is None:
-            print "Path cannot be empty for a GET request"
+            print "Path cannot be empty for an OBSERVE request"
             usage()
             sys.exit(2)
-        client.observe(path, client_callback_observe)
+        if uri_query is None:
+            client.observe(path, client_callback_observe)
+        else:
+            client.observe(path, client_callback_observe, uri_query)
         
     elif op == "DELETE":
         if path is None:
             print "Path cannot be empty for a DELETE request"
             usage()
             sys.exit(2)
-        response = client.delete(path)
+        response = client.delete(path, proxy_uri=proxy_uri)
         print response.pretty_print()
         client.stop()
     elif op == "POST":
@@ -133,7 +150,7 @@ def main():  # pragma: no cover
             print "Payload cannot be empty for a POST request"
             usage()
             sys.exit(2)
-        response = client.post(path, payload)
+        response = client.post(path, payload, proxy_uri=proxy_uri)
         print response.pretty_print()
         client.stop()
     elif op == "PUT":
@@ -145,7 +162,7 @@ def main():  # pragma: no cover
             print "Payload cannot be empty for a PUT request"
             usage()
             sys.exit(2)
-        response = client.put(path, payload)
+        response = client.put(path, payload, proxy_uri=proxy_uri)
         print response.pretty_print()
         client.stop()
     elif op == "DISCOVER":
