@@ -162,6 +162,20 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
+    def refresh_observation(self, token):
+        """
+        Re-register interest with the server in the previously observed resource.
+
+        :param token: the token returned from the original observe request
+        """
+        with self.requests_lock:
+            if token not in self.requests:
+                return
+            if not hasattr(self.requests[token].request, 'observe'):
+                return
+            context = self.requests[token]
+        self.protocol.send_message(context.request)
+
     def delete(self, path, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a DELETE on a certain path.
