@@ -36,7 +36,7 @@ class CHProxy:
         :param coap_ip: the ip of the ch_proxy server
         :param coap_port: the port of the ch_proxy server
         :param path: the path of the ch_proxy server
-        
+
         """
         global ch_path
         ch_path = CHProxy.get_formatted_path(path)
@@ -97,7 +97,6 @@ class CoAP_HTTP(CoAP):
             rst.destination = client_address
             rst.type = Types["RST"]
             rst.code = message
-            rst.mid = message.mid
             self.send_datagram(rst)
             return
         logger.debug("receive_datagram - " + str(message))
@@ -110,12 +109,14 @@ class CoAP_HTTP(CoAP):
                 rst.type = Types["RST"]
                 rst.code = Codes.BAD_REQUEST.number
                 rst.mid = message.mid
+                rst.token = message.token
                 self.send_datagram(rst)
                 return
             # Execute HTTP/HTTPS request
             http_response = CoAP_HTTP.execute_http_request(message.code, message.proxy_uri, message.payload)
             # HTTP response to CoAP response conversion
-            coap_response = CoAP_HTTP.to_coap_response(http_response, message.code, client_address, message.mid)
+            coap_response = CoAP_HTTP.to_coap_response(http_response, message.code, client_address, message.mid,
+                                                       message.token)
             # Send datagram and return
             self.send_datagram(coap_response)
             return
@@ -127,12 +128,13 @@ class CoAP_HTTP(CoAP):
             logger.error("Received response from %s", message.source)
 
     @staticmethod
-    def to_coap_response(http_response, request_method, client_address, mid):
+    def to_coap_response(http_response, request_method, client_address, mid, token):
         coap_msg = Message()
         coap_msg.destination = client_address
         coap_msg.type = Types["ACK"]
         coap_msg.code = CoAP_HTTP.to_coap_code(http_response.status_code, request_method)
         coap_msg.mid = mid
+        coap_msg.token = token
         if 'Content-Type' in http_response.headers:
             coap_msg.content_type = CoAP_HTTP.to_coap_content_type(http_response.headers['Content-Type'].split(";")[0])
         else:
