@@ -281,3 +281,8 @@ class AdvancedResourceSeparate(Resource):
         response.payload = "Response deleted"
         return True, response
 
+
+class DynamicResource(Resource):
+    def __init__(self, name="Dynamic"):
+        super(DynamicResource, self).__init__(name)
+        self.payload = "Dynamic resource"
