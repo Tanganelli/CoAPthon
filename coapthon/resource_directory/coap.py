@@ -368,8 +368,6 @@ class CoAP(object):
                 self.to_be_stopped.remove(transaction.retransmit_stop)
             except ValueError:
                 pass
-            transaction.retransmit_stop = None
-            transaction.retransmit_thread = None
 
     def _start_separate_timer(self, transaction):
         """

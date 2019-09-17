@@ -143,11 +143,11 @@ class CoAP(object):
         Only one retransmit thread at a time, wait for other to finish
         
         """
-        if hasattr(transaction, 'retransmit_thread'):
-            while transaction.retransmit_thread is not None:
-                logger.debug("Waiting for retransmit thread to finish ...")
-                time.sleep(0.01)
-                continue
+        if transaction.retransmit_thread is not None:
+            try:
+                transaction.retransmit_thread.join()
+            except RuntimeError:  # Catches the thread not having started
+                pass
 
     def _send_block_request(self, transaction):
         """
@@ -239,8 +239,6 @@ class CoAP(object):
                 self.to_be_stopped.remove(transaction.retransmit_stop)
             except ValueError:
                 pass
-            transaction.retransmit_stop = None
-            transaction.retransmit_thread = None
 
             logger.debug("retransmit loop ... exit")
 
