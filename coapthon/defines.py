@@ -222,6 +222,7 @@ class Codes(object):
     """
     CoAP codes. Every code is represented as (NUMBER, NAME)
     """
+
     ERROR_LOWER_BOUND = 128
 
     EMPTY = CodeItem(0, 'EMPTY')
@@ -229,6 +230,8 @@ class Codes(object):
     POST = CodeItem(2, 'POST')
     PUT = CodeItem(3, 'PUT')
     DELETE = CodeItem(4, 'DELETE')
+    FETCH = CodeItem(5, 'FETCH')
+    PATCH = CodeItem(6, 'PATCH')
 
     CREATED = CodeItem(65, 'CREATED')
     DELETED = CodeItem(66, 'DELETED')
@@ -260,6 +263,8 @@ class Codes(object):
         2: POST,
         3: PUT,
         4: DELETE,
+        5: FETCH,
+        6: PATCH,
 
         65: CREATED,
         66: DELETED,
@@ -295,7 +300,9 @@ Content_types = {
     "application/octet-stream": 42,
     "application/exi": 47,
     "application/json": 50,
-    "application/cbor": 60
+    "application/cbor": 60,
+    "application/map-keys+json": 12000,
+    "application/json-patch+json": 12100
 }
 
 COAP_PREFACE = "coap://"

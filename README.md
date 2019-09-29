@@ -1,7 +1,6 @@
 [![Build Status](https://travis-ci.org/Tanganelli/CoAPthon.svg?branch=master)](https://travis-ci.org/Tanganelli/CoAPthon)
 [![Coverage Status](https://coveralls.io/repos/Tanganelli/CoAPthon/badge.svg?branch=master&service=github)](https://coveralls.io/github/Tanganelli/CoAPthon?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/coapthon/badge/?version=latest)](http://coapthon.readthedocs.org/en/latest/?badge=latest)
-[![BuyMeACoffe](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jeo)
 
 CoAPthon
 ========
@@ -408,4 +407,3 @@ $ make html
 ```
 
 The documentation will be build in CoAPthon/docs/build/html. Let's start from index.html to have an overview of the library.
-

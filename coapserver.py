@@ -5,7 +5,7 @@ import sys
 from coapthon.server.coap import CoAP
 from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, \
     Child, \
-    MultipleEncodingResource, AdvancedResource, AdvancedResourceSeparate, DynamicResource
+    MultipleEncodingResource, AdvancedResource, AdvancedResourceSeparate, FetchResource
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -25,7 +25,8 @@ class CoAPServer(CoAP):
         self.add_resource('child/', Child())
         self.add_resource('advanced/', AdvancedResource())
         self.add_resource('advancedSeparate/', AdvancedResourceSeparate())
-        self.add_resource('dynamic/', DynamicResource())
+        ##Resource to test FETCH
+        self.add_resource('fetchTest/', FetchResource())
 
         print "CoAP Server start on " + host + ":" + str(port)
         print self.root.dump()

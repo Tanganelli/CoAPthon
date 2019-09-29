@@ -55,6 +55,7 @@ class Tests(unittest.TestCase):
 
     def test_retrasnmissions(self):
         print "Retransmissions"
+        print "PROVA IN CORSO"
         path = "/separate"
         req = Request()
         req.code = defines.Codes.GET.number
