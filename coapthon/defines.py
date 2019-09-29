@@ -301,8 +301,8 @@ Content_types = {
     "application/exi": 47,
     "application/json": 50,
     "application/cbor": 60,
-    "application/map-keys+json": 12000,
-    "application/json-patch+json": 12100
+    "application/map-keys+json": 51,
+    "application/json-patch+json": 52
 }
 
 COAP_PREFACE = "coap://"
