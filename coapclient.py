@@ -57,7 +57,7 @@ def main():  # pragma: no cover
     payload = None
     proxy_uri = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:f:u", ["help", "operation=", "path=", "payload=",
+        opts, args = getopt.getopt(sys.argv[1:], "ho:p:P:f:", ["help", "operation=", "path=", "payload=",
                                                                "payload_file=", "proxy-uri-header="])
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -70,9 +70,7 @@ def main():  # pragma: no cover
         elif o in ("-p", "--path"):
             path = a
         elif o in ("-P", "--payload"):
-            #payload = a+'\''+str(args)
             payload = a
-            #print payload
         elif o in ("-f", "--payload-file"):
             with open(a, 'r') as f:
                 payload = f.read()

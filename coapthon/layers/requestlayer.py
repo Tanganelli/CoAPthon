@@ -157,7 +157,6 @@ class RequestLayer(object):
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
-        print "FETCH IN CORSO"
         if path == defines.DISCOVERY_URL:
             transaction = self._server.resourceLayer.discover(transaction)
         else:
@@ -187,7 +186,6 @@ class RequestLayer(object):
         transaction.response = Response()
         transaction.response.destination = transaction.request.source
         transaction.response.token = transaction.request.token
-        print "PATCH IN CORSO"
         try:
             resource = self._server.root[path]
         except KeyError:
@@ -198,4 +196,5 @@ class RequestLayer(object):
             transaction.resource = resource
             # Update request
             transaction = self._server.resourceLayer.patch_resource(transaction)
+
         return transaction

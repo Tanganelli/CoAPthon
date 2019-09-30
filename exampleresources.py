@@ -295,7 +295,6 @@ class FetchResource(Resource):
         self.x_coord = 256
         self.y_coord = 45
         self.foo = ["bar", "baz"]
-        print type(self.foo)
         self.allValues = {
             'x-coord': self.x_coord,
             'y-coord':self.y_coord,
@@ -312,7 +311,6 @@ class FetchResource(Resource):
     def render_FETCH(self, request):
         if not request.payload:
             tempPayload = '{'
-            #print "non ce"
             for i, q in enumerate(self.allValues):
                 if i > 0:
                     tempPayload += ','
@@ -322,20 +320,15 @@ class FetchResource(Resource):
             return self
         else:
             query = request.payload
-            if ("['" not in query):
-                query = query.replace("[","['").replace(",", "','").replace("]", "']")
-            query = ast.literal_eval(query)
-            tempJson = '{'
-            for i, q in enumerate(query):
+            query = json.loads(query)
+            values = {}
+            for q in query["keys"]:
                 if q in self.allValues:
-                    if i > 0:
-                        tempJson += ','
-                    tempJson += "'"+str(q)+"': '"+str(self.allValues[q])+"'"
-            if tempJson == '{':
-                self.payload =(defines.Codes.NOT_FOUND)
+                    values[q] = self.allValues[q]
+            if (len(values.keys()) == 0):
+                self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
             else:
-                tempJson += '}'
-                self.payload = (defines.Content_types["application/json"], tempJson)
+                self.payload = json.dumps(values)
             return self
 
     def render_PATCH(self, request):
@@ -343,11 +336,9 @@ class FetchResource(Resource):
             return self
         else:
             query = request.payload
-            if ("['" not in query):
-                query = query.replace("{", "{'").replace(":", "':'").replace(",", "','").replace("}", "'}").replace("}','{", "},{")
-            query = ast.literal_eval(query)
-            for i, q in enumerate(query):
-                splitPath = q['path'].split('/');
+            query = json.loads(query)
+            for keys,values in query.iteritems():
+                splitPath = values['path'].split('/');
                 if (len(splitPath) == 2):
                     AVpath = splitPath[0]
                     AVindex = int(splitPath[1])
@@ -355,31 +346,31 @@ class FetchResource(Resource):
                     AVpath = splitPath[0]
                     AVindex = -1
                 try:
-                    int(q['value'])
-                    valueToAdd = int(q['value'])
+                    int(values['value'])
+                    valueToAdd = int(values['value'])
                 except ValueError:
-                    valueToAdd = q['value']
-
-                if(q['op']=="replace"):
-                    if(q['path'] in self.allValues):
-                        self.allValues[q['path']] = valueToAdd
+                    valueToAdd = values['value']
+                if(values['op'] == 'replace'):
+                    if(AVpath in self.allValues):
+                        self.allValues[AVpath] = valueToAdd
                     else:
-                        self.payload = (defines.Codes.NOT_FOUND)
+                        print AVpath
+                        self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+                        return self
                 else:
                     if(AVpath in self.allValues):
                         if (type(self.allValues[AVpath]) == list ):
                             if (AVindex > len(self.allValues[AVpath])):
-                                self.allValues[AVpath].append(valueToAdd)
+                                self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
                             else:
                                 self.allValues[AVpath].insert(AVindex, valueToAdd)
                         else:
                             tempValue = [self.allValues[AVpath]]
                             tempValue.insert(AVindex, valueToAdd)
                             self.allValues[AVpath] = tempValue
-
                     else:
-                        self.payload = (defines.Codes.NOT_FOUND)
-            return self
+                        self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+        return self
 
     def render_PUT(self, request):
         self.edit_resource(request)
