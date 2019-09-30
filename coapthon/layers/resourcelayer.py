@@ -608,7 +608,6 @@ class ResourceLayer(object):
             return transaction
 
         method = getattr(transaction.resource, "render_PATCH", None)
-
         try:
             resource = method(request=transaction.request)
         except NotImplementedError:

@@ -354,8 +354,7 @@ class FetchResource(Resource):
                     if(AVpath in self.allValues):
                         self.allValues[AVpath] = valueToAdd
                     else:
-                        print AVpath
-                        self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+                        self.payload = (defines.Codes.INCONSISTENT_STATE)
                         return self
                 else:
                     if(AVpath in self.allValues):
