@@ -104,6 +104,15 @@ def main():  # pragma: no cover
         sys.exit(2)
 
     host, port, path = parse_uri(path)
+
+    """ Idee sul controllo finale dell'url 
+
+    if path and not path.endswith("coap://"):
+        print "errore nel passaggio"
+        usage()
+        sys.exit(2)
+    """
+
     try:
         tmp = socket.gethostbyname(host)
         host = tmp
@@ -124,7 +133,7 @@ def main():  # pragma: no cover
             usage()
             sys.exit(2)
         client.observe(path, client_callback_observe)
-        
+
     elif op == "DELETE":
         if path is None:
             print "Path cannot be empty for a DELETE request"
@@ -159,6 +168,30 @@ def main():  # pragma: no cover
         client.stop()
     elif op == "DISCOVER":
         response = client.discover()
+        print response.pretty_print()
+        client.stop()
+        """test con implementazione in request layer"""
+    elif op == "FETCH":
+        print "FETCH CALLBACK OK"
+        if path is None:
+            print "Path cannot be empty for FETCH"
+            usage()
+            sys.exit(2)
+        ##AGGIUNTA DEL PAYLOAD DA DOVE ARRIVA LA RICHIESTA
+        if payload is None:
+            print "Payload cannot be empty for a FETCH request"
+            usage()
+            sys.exit(2)
+        response = client.fetch(path, payload, proxy_uri=proxy_uri)
+        print response.pretty_print()
+        client.stop()
+    elif op == "PATCH":
+        print "PATCH CALLBACK OK"
+        if path is None:
+            print "Path cannot be empty for FETCH"
+            usage()
+            sys.exit(2)
+        response = client.patch(path, payload, proxy_uri=proxy_uri)
         print response.pretty_print()
         client.stop()
     else:

@@ -1,8 +1,14 @@
 import time
-
+import ast
 from coapthon import defines
 
 from coapthon.resources.resource import Resource
+
+##VAR DUMP
+import pprint
+
+#Per JSON
+import json
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -179,7 +185,8 @@ class MultipleEncodingResource(Resource):
         elif request.accept == defines.Content_types["text/plain"]:
             self.payload = (defines.Content_types["text/plain"], str(self.value))
         return self
-
+    def render_FETCH(self, request):
+        return self
     def render_PUT(self, request):
         self.edit_resource(request)
         return self
@@ -281,3 +288,96 @@ class AdvancedResourceSeparate(Resource):
         response.payload = "Response deleted"
         return True, response
 
+class FetchResource(Resource):
+    def __init__(self, name="FetchResource", coap_server=None):
+        super(FetchResource, self).__init__(name, coap_server, visible=True,
+                                            observable=True, allow_children=True)
+        self.x_coord = 256
+        self.y_coord = 45
+        self.foo = ["bar", "baz"]
+        self.allValues = {
+            'x-coord': self.x_coord,
+            'y-coord':self.y_coord,
+            'foo': self.foo
+        }
+
+        self.resource_type = "rt1"
+        #self.content_type = "application/json"
+        self.interface_type = "if1"
+
+    def render_GET(self, request):
+        return self
+
+    def render_FETCH(self, request):
+        if not request.payload:
+            tempPayload = '{'
+            for i, q in enumerate(self.allValues):
+                if i > 0:
+                    tempPayload += ','
+                tempPayload += "'" + str(q) + "': '" + str(self.allValues[q]) + "'"
+            tempPayload += '}'
+            self.payload = (defines.Content_types["application/json"], tempPayload)
+            return self
+        else:
+            query = request.payload
+            query = json.loads(query)
+            values = {}
+            for q in query["keys"]:
+                if q in self.allValues:
+                    values[q] = self.allValues[q]
+            if (len(values.keys()) == 0):
+                self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+            else:
+                self.payload = json.dumps(values)
+            return self
+
+    def render_PATCH(self, request):
+        if not request.payload:
+            return self
+        else:
+            query = request.payload
+            query = json.loads(query)
+            for keys,values in query.iteritems():
+                splitPath = values['path'].split('/');
+                if (len(splitPath) == 2):
+                    AVpath = splitPath[0]
+                    AVindex = int(splitPath[1])
+                else:
+                    AVpath = splitPath[0]
+                    AVindex = -1
+                try:
+                    int(values['value'])
+                    valueToAdd = int(values['value'])
+                except ValueError:
+                    valueToAdd = values['value']
+                if(values['op'] == 'replace'):
+                    if(AVpath in self.allValues):
+                        self.allValues[AVpath] = valueToAdd
+                    else:
+                        self.payload = (defines.Codes.INCONSISTENT_STATE)
+                        return self
+                else:
+                    if(AVpath in self.allValues):
+                        if (type(self.allValues[AVpath]) == list ):
+                            if (AVindex > len(self.allValues[AVpath])):
+                                self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+                            else:
+                                self.allValues[AVpath].insert(AVindex, valueToAdd)
+                        else:
+                            tempValue = [self.allValues[AVpath]]
+                            tempValue.insert(AVindex, valueToAdd)
+                            self.allValues[AVpath] = tempValue
+                    else:
+                        self.payload = (defines.Codes.UNPROCESSABLE_ENTITY)
+        return self
+
+    def render_PUT(self, request):
+        self.edit_resource(request)
+        return self
+
+    def render_POST(self, request):
+        res = self.init_resource(request, FetchResource())
+        return res
+
+    def render_DELETE(self, request):
+        return True

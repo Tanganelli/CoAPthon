@@ -501,6 +501,186 @@ class ResourceLayer(object):
 
         return transaction
 
+    def fetch_resource(self, transaction):
+        """
+        Render a FETCH request.
+
+        :param transaction: the transaction
+        :return: the transaction
+        """
+        method = getattr(transaction.resource, 'render_FETCH', None)
+
+        transaction.resource.actual_content_type = None
+        # Accept
+        if transaction.request.accept is not None:
+            transaction.resource.actual_content_type = transaction.request.accept
+
+        # Render_GET
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
+            try:
+                method = getattr(transaction.resource, "render_FETCH_advanced", None)
+                ret = method(request=transaction.request, response=transaction.response)
+                if isinstance(ret, tuple) and len(ret) == 2 and isinstance(ret[1], Response) \
+                        and isinstance(ret[0], Resource):
+                    # Advanced handler
+                    resource, response = ret
+                    transaction.resource = resource
+                    transaction.response = response
+                    if transaction.response.code is None:
+                        transaction.response.code = defines.Codes.CONTENT.number
+                    return transaction
+                elif isinstance(ret, tuple) and len(ret) == 3 and isinstance(ret[1], Response) \
+                        and isinstance(ret[0], Resource):
+                    # Advanced handler separate
+                    resource, response, callback = ret
+                    ret = self._handle_separate_advanced(transaction, callback)
+                    if not isinstance(ret, tuple) or \
+                            not (isinstance(ret[0], Resource) and isinstance(ret[1], Response)):  # pragma: no cover
+                        transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                        return transaction
+                    resource, response = ret
+                    transaction.resource = resource
+                    transaction.response = response
+                    if transaction.response.code is None:
+                        transaction.response.code = defines.Codes.CONTENT.number
+                    return transaction
+                else:
+                    raise NotImplementedError
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
+
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):  # pragma: no cover
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:  # pragma: no cover
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction.response
+
+        if resource.etag in transaction.request.etag:
+            transaction.response.code = defines.Codes.VALID.number
+        else:
+            transaction.response.code = defines.Codes.CONTENT.number
+
+        try:
+            transaction.response.payload = resource.payload
+            if resource.actual_content_type is not None \
+                    and resource.actual_content_type != defines.Content_types["text/plain"]:
+                transaction.response.content_type = resource.actual_content_type
+        except KeyError:
+            transaction.response.code = defines.Codes.NOT_ACCEPTABLE.number
+            return transaction.response
+
+        assert(isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+        if resource.max_age is not None:
+            transaction.response.max_age = resource.max_age
+
+        transaction.resource = resource
+
+        return transaction
+
+    def patch_resource(self, transaction):
+        """
+        Render a PATCH request.
+
+        :param transaction: the transaction
+        :return: the response
+        """
+        # If-Match
+        if transaction.request.if_match:
+            if None not in transaction.request.if_match and str(transaction.resource.etag) \
+                    not in transaction.request.if_match:
+                transaction.response.code = defines.Codes.PRECONDITION_FAILED.number
+                return transaction
+        # If-None-Match
+        if transaction.request.if_none_match:
+            transaction.response.code = defines.Codes.PRECONDITION_FAILED.number
+            return transaction
+
+        method = getattr(transaction.resource, "render_PATCH", None)
+        try:
+            resource = method(request=transaction.request)
+        except NotImplementedError:
+            try:
+                method = getattr(transaction.resource, "render_PATCH_advanced", None)
+                ret = method(request=transaction.request, response=transaction.response)
+                if isinstance(ret, tuple) and len(ret) == 2 and isinstance(ret[1], Response) \
+                        and isinstance(ret[0], Resource):
+                    # Advanced handler
+                    resource, response = ret
+                    resource.changed = True
+                    resource.observe_count += 1
+                    transaction.resource = resource
+                    transaction.response = response
+                    if transaction.response.code is None:
+                        transaction.response.code = defines.Codes.CHANGED.number
+                    return transaction
+                elif isinstance(ret, tuple) and len(ret) == 3 and isinstance(ret[1], Response) \
+                        and isinstance(ret[0], Resource):
+                    # Advanced handler separate
+                    resource, response, callback = ret
+                    ret = self._handle_separate_advanced(transaction, callback)
+                    if not isinstance(ret, tuple) or \
+                            not (isinstance(ret[0], Resource) and isinstance(ret[1], Response)):  # pragma: no cover
+                        transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                        return transaction
+                    resource, response = ret
+                    resource.changed = True
+                    resource.observe_count += 1
+                    transaction.resource = resource
+                    transaction.response = response
+                    if transaction.response.code is None:
+                        transaction.response.code = defines.Codes.CHANGED.number
+                    return transaction
+                else:
+                    raise NotImplementedError
+            except NotImplementedError:
+                transaction.response.code = defines.Codes.METHOD_NOT_ALLOWED.number
+                return transaction
+
+        if isinstance(resource, Resource):
+            pass
+        elif isinstance(resource, tuple) and len(resource) == 2:
+            resource, callback = resource
+            resource = self._handle_separate(transaction, callback)
+            if not isinstance(resource, Resource):  # pragma: no cover
+                transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+                return transaction
+        else:  # pragma: no cover
+            # Handle error
+            transaction.response.code = defines.Codes.INTERNAL_SERVER_ERROR.number
+            return transaction
+
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+
+        transaction.response.code = defines.Codes.CHANGED.number
+
+        transaction.response.payload = None
+
+        assert (isinstance(resource, Resource))
+        if resource.etag is not None:
+            transaction.response.etag = resource.etag
+        if resource.max_age is not None:
+            transaction.response.max_age = resource.max_age
+
+        resource.changed = True
+        resource.observe_count += 1
+        transaction.resource = resource
+
+        return transaction
+
+
     def discover(self, transaction):
         """
         Render a GET request to the .well-know/core link.

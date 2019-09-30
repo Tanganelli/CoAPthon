@@ -29,6 +29,10 @@ class RequestLayer(object):
             transaction = self._handle_put(transaction)
         elif method == defines.Codes.DELETE.number:
             transaction = self._handle_delete(transaction)
+        elif method == defines.Codes.FETCH.number:
+            transaction = self._handle_fetch(transaction)
+        elif method == defines.Codes.PATCH.number:
+            transaction = self._handle_patch(transaction)
         else:
             transaction.response = None
         return transaction
@@ -140,3 +144,57 @@ class RequestLayer(object):
             transaction = self._server.resourceLayer.delete_resource(transaction, path)
         return transaction
 
+    def _handle_fetch(self, transaction):
+        """
+                Handle FETCH requests
+
+                :type transaction: Transaction
+                :param transaction: the transaction that owns the request
+                :rtype : Transaction
+                :return: the edited transaction with the response to the request
+                """
+        path = str("/" + transaction.request.uri_path)
+        transaction.response = Response()
+        transaction.response.destination = transaction.request.source
+        transaction.response.token = transaction.request.token
+        if path == defines.DISCOVERY_URL:
+            transaction = self._server.resourceLayer.discover(transaction)
+        else:
+            try:
+                resource = self._server.root[path]
+            except KeyError:
+                resource = None
+            if resource is None or path == '/':
+                # Not Found
+                transaction.response.code = defines.Codes.NOT_FOUND.number
+            else:
+                transaction.resource = resource
+                transaction = self._server.resourceLayer.fetch_resource(transaction)
+
+        return transaction
+
+    def _handle_patch(self, transaction):
+        """
+        Handle PATCH requests
+
+        :type transaction: Transaction
+        :param transaction: the transaction that owns the request
+        :rtype : Transaction
+        :return: the edited transaction with the response to the request
+        """
+        path = str("/" + transaction.request.uri_path)
+        transaction.response = Response()
+        transaction.response.destination = transaction.request.source
+        transaction.response.token = transaction.request.token
+        try:
+            resource = self._server.root[path]
+        except KeyError:
+            resource = None
+        if resource is None:
+            transaction.response.code = defines.Codes.NOT_FOUND.number
+        else:
+            transaction.resource = resource
+            # Update request
+            transaction = self._server.resourceLayer.patch_resource(transaction)
+
+        return transaction

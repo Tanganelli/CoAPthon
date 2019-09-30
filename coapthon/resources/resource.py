@@ -442,6 +442,14 @@ class Resource(object):
         """
         raise NotImplementedError
 
+    def render_FETCH(self, request):
+
+        raise NotImplementedError
+
+    def render_PATCH(self, request):
+
+        raise NotImplementedError
+
     def render_GET_advanced(self, request, response):
         """
         Method to be redefined to render a GET request on the resource.

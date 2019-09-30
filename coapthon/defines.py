@@ -222,6 +222,7 @@ class Codes(object):
     """
     CoAP codes. Every code is represented as (NUMBER, NAME)
     """
+
     ERROR_LOWER_BOUND = 128
 
     EMPTY = CodeItem(0, 'EMPTY')
@@ -229,6 +230,8 @@ class Codes(object):
     POST = CodeItem(2, 'POST')
     PUT = CodeItem(3, 'PUT')
     DELETE = CodeItem(4, 'DELETE')
+    FETCH = CodeItem(5, 'FETCH')
+    PATCH = CodeItem(6, 'PATCH')
 
     CREATED = CodeItem(65, 'CREATED')
     DELETED = CodeItem(66, 'DELETED')
@@ -253,6 +256,8 @@ class Codes(object):
     SERVICE_UNAVAILABLE = CodeItem(163, 'SERVICE_UNAVAILABLE')
     GATEWAY_TIMEOUT = CodeItem(164, 'GATEWAY_TIMEOUT')
     PROXY_NOT_SUPPORTED = CodeItem(165, 'PROXY_NOT_SUPPORTED')
+    UNPROCESSABLE_ENTITY = CodeItem(166, 'UNPROCESSABLE_ENTITY')
+    INCONSISTENT_STATE = CodeItem(167, 'INCOSISTENT_STATE')
 
     LIST = {
         0: EMPTY,
@@ -260,6 +265,8 @@ class Codes(object):
         2: POST,
         3: PUT,
         4: DELETE,
+        5: FETCH,
+        6: PATCH,
 
         65: CREATED,
         66: DELETED,
@@ -283,7 +290,9 @@ class Codes(object):
         162: BAD_GATEWAY,
         163: SERVICE_UNAVAILABLE,
         164: GATEWAY_TIMEOUT,
-        165: PROXY_NOT_SUPPORTED
+        165: PROXY_NOT_SUPPORTED,
+        166: UNPROCESSABLE_ENTITY,
+        167: INCONSISTENT_STATE
 
     }
 
@@ -295,7 +304,9 @@ Content_types = {
     "application/octet-stream": 42,
     "application/exi": 47,
     "application/json": 50,
-    "application/cbor": 60
+    "application/cbor": 60,
+    "application/map-keys+json": 51,
+    "application/json-patch+json": 52
 }
 
 COAP_PREFACE = "coap://"
@@ -328,6 +339,8 @@ CoAP_HTTP = {
     "BAD_GATEWAY": "502",
     "SERVICE_UNAVAILABLE": "503",
     "GATEWAY_TIMEOUT": "504",
-    "PROXY_NOT_SUPPORTED": "502"
+    "PROXY_NOT_SUPPORTED": "502",
+    "INCONSISTENT_STATE": "409",
+    "UNPROCESSABLE_ENTITY": "422"
 
 }

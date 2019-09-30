@@ -143,6 +143,54 @@ class HelperClient(object):
 
         return self.send_request(request, callback, timeout)
 
+    def fetch(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+        """
+        Perform a FETCH on a certain path.
+
+        :param path: the path
+        :param payload: the request payload
+        :param proxy_uri: Proxy-Uri option of a request
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.FETCH, path)
+        request.token = generate_random_token(2)
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
+        request.payload = payload
+        request.content_type = defines.Content_types["application/map-keys+json"]
+
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
+
+        return self.send_request(request, callback, timeout)
+
+    def patch(self, path, payload, proxy_uri=None, callback=None, timeout=None, **kwargs):  # pragma: no cover
+        """
+        Perform a PATCH on a certain path.
+
+        :param path: the path
+        :param payload: the request payload
+        :param proxy_uri: Proxy-Uri option of a request
+        :param callback: the callback function to invoke upon response
+        :param timeout: the timeout of the request
+        :return: the response
+        """
+        request = self.mk_request(defines.Codes.PATCH, path)
+        request.token = generate_random_token(2)
+        request.payload = payload
+        request.content_type = defines.Content_types["application/json-patch+json"]
+        if proxy_uri:
+            request.proxy_uri = proxy_uri
+
+        for k, v in kwargs.iteritems():
+            if hasattr(request, k):
+                setattr(request, k, v)
+
+        return self.send_request(request, callback, timeout)
+
     def observe(self, path, callback, timeout=None, **kwargs):  # pragma: no cover
         """
         Perform a GET with observe on a certain path.
