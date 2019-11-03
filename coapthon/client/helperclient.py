@@ -5,6 +5,7 @@ from coapthon import defines
 from coapthon.client.coap import CoAP
 from coapthon.messages.request import Request
 from coapthon.utils import generate_random_token
+import socket
 
 __author__ = 'Giacomo Tanganelli'
 
@@ -30,7 +31,13 @@ class HelperClient(object):
         :param cb_ignore_read_exception: Callback function to handle exception raised during the socket read operation
         :param cb_ignore_write_exception: Callback function to handle exception raised during the socket write operation 
         """
-        self.server = server
+        # bug fix:check if host is a domain, if true, convert server domain into ip
+        server_ip = socket.getaddrinfo(server[0], None)[0][4][0]
+        if server_ip == server[0]:
+            self.server = server
+        else:
+            self.server = (server_ip, server[1])
+
         self.protocol = CoAP(self.server, random.randint(1, 65535), self._wait_response, sock=sock,
                              cb_ignore_read_exception=cb_ignore_read_exception, cb_ignore_write_exception=cb_ignore_write_exception)
 
@@ -297,4 +304,12 @@ class HelperClient(object):
         request.uri_path = path
         return request
 
-
+    # feature update : ping
+    def ping(self):
+        """
+        send a CON empty message to server to trigger RST response (CoAP ping)
+        """
+        empty = Request()
+        empty.destination = self.server
+        empty.type = 0
+        self.send_empty(empty)
