@@ -104,7 +104,7 @@ Log through ssh to the Yun and issue the following:
 # easy_install pip #installs pip
 ```
 
-Then you need to modify the setup.py and comment the line <strong>conditionalExtensions=getExtensions()</strong>. Then :
+Then you need to modify the [`setup.py`](/setup.py) and comment the line <strong>conditionalExtensions=getExtensions()</strong>. Then :
 
 ```sh
 # python setup.py build_py build_scripts install --skip-build
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     main()
 ```
 
-Resources are extended from the class resource.Resource. Simple examples can be found in example_resource.py.
+Resources are extended from the class resources.Resource. Simple examples can be found in [`exampleresources.py`](/exampleresources.py).
 
 ```Python
 from coapthon.resources.resource import Resource
