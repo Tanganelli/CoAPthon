@@ -280,3 +280,4 @@ class AdvancedResourceSeparate(Resource):
     def render_DELETE_separate(self, request, response):
         response.payload = "Response deleted"
         return True, response
+
